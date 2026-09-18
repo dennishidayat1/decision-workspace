@@ -1,0 +1,6 @@
+@DecisionWorkspace.Api_HostAddress = http://localhost:5207
+
+GET {{DecisionWorkspace.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
