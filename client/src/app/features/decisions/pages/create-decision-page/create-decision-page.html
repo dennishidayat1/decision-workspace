@@ -1,0 +1,41 @@
+<section>
+  <h2>Create Decision</h2>
+
+  <form [formGroup]="decisionForm"
+    (ngSubmit)="onSubmit()">
+    <label for="title">Title</label>
+    <input
+      id="title"
+      type="text"
+      formControlName="title"
+    />
+
+    <label for="question">Question</label>
+    <input
+      id="question"
+      type="text"
+      formControlName="question"
+    />
+
+    <label for="context">Context</label>
+    <textarea
+      id="context"
+      formControlName="context"
+    ></textarea>
+    
+    <label for="category">Category</label>
+    <input
+        id="category"
+        type="text"
+        formControlName="category"
+        placeholder="e.g. Shopping, Career, Travel"
+    />
+    
+<button
+  type="submit"
+  [disabled]="decisionForm.invalid"
+>
+  Create Decision
+</button>
+  </form>
+</section>

@@ -13,6 +13,13 @@ export const routes: Routes = [
             (m) => m.DashboardPage,
           ),
       },
+      {
+        path: 'decisions/new',
+        loadComponent: () =>
+          import(
+            './features/decisions/pages/create-decision-page/create-decision-page'
+          ).then((m) => m.CreateDecisionPage),
+      },
     ],
   },
 ];
