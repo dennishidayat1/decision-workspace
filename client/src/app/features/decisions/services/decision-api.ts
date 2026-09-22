@@ -6,10 +6,17 @@ import { Decision } from '../models/decision';
 @Service()
 export class DecisionApi {
   private readonly http = inject(HttpClient);
+  
   createDecision(request: CreateDecisionRequest) {
     return this.http.post<Decision>(
       'http://localhost:5207/api/decisions',
       request,
+    );
+  }
+
+  getAllDecisions() {
+    return this.http.get<Decision[]>(
+      'http://localhost:5207/api/decisions',
     );
   }
 }

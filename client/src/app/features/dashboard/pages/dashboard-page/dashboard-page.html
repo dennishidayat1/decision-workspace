@@ -1,4 +1,21 @@
 <section>
   <h2>Your Decisions</h2>
   <p>Research, compare, and keep track of decisions that matter.</p>
+
+  @if (isLoading()) {
+    <p>Loading decisions...</p>
+  } @else if (loadError()) {
+    <p>{{ loadError() }}</p>
+  } @else {
+    @for (decision of decisions(); track decision.id) {
+    <article>
+      <h3>{{ decision.title }}</h3>
+      <p>{{ decision.question }}</p>
+    </article>
+    } @empty {
+      <p>No decisions yet.</p>
+    }
+  }
 </section>
+
+<a routerLink="/decisions/new">New Decision</a>

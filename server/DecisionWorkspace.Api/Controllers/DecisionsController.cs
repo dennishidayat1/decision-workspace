@@ -23,5 +23,13 @@ namespace DecisionWorkspace.Api.Controllers
 
             return Ok(decision);
         }
+
+        [HttpGet]
+        public async Task<IActionResult> GetAll()
+        {
+            var decisions = await _decisionService.GetAllAsync();
+
+            return Ok(decisions);
+        }
     }
 }

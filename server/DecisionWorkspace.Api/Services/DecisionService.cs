@@ -1,6 +1,7 @@
 using DecisionWorkspace.Api.Contracts;
 using DecisionWorkspace.Api.Models;
 using DecisionWorkspace.Api.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace DecisionWorkspace.Api.Services;
 
@@ -31,5 +32,12 @@ public class DecisionService
         await _dbContext.SaveChangesAsync();
 
         return decision;
+    }
+
+    public async Task<List<Decision>> GetAllAsync()
+    {
+        return await _dbContext.Decisions
+        .OrderByDescending(d => d.CreatedAt)
+        .ToListAsync();
     }
 }
