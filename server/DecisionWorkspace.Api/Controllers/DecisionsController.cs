@@ -31,5 +31,18 @@ namespace DecisionWorkspace.Api.Controllers
 
             return Ok(decisions);
         }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(Guid id)
+        {
+            var decision = await _decisionService.GetByIdAsync(id);
+
+            if (decision == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(decision);
+        }
     }
 }

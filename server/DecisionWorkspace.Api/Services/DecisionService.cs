@@ -40,4 +40,10 @@ public class DecisionService
         .OrderByDescending(d => d.CreatedAt)
         .ToListAsync();
     }
+
+    public async Task<Decision?> GetByIdAsync(Guid id)
+    {
+        return await _dbContext.Decisions
+            .FirstOrDefaultAsync(d => d.Id == id);
+    }
 }

@@ -8,10 +8,14 @@
     <p>{{ loadError() }}</p>
   } @else {
     @for (decision of decisions(); track decision.id) {
-    <article>
-      <h3>{{ decision.title }}</h3>
-      <p>{{ decision.question }}</p>
-    </article>
+      <article>
+        <h3>
+          <a [routerLink]="['/decisions', decision.id]">
+            {{ decision.title }}
+          </a>
+        </h3>
+        <p>{{ decision.question }}</p>
+      </article>
     } @empty {
       <p>No decisions yet.</p>
     }

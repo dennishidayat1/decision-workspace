@@ -20,6 +20,13 @@ export const routes: Routes = [
             './features/decisions/pages/create-decision-page/create-decision-page'
           ).then((m) => m.CreateDecisionPage),
       },
+      {
+        path: 'decisions/:id',
+        loadComponent: () =>
+          import(
+            './features/decisions/pages/decision-detail-page/decision-detail-page'
+          ).then((m) => m.DecisionDetailPage),
+      },
     ],
   },
 ];

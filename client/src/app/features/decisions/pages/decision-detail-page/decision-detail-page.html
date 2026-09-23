@@ -1,0 +1,18 @@
+@if (isLoading()) {
+  <p>Loading decision...</p>
+} @else if (loadError()) {
+  <p>{{ loadError() }}</p>
+} @else if (decision(); as decision) {
+  <section>
+    <h2>{{ decision.title }}</h2>
+    <p>{{ decision.question }}</p>
+
+    @if (decision.category) {
+      <p>Category: {{ decision.category }}</p>
+    }
+
+    @if (decision.context) {
+      <p>{{ decision.context }}</p>
+    }
+  </section>
+}
