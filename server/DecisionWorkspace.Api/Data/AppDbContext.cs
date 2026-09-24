@@ -11,4 +11,5 @@ public class AppDbContext : DbContext
     }
 
     public DbSet<Decision> Decisions { get; set; }
+    public DbSet<DecisionOption> DecisionOptions { get; set; }
 }

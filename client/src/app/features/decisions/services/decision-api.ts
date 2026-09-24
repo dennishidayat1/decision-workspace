@@ -3,6 +3,8 @@ import { HttpClient } from '@angular/common/http';
 import { CreateDecisionRequest } from '../models/create-decision-request';
 import { Decision } from '../models/decision';
 import { environment } from '../../../../environments/environment';
+import { DecisionOption } from '../models/decision-option';
+import { CreateDecisionOptionRequest } from '../models/create-decision-option-request';
 
 @Service()
 export class DecisionApi {
@@ -25,6 +27,19 @@ export class DecisionApi {
   getDecisionById(id: string) {
     return this.http.get<Decision>(
       `${this.apiUrl}/${id}`,
+    );
+  }
+
+  getDecisionOptions(decisionId: string) {
+    return this.http.get<DecisionOption[]>(
+      `${this.apiUrl}/${decisionId}/options`,
+    );
+  }
+
+  createDecisionOption(decisionId: string, request: CreateDecisionOptionRequest) {
+    return this.http.post<DecisionOption>(
+      `${this.apiUrl}/${decisionId}/options`,
+      request,
     );
   }
 }

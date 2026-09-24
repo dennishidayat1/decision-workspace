@@ -1,6 +1,7 @@
 using DecisionWorkspace.Api.Services;
 using DecisionWorkspace.Api.Data;
 using Microsoft.EntityFrameworkCore;
+using DecisionOptionWorkspace.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +21,7 @@ builder.Services.AddCors(options =>
     });
 });
 builder.Services.AddScoped<DecisionService>();
+builder.Services.AddScoped<DecisionOptionService>();
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseNpgsql(

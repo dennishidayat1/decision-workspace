@@ -5,6 +5,7 @@
 } @else if (decision(); as decision) {
   <section>
     <h2>{{ decision.title }}</h2>
+
     <p>{{ decision.question }}</p>
 
     @if (decision.category) {
@@ -13,6 +14,64 @@
 
     @if (decision.context) {
       <p>{{ decision.context }}</p>
+    }
+
+    <h3>Options</h3>
+
+    <form [formGroup]="optionForm" (ngSubmit)="onAddOption()">
+      <label>
+        Title
+        <input type="text" formControlName="title" />
+      </label>
+      <label>
+        URL
+        <input type="url" formControlName="url" />
+      </label>
+
+      <label>
+        Thumbnail URL
+        <input type="url" formControlName="thumbnailUrl" />
+      </label>
+
+      <label>
+        Description
+        <textarea formControlName="description"></textarea>
+      </label>
+
+      <label>
+        Price
+        <input type="number" formControlName="price" />
+      </label>
+
+      <label>
+        Currency
+        <input type="text" formControlName="currency" />
+      </label>
+
+      <button type="submit">Add Option</button>
+    </form>
+
+    @for (option of decisionOptions(); track option.id) {
+      <article>
+        <h4>{{ option.title }}</h4>
+        <p>{{ option.description }}</p>
+        @if (option.url) {
+          <p>
+            <a [href]="option.url" target="_blank">View Option</a>
+          </p>
+        }
+        @if (option.thumbnailUrl) {
+          <img [src]="option.thumbnailUrl" [alt]="option.title" />
+        }
+        @if (option.price !== undefined && option.currency) {
+          <p>Price: {{ option.price }} {{ option.currency }}</p>
+        }
+      </article>
+    } @empty {
+      <p>No options yet.</p>
+    }
+    @if (optionSubmitError()) {
+      <p>{{ optionSubmitError() }}</p>
     }
   </section>
 }
