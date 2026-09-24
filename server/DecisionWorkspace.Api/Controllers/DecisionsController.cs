@@ -1,7 +1,5 @@
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using DecisionWorkspace.Api.Contracts;
-using DecisionWorkspace.Api.Models;
 using DecisionWorkspace.Api.Services;
 
 namespace DecisionWorkspace.Api.Controllers

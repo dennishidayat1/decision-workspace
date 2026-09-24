@@ -7,6 +7,8 @@ import { finalize } from 'rxjs';
 import { DecisionOption } from '../../models/decision-option';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CreateDecisionOptionRequest } from '../../models/create-decision-option-request';
+import { DecisionOptionAttribute } from '../../models/decision-option-attribute';
+import { CreateDecisionOptionAttributeRequest } from '../../models/create-decision-option-attribute-request';
 
 @Component({
   imports: [ReactiveFormsModule],
@@ -26,9 +28,14 @@ export class DecisionDetailPage implements OnInit {
   readonly decisionId = this.route.snapshot.paramMap.get('id');
   readonly decision = signal<Decision | null>(null);
   readonly decisionOptions = signal<DecisionOption[] | []>([]);
+  readonly optionAttributes = signal<
+    Record<string, DecisionOptionAttribute[]>
+  >({});
+  readonly selectedOptionIdForAttribute = signal<string | null>(null);
   readonly isLoading = signal(true);
   readonly loadError = signal<string | null>(null);
   readonly optionSubmitError = signal<string | null>(null);
+  readonly attributeSubmitError = signal<string | null>(null);
   readonly optionForm = new FormGroup({
     title: new FormControl('', {
       nonNullable: true,
@@ -46,6 +53,17 @@ export class DecisionDetailPage implements OnInit {
     price: new FormControl<number | null>(null),
     currency: new FormControl('', {
       nonNullable: true,
+    }),
+  });
+
+  readonly optionAttributesForm = new FormGroup({
+    name: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required],
+    }),
+    value: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required],
     }),
   });
 
@@ -88,6 +106,9 @@ export class DecisionDetailPage implements OnInit {
     this.decisionApi.getDecisionOptions(this.decisionId).subscribe({
       next: (options) => {
         this.decisionOptions.set(options);
+        options.forEach((option) => {
+          this.loadOptionAttributes(option.id);
+        });
       },
       error: (error) => {
         console.error('Failed to load decision options:', error);
@@ -131,6 +152,79 @@ export class DecisionDetailPage implements OnInit {
         console.error('Failed to create decision option:', error);
         this.optionSubmitError.set(
           'Failed to create decision option. Please try again later.',
+        );
+      },
+    });
+  }
+
+  private loadOptionAttributes(decisionOptionId: string): void {
+    if (!this.decisionId) {
+      console.error('Decision ID is not available in the route parameters.');
+      this.loadError.set('Decision ID is missing.');
+      return;
+    }
+
+    this.decisionApi.getDecisionOptionAttributes(this.decisionId, decisionOptionId).subscribe({
+      next: (attributes) => {
+        this.optionAttributes.update((currentAttributes) => ({
+          ...currentAttributes,
+          [decisionOptionId]: attributes,
+        }));
+      },
+      error: (error) => {
+        console.error(`Failed to load attributes for option ${decisionOptionId}:`, error);
+        this.loadError.set(
+          `Failed to load attributes for option ${decisionOptionId}. Please try again later.`,
+        );
+      },
+    });
+  }
+
+  openAttributeForm(decisionOptionId: string): void {
+    this.selectedOptionIdForAttribute.set(decisionOptionId);
+    this.optionAttributesForm.reset();
+  }
+
+  closeAttributeForm(): void {
+    this.selectedOptionIdForAttribute.set(null);
+    this.optionAttributesForm.reset();
+  }
+
+  onAddAttribute(): void {
+    const decisionOptionId = this.selectedOptionIdForAttribute();
+    if (!this.decisionId || !decisionOptionId) {
+      console.error('Decision ID or Decision Option ID is not available.');
+      this.loadError.set('Decision ID or Decision Option ID is missing.');
+      return;
+    }
+
+    if (this.optionAttributesForm.invalid) {
+      console.error('Attribute form is invalid:', this.optionAttributesForm.errors);
+      this.attributeSubmitError.set(
+        'Please fill in all required fields for the attribute.',
+      );
+      return;
+    }
+
+    this.attributeSubmitError.set(null);
+
+    const request: CreateDecisionOptionAttributeRequest = this.optionAttributesForm.getRawValue();
+
+    this.decisionApi.createDecisionOptionAttribute(this.decisionId, decisionOptionId, request).subscribe({
+      next: (createdAttribute) => {
+        this.optionAttributes.update((currentAttributes) => {
+          const updatedAttributes = currentAttributes[decisionOptionId] || [];
+          return {
+            ...currentAttributes,
+            [decisionOptionId]: [...updatedAttributes, createdAttribute],
+          };
+        });
+        this.closeAttributeForm();
+      },
+      error: (error) => {
+        console.error('Failed to create decision option attribute:', error);
+        this.attributeSubmitError.set(
+          'Failed to create decision option attribute. Please try again later.',
         );
       },
     });

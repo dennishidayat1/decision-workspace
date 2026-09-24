@@ -66,10 +66,46 @@
         @if (option.price !== undefined && option.currency) {
           <p>Price: {{ option.price }} {{ option.currency }}</p>
         }
+        @for (optionAttribute of optionAttributes()[option.id] ?? []; track optionAttribute.id) {
+          <p>{{ optionAttribute.name }}: {{ optionAttribute.value }}</p>
+        }
+        <button type="button" (click)="openAttributeForm(option.id)">
+          Add Attribute
+        </button>
       </article>
     } @empty {
       <p>No options yet.</p>
     }
+    @if (selectedOptionIdForAttribute()) {
+    <section>
+      <h3>Add Attribute</h3>
+
+      <form [formGroup]="optionAttributesForm" (ngSubmit)="onAddAttribute()">
+        <label>
+          Attribute
+          <input type="text" formControlName="name" />
+        </label>
+
+        <label>
+          Value
+          <input type="text" formControlName="value" />
+        </label>
+        
+        <button type="button" (click)="closeAttributeForm()">
+          Cancel
+        </button>
+        <button
+          type="submit"
+          [disabled]="optionAttributesForm.invalid"
+        >
+          Add
+        </button>
+      </form>
+      @if (attributeSubmitError()) {
+        <p>{{ attributeSubmitError() }}</p>
+      }
+    </section>
+  }
     @if (optionSubmitError()) {
       <p>{{ optionSubmitError() }}</p>
     }
