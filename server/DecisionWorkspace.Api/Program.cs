@@ -23,6 +23,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddScoped<DecisionService>();
 builder.Services.AddScoped<DecisionOptionService>();
 builder.Services.AddScoped<DecisionOptionAttributeService>();
+builder.Services.AddScoped<CriterionService>();
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseNpgsql(

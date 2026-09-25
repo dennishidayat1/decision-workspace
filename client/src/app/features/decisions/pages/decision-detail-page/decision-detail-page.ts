@@ -9,6 +9,8 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { CreateDecisionOptionRequest } from '../../models/create-decision-option-request';
 import { DecisionOptionAttribute } from '../../models/decision-option-attribute';
 import { CreateDecisionOptionAttributeRequest } from '../../models/create-decision-option-attribute-request';
+import { Criterion } from '../../models/criterion';
+import { CreateCriterionRequest } from '../../models/create-criterion-request';
 
 @Component({
   imports: [ReactiveFormsModule],
@@ -23,19 +25,22 @@ export class DecisionDetailPage implements OnInit {
   ngOnInit(): void {
     this.loadDecision();
     this.loadDecisionOptions();
+    this.loadCriteria();
   }
 
   readonly decisionId = this.route.snapshot.paramMap.get('id');
   readonly decision = signal<Decision | null>(null);
-  readonly decisionOptions = signal<DecisionOption[] | []>([]);
+  readonly decisionOptions = signal<DecisionOption[]>([]);
   readonly optionAttributes = signal<
     Record<string, DecisionOptionAttribute[]>
   >({});
+  readonly criteria = signal<Criterion[] | []>([]);
   readonly selectedOptionIdForAttribute = signal<string | null>(null);
   readonly isLoading = signal(true);
   readonly loadError = signal<string | null>(null);
   readonly optionSubmitError = signal<string | null>(null);
   readonly attributeSubmitError = signal<string | null>(null);
+  readonly criterionSubmitError = signal<string | null>(null);
   readonly optionForm = new FormGroup({
     title: new FormControl('', {
       nonNullable: true,
@@ -64,6 +69,23 @@ export class DecisionDetailPage implements OnInit {
     value: new FormControl('', {
       nonNullable: true,
       validators: [Validators.required],
+    }),
+  });
+
+  readonly criterionForm = new FormGroup({
+    name: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required],
+    }),
+    importance: new FormControl<number | null>(null, {
+      validators: [
+        Validators.required,
+        Validators.min(1),
+        Validators.max(5),
+      ],
+    }),
+    context: new FormControl('', {
+      nonNullable: true,
     }),
   });
 
@@ -225,6 +247,68 @@ export class DecisionDetailPage implements OnInit {
         console.error('Failed to create decision option attribute:', error);
         this.attributeSubmitError.set(
           'Failed to create decision option attribute. Please try again later.',
+        );
+      },
+    });
+  }
+
+  private loadCriteria(): void {
+    if (!this.decisionId) {
+      console.error('Decision ID is not available in the route parameters.');
+      this.loadError.set('Decision ID is missing.');
+      return;
+    }
+
+    this.decisionApi.getCriteria(this.decisionId).subscribe({
+      next: (criteria) => {
+        this.criteria.set(criteria);
+      },
+      error: (error) => {
+        console.error('Failed to load criteria:', error);
+        this.loadError.set('Failed to load criteria. Please try again later.');
+      },
+    });
+  }
+
+  onAddCriterion(): void {
+    if (!this.decisionId) {
+      console.error('Decision ID is not available in the route parameters.');
+      this.loadError.set('Decision ID is missing.');
+      return;
+    }
+
+    if (this.criterionForm.invalid) {
+      console.error('Criterion form is invalid:', this.criterionForm.errors);
+      this.criterionSubmitError.set(
+        'Please fill in all required fields for the criterion.',
+      );
+      return;
+    }
+
+    this.criterionSubmitError.set(null);
+
+    const formValue = this.criterionForm.getRawValue();
+
+    if (formValue.importance === null) {
+      this.criterionSubmitError.set('Please select an importance.');
+      return;
+    }
+
+    const request: CreateCriterionRequest = {
+      name: formValue.name,
+      importance: formValue.importance,
+      context: formValue.context || undefined,
+    };
+
+    this.decisionApi.createCriterion(this.decisionId, request).subscribe({
+      next: (createdCriterion) => {
+        this.criteria.update((currentCriteria) => [...currentCriteria, createdCriterion]);
+        this.criterionForm.reset();
+      },
+      error: (error) => {
+        console.error('Failed to create criterion:', error);
+        this.criterionSubmitError.set(
+          'Failed to create criterion. Please try again later.',
         );
       },
     });

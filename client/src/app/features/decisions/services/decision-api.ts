@@ -7,6 +7,8 @@ import { DecisionOption } from '../models/decision-option';
 import { CreateDecisionOptionRequest } from '../models/create-decision-option-request';
 import { CreateDecisionOptionAttributeRequest } from '../models/create-decision-option-attribute-request';
 import { DecisionOptionAttribute } from '../models/decision-option-attribute';
+import { CreateCriterionRequest } from '../models/create-criterion-request';
+import { Criterion } from '../models/criterion';
 
 @Service()
 export class DecisionApi {
@@ -54,6 +56,19 @@ export class DecisionApi {
   createDecisionOptionAttribute(decisionId: string, decisionOptionId: string, request: CreateDecisionOptionAttributeRequest) {
     return this.http.post<DecisionOptionAttribute>(
       `${this.apiUrl}/${decisionId}/options/${decisionOptionId}/attributes`,
+      request,
+    );
+  }
+
+  getCriteria(decisionId: string) {
+    return this.http.get<Criterion[]>(
+      `${this.apiUrl}/${decisionId}/criteria`,
+    );
+  }
+
+  createCriterion(decisionId: string, request: CreateCriterionRequest) {
+    return this.http.post<Criterion>(
+      `${this.apiUrl}/${decisionId}/criteria`,
       request,
     );
   }

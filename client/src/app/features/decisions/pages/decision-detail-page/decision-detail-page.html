@@ -16,6 +16,43 @@
       <p>{{ decision.context }}</p>
     }
 
+    @for (criterion of criteria(); track criterion.id) {
+      <p>Criterion: {{ criterion.name }}</p>
+      <p>Importance: {{ criterion.importance }}</p>
+
+      @if (criterion.context) {
+        <p>Context: {{ criterion.context }}</p>
+      }
+    } @empty {
+      <p>No criteria yet.</p>
+    }
+    <form [formGroup]="criterionForm" (ngSubmit)="onAddCriterion()">
+      <label for="criterion-name">Name</label>
+      <input
+        id="criterion-name"
+        type="text"
+        formControlName="name"
+        placeholder="e.g. Fitment"
+      />
+      <label for="criterion-importance">Importance</label>
+      <input
+        id="criterion-importance"
+        type="number"
+        formControlName="importance"
+        min="1"
+        max="5"
+      />
+      <label for="criterion-context">Context</label>
+      <textarea
+        id="criterion-context"
+        formControlName="context"
+        placeholder="Why does this criterion matter?"
+      ></textarea>
+      <button type="submit" [disabled]="criterionForm.invalid">
+        Add Criterion
+      </button>
+    </form>
+
     <h3>Options</h3>
 
     <form [formGroup]="optionForm" (ngSubmit)="onAddOption()">
