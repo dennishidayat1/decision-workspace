@@ -11,6 +11,8 @@ import { DecisionOptionAttribute } from '../../models/decision-option-attribute'
 import { CreateDecisionOptionAttributeRequest } from '../../models/create-decision-option-attribute-request';
 import { Criterion } from '../../models/criterion';
 import { CreateCriterionRequest } from '../../models/create-criterion-request';
+import { OptionScore } from '../../models/option-score';
+import { CreateOptionScoreRequest } from '../../models/create-option-score-request';
 
 @Component({
   imports: [ReactiveFormsModule],
@@ -31,16 +33,17 @@ export class DecisionDetailPage implements OnInit {
   readonly decisionId = this.route.snapshot.paramMap.get('id');
   readonly decision = signal<Decision | null>(null);
   readonly decisionOptions = signal<DecisionOption[]>([]);
-  readonly optionAttributes = signal<
-    Record<string, DecisionOptionAttribute[]>
-  >({});
+  readonly optionAttributes = signal<Record<string, DecisionOptionAttribute[]>>({});
   readonly criteria = signal<Criterion[] | []>([]);
   readonly selectedOptionIdForAttribute = signal<string | null>(null);
+  readonly optionScores = signal<Record<string, OptionScore[]>>({});
+  readonly optionScoreForms = new Map<string, FormGroup>();
   readonly isLoading = signal(true);
   readonly loadError = signal<string | null>(null);
   readonly optionSubmitError = signal<string | null>(null);
   readonly attributeSubmitError = signal<string | null>(null);
   readonly criterionSubmitError = signal<string | null>(null);
+  readonly optionScoreSubmitError = signal<string | null>(null);
   readonly optionForm = new FormGroup({
     title: new FormControl('', {
       nonNullable: true,
@@ -88,6 +91,18 @@ export class DecisionDetailPage implements OnInit {
       nonNullable: true,
     }),
   });
+  readonly optionScoreForm = new FormGroup({
+    score: new FormControl<number | null>(null, {
+      validators: [
+        Validators.required,
+        Validators.min(1),
+        Validators.max(5),
+      ],
+    }),
+    comment: new FormControl('', {
+      nonNullable: true,
+    }),
+  });
 
   private loadDecision(): void {
     this.loadError.set(null);
@@ -130,6 +145,7 @@ export class DecisionDetailPage implements OnInit {
         this.decisionOptions.set(options);
         options.forEach((option) => {
           this.loadOptionAttributes(option.id);
+          this.loadOptionScores(option.id)
         });
       },
       error: (error) => {
@@ -312,5 +328,127 @@ export class DecisionDetailPage implements OnInit {
         );
       },
     });
+  }
+
+  private loadOptionScores(decisionOptionId: string): void {
+    if (!decisionOptionId) {
+      this.loadError.set('Decision Option Id is empty')
+      console.log('Decision Option Id is empty')
+      return
+    }
+
+    this.decisionApi.getOptionScores(decisionOptionId).subscribe({
+      next: (newOptionScore) => {
+        this.optionScores.update((currentOptionScore) => (
+          { ...currentOptionScore, [decisionOptionId]: newOptionScore })
+        );
+      },
+      error: (error) => {
+        console.error('Failed to load option score:', error);
+        this.loadError.set(
+          'Failed to load option score. Please try again later.',
+        );
+      }
+    });
+  }
+
+  onSaveOptionScore(decisionOptionId: string, criterionId: string): void {
+
+    const form = this.getOptionScoreForm(decisionOptionId, criterionId);
+
+    if (!decisionOptionId) {
+      console.error('Decision option ID is not available.');
+      this.optionScoreSubmitError.set('Decision option ID is missing.');
+      return;
+    }
+
+    if (form.invalid) {
+      form.markAllAsTouched();
+      this.optionScoreSubmitError.set(
+        'Please fill in all required fields for the option score',
+      );
+      return;
+    }
+
+    this.optionScoreSubmitError.set(null)
+
+    const formValue = form.getRawValue();
+
+    if (formValue.score === null) {
+      return
+    }
+
+    const request: CreateOptionScoreRequest = {
+      criterionId,
+      score: formValue.score,
+      comment: formValue.comment
+    }
+
+    this.decisionApi.createOptionScore(decisionOptionId, request).subscribe({
+      next: (savedScore) => {
+
+        this.optionScores.update((existingScores) => {
+          const currentScores = existingScores[decisionOptionId] ?? [];
+
+          const scoreExists = currentScores.some(
+            (score) => score.criterionId === savedScore.criterionId
+          );
+          const updatedScores = scoreExists
+            ? currentScores.map((score) =>
+              score.criterionId === savedScore.criterionId
+                ? savedScore
+                : score
+            )
+            : [...currentScores, savedScore];
+
+          return {
+            ...existingScores,
+            [decisionOptionId]: updatedScores,
+          };
+        })
+
+        form.reset();
+      },
+      error: (error) => {
+        console.error('Failed to submit option score:', error);
+        this.optionScoreSubmitError.set(
+          'Failed to submit option score. Please try again later.',
+        );
+      }
+    })
+  }
+
+  private getOptionScoreKey(decisionOptionId: string, criterionId: string,): string {
+    return `${decisionOptionId}:${criterionId}`;
+  }
+
+  getOptionScoreForm(decisionOptionId: string, criterionId: string,): FormGroup {
+    const key = this.getOptionScoreKey(decisionOptionId, criterionId);
+    const existingForm = this.optionScoreForms.get(key);
+
+    if (existingForm) {
+      return existingForm;
+    }
+
+    const savedScore = (this.optionScores()[decisionOptionId] ?? []).find(
+      (score) => score.criterionId === criterionId,
+    );
+
+    const newForm = new FormGroup({
+      score: new FormControl<number | null>(savedScore?.score ?? null, {
+        validators: [
+          Validators.required,
+          Validators.min(1),
+          Validators.max(5),
+        ],
+      }),
+      comment: new FormControl(savedScore?.comment ?? '', {
+        nonNullable: true,
+      }),
+    });
+
+    this.optionScoreForms.set(key, newForm);
+
+    return newForm;
   }
 }

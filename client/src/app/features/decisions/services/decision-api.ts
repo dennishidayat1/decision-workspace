@@ -9,67 +9,82 @@ import { CreateDecisionOptionAttributeRequest } from '../models/create-decision-
 import { DecisionOptionAttribute } from '../models/decision-option-attribute';
 import { CreateCriterionRequest } from '../models/create-criterion-request';
 import { Criterion } from '../models/criterion';
+import { CreateOptionScoreRequest } from '../models/create-option-score-request';
+import { OptionScore } from '../models/option-score';
 
 @Service()
 export class DecisionApi {
   private readonly http = inject(HttpClient);
 
-  private readonly apiUrl = `${environment.apiUrl}/decisions`;
+  private readonly apiUrl = `${environment.apiUrl}`;
   
   createDecision(request: CreateDecisionRequest) {
     return this.http.post<Decision>(
-      this.apiUrl,
+      `${this.apiUrl}/decisions`,
       request,
     );
   }
 
   getAllDecisions() {
     return this.http.get<Decision[]>(
-      this.apiUrl,
+      `${this.apiUrl}/decisions`,
     );
   }
   getDecisionById(id: string) {
     return this.http.get<Decision>(
-      `${this.apiUrl}/${id}`,
+      `${this.apiUrl}/decisions/${id}`,
     );
   }
 
   getDecisionOptions(decisionId: string) {
     return this.http.get<DecisionOption[]>(
-      `${this.apiUrl}/${decisionId}/options`,
+      `${this.apiUrl}/decisions/${decisionId}/options`,
     );
   }
 
   createDecisionOption(decisionId: string, request: CreateDecisionOptionRequest) {
     return this.http.post<DecisionOption>(
-      `${this.apiUrl}/${decisionId}/options`,
+      `${this.apiUrl}/decisions/${decisionId}/options`,
       request,
     );
   }
 
   getDecisionOptionAttributes(decisionId: string, decisionOptionId: string) {
     return this.http.get<DecisionOptionAttribute[]>(
-      `${this.apiUrl}/${decisionId}/options/${decisionOptionId}/attributes`,
+      `${this.apiUrl}/decisions/${decisionId}/options/${decisionOptionId}/attributes`,
     );
   }
 
   createDecisionOptionAttribute(decisionId: string, decisionOptionId: string, request: CreateDecisionOptionAttributeRequest) {
     return this.http.post<DecisionOptionAttribute>(
-      `${this.apiUrl}/${decisionId}/options/${decisionOptionId}/attributes`,
+      `${this.apiUrl}/decisions/${decisionId}/options/${decisionOptionId}/attributes`,
       request,
     );
   }
 
   getCriteria(decisionId: string) {
     return this.http.get<Criterion[]>(
-      `${this.apiUrl}/${decisionId}/criteria`,
+      `${this.apiUrl}/decisions/${decisionId}/criteria`,
     );
   }
 
   createCriterion(decisionId: string, request: CreateCriterionRequest) {
     return this.http.post<Criterion>(
-      `${this.apiUrl}/${decisionId}/criteria`,
+      `${this.apiUrl}/decisions/${decisionId}/criteria`,
       request,
     );
+  }
+  
+  getOptionScores(decisionOptionId: string) {
+    return this.http.get<OptionScore[]>(
+      `${this.apiUrl}/decision-options/${decisionOptionId}/scores`
+    )
+  }
+
+  createOptionScore(decisionOptionId: string, request: CreateOptionScoreRequest) {
+    return this.http.post<OptionScore>(
+      `${this.apiUrl}/decision-options/${decisionOptionId}/scores`,
+      request
+    )
   }
 }

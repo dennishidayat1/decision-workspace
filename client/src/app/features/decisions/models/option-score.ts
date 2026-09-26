@@ -1,6 +1,8 @@
 export interface OptionScore {
-  optionId: string;
+  decisionOptionId: string;
   criterionId: string;
   score: number;
-  note?: string;
+  comment?: string;
+  createdAt: string;
+  updatedAt: string;
 }

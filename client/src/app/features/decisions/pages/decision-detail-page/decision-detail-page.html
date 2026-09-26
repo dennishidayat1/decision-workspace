@@ -13,6 +13,7 @@
     }
 
     @if (decision.context) {
+
       <p>{{ decision.context }}</p>
     }
 
@@ -97,15 +98,59 @@
             <a [href]="option.url" target="_blank">View Option</a>
           </p>
         }
+
         @if (option.thumbnailUrl) {
           <img [src]="option.thumbnailUrl" [alt]="option.title" />
         }
         @if (option.price !== undefined && option.currency) {
           <p>Price: {{ option.price }} {{ option.currency }}</p>
         }
+
         @for (optionAttribute of optionAttributes()[option.id] ?? []; track optionAttribute.id) {
           <p>{{ optionAttribute.name }}: {{ optionAttribute.value }}</p>
         }
+
+        @for (optionScore of optionScores()[option.id] ?? []; track optionScore.criterionId) {
+          <p>
+            Score: {{ optionScore.score }}
+            @if (optionScore.comment) {
+              — {{ optionScore.comment }}
+            }
+          </p>
+        }
+
+        @for (criterion of criteria(); track criterion.id) {
+          <p>{{ criterion.name }} (Importance: {{ criterion.importance }})</p>
+
+          <form
+            [formGroup]="getOptionScoreForm(option.id, criterion.id)"
+            (ngSubmit)="onSaveOptionScore(option.id, criterion.id)"
+          >
+          <label>Score
+            <input
+              type="number"
+              formControlName="score"
+              min="1"
+              max="5"
+            />
+          </label>
+          <label>
+            Comment
+            <input
+              type="text"
+              formControlName="comment"
+              placeholder="Optional comment"
+            />
+          </label>
+          <button
+            type="submit"
+            [disabled]="getOptionScoreForm(option.id, criterion.id).invalid"
+          >
+            Save Score
+          </button>
+          </form>
+        }
+        
         <button type="button" (click)="openAttributeForm(option.id)">
           Add Attribute
         </button>

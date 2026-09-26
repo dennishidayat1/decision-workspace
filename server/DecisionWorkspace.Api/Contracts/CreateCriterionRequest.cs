@@ -1,6 +1,6 @@
-namespace DecisionWorkspace.Api.Contracts;
-
 using System.ComponentModel.DataAnnotations;
+
+namespace DecisionWorkspace.Api.Contracts;
 
 public class CreateCriterionRequest
 {
