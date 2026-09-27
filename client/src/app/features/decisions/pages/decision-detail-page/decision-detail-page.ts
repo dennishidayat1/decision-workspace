@@ -1,6 +1,7 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { inject } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
 import { DecisionApi } from '../../services/decision-api';
 import { Decision } from '../../models/decision';
 import { finalize } from 'rxjs';
@@ -13,13 +14,21 @@ import { Criterion } from '../../models/criterion';
 import { CreateCriterionRequest } from '../../models/create-criterion-request';
 import { OptionScore } from '../../models/option-score';
 import { CreateOptionScoreRequest } from '../../models/create-option-score-request';
+import { computed } from '@angular/core';
+
+type OptionSort =
+  | { type: 'best' }
+  | { type: 'price-low' }
+  | { type: 'price-high' }
+  | { type: 'criterion'; criterionId: string };
 
 @Component({
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, DecimalPipe],
   selector: 'app-decision-detail-page',
   styleUrl: './decision-detail-page.scss',
   templateUrl: './decision-detail-page.html',
 })
+
 export class DecisionDetailPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly decisionApi = inject(DecisionApi);
@@ -38,12 +47,20 @@ export class DecisionDetailPage implements OnInit {
   readonly selectedOptionIdForAttribute = signal<string | null>(null);
   readonly optionScores = signal<Record<string, OptionScore[]>>({});
   readonly optionScoreForms = new Map<string, FormGroup>();
+  readonly optionSort = signal<OptionSort>({ type: 'best' });
   readonly isLoading = signal(true);
   readonly loadError = signal<string | null>(null);
   readonly optionSubmitError = signal<string | null>(null);
   readonly attributeSubmitError = signal<string | null>(null);
   readonly criterionSubmitError = signal<string | null>(null);
   readonly optionScoreSubmitError = signal<string | null>(null);
+  readonly optionSortValue = computed(() => {
+    const sort = this.optionSort();
+
+    return sort.type === 'criterion'
+      ? sort.criterionId
+      : sort.type;
+  });
   readonly optionForm = new FormGroup({
     title: new FormControl('', {
       nonNullable: true,
@@ -102,6 +119,93 @@ export class DecisionDetailPage implements OnInit {
     comment: new FormControl('', {
       nonNullable: true,
     }),
+  });
+
+  readonly sortedDecisionOptions = computed(() => {
+    const options = this.decisionOptions();
+
+    const sortMode = this.optionSort();
+
+    return [...options].sort((a, b) => {
+      if (sortMode.type === 'price-low') {
+        const priceA = a.price;
+        const priceB = b.price;
+
+        if (priceA === undefined && priceB === undefined) {
+          return 0;
+        }
+
+        if (priceA === undefined) {
+          return 1;
+        }
+
+        if (priceB === undefined) {
+          return -1;
+        }
+
+        return priceA - priceB;
+      }
+
+      if (sortMode.type === 'price-high') {
+        const priceA = a.price;
+        const priceB = b.price;
+
+        if (priceA === undefined && priceB === undefined) {
+          return 0;
+        }
+
+        if (priceA === undefined) {
+          return 1;
+        }
+
+        if (priceB === undefined) {
+          return -1;
+        }
+
+        return priceB - priceA;
+      }
+
+      if (sortMode.type === 'criterion') {
+        const scoreA = (this.optionScores()[a.id] ?? []).find(
+          (score) => score.criterionId === sortMode.criterionId,
+        );
+
+        const scoreB = (this.optionScores()[b.id] ?? []).find(
+          (score) => score.criterionId === sortMode.criterionId,
+        );
+
+        if (!scoreA && !scoreB) {
+          return 0;
+        }
+
+        if (!scoreA) {
+          return 1;
+        }
+
+        if (!scoreB) {
+          return -1;
+        }
+
+        return scoreB.score - scoreA.score;
+      }
+
+      const scoreA = this.getWeightedScore(a.id);
+      const scoreB = this.getWeightedScore(b.id);
+
+      if (scoreA === null && scoreB === null) {
+        return 0;
+      }
+
+      if (scoreA === null) {
+        return 1;
+      }
+
+      if (scoreB === null) {
+        return -1;
+      }
+
+      return scoreB - scoreA;
+    });
   });
 
   private loadDecision(): void {
@@ -450,5 +554,59 @@ export class DecisionDetailPage implements OnInit {
     this.optionScoreForms.set(key, newForm);
 
     return newForm;
+  }
+
+  getWeightedScore(decisionOptionId: string): number | null {
+    const scores = this.optionScores()[decisionOptionId] ?? [];
+
+    if (scores.length === 0) {
+      return null;
+    }
+
+    const weightedTotal = scores.reduce((total, optionScore) => {
+      const criterion = this.criteria().find(
+        (criterion) => criterion.id === optionScore.criterionId,
+      );
+
+      if (!criterion) {
+        return total;
+      }
+
+      return total + optionScore.score * criterion.importance;
+    }, 0);
+
+    const totalImportance = scores.reduce((total, optionScore) => {
+      const criterion = this.criteria().find(
+        (criterion) => criterion.id === optionScore.criterionId,
+      );
+
+      if (!criterion) {
+        return total;
+      }
+
+      return total + criterion.importance;
+    }, 0);
+
+    if (totalImportance === 0) {
+      return null;
+    }
+
+    return weightedTotal / totalImportance;
+  }
+
+  onOptionSortChange(value: string): void {
+    if (
+      value === 'best' ||
+      value === 'price-low' ||
+      value === 'price-high'
+    ) {
+      this.optionSort.set({ type: value });
+      return;
+    }
+
+    this.optionSort.set({
+      type: 'criterion',
+      criterionId: value,
+    });
   }
 }

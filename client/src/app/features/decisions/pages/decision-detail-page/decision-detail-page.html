@@ -1,195 +1,188 @@
 @if (isLoading()) {
-  <p>Loading decision...</p>
+<p>Loading decision...</p>
 } @else if (loadError()) {
-  <p>{{ loadError() }}</p>
+<p>{{ loadError() }}</p>
 } @else if (decision(); as decision) {
-  <section>
-    <h2>{{ decision.title }}</h2>
+<section>
+  <h2>{{ decision.title }}</h2>
 
-    <p>{{ decision.question }}</p>
+  <p>{{ decision.question }}</p>
 
-    @if (decision.category) {
-      <p>Category: {{ decision.category }}</p>
+  @if (decision.category) {
+  <p>Category: {{ decision.category }}</p>
+  }
+
+  @if (decision.context) {
+
+  <p>{{ decision.context }}</p>
+  }
+
+  @for (criterion of criteria(); track criterion.id) {
+  <p>Criterion: {{ criterion.name }}</p>
+  <p>Importance: {{ criterion.importance }}</p>
+
+  @if (criterion.context) {
+  <p>Context: {{ criterion.context }}</p>
+  }
+  } @empty {
+  <p>No criteria yet.</p>
+  }
+  <form [formGroup]="criterionForm" (ngSubmit)="onAddCriterion()">
+    <label for="criterion-name">Name</label>
+    <input id="criterion-name" type="text" formControlName="name" placeholder="e.g. Fitment" />
+    <label for="criterion-importance">Importance</label>
+    <input id="criterion-importance" type="number" formControlName="importance" min="1" max="5" />
+    <label for="criterion-context">Context</label>
+    <textarea id="criterion-context" formControlName="context" placeholder="Why does this criterion matter?"></textarea>
+    <button type="submit" [disabled]="criterionForm.invalid">
+      Add Criterion
+    </button>
+  </form>
+
+  <h3>Options</h3>
+
+  <form [formGroup]="optionForm" (ngSubmit)="onAddOption()">
+    <label>
+      Title
+      <input type="text" formControlName="title" />
+    </label>
+    <label>
+      URL
+      <input type="url" formControlName="url" />
+    </label>
+
+    <label>
+      Thumbnail URL
+      <input type="url" formControlName="thumbnailUrl" />
+    </label>
+
+    <label>
+      Description
+      <textarea formControlName="description"></textarea>
+    </label>
+
+    <label>
+      Price
+      <input type="number" formControlName="price" />
+    </label>
+
+    <label>
+      Currency
+      <input type="text" formControlName="currency" />
+    </label>
+
+    <button type="submit">Add Option</button>
+  </form>
+
+  <label>
+    Sort by
+    <select
+      [value]="optionSortValue()"
+      (change)="onOptionSortChange($any($event.target).value)"
+    >
+      <option value="best">Best</option>
+      <option value="price-low">Price: Low to High</option>
+      <option value="price-high">Price: High to Low</option>
+
+      @for (criterion of criteria(); track criterion.id) {
+        <option [value]="criterion.id">
+          {{ criterion.name }}
+        </option>
+      }
+    </select>
+  </label>
+
+  @for (option of sortedDecisionOptions(); track option.id) {
+  <article>
+    <h4>{{ option.title }}</h4>
+
+    @if (getWeightedScore(option.id); as weightedScore) {
+    <p>Overall score: {{ weightedScore | number:'1.1-2' }}</p>
+    } @else {
+    <p>Not rated yet</p>
     }
 
-    @if (decision.context) {
+    <p>{{ option.description }}</p>
+    @if (option.url) {
+    <p>
+      <a [href]="option.url" target="_blank">View Option</a>
+    </p>
+    }
 
-      <p>{{ decision.context }}</p>
+    @if (option.thumbnailUrl) {
+    <img [src]="option.thumbnailUrl" [alt]="option.title" />
+    }
+    @if (option.price !== undefined && option.currency) {
+    <p>Price: {{ option.price }} {{ option.currency }}</p>
+    }
+
+    @for (optionAttribute of optionAttributes()[option.id] ?? []; track optionAttribute.id) {
+    <p>{{ optionAttribute.name }}: {{ optionAttribute.value }}</p>
+    }
+
+    @for (optionScore of optionScores()[option.id] ?? []; track optionScore.criterionId) {
+    <p>
+      Score: {{ optionScore.score }}
+      @if (optionScore.comment) {
+      — {{ optionScore.comment }}
+      }
+    </p>
     }
 
     @for (criterion of criteria(); track criterion.id) {
-      <p>Criterion: {{ criterion.name }}</p>
-      <p>Importance: {{ criterion.importance }}</p>
+    <p>{{ criterion.name }} (Importance: {{ criterion.importance }})</p>
 
-      @if (criterion.context) {
-        <p>Context: {{ criterion.context }}</p>
-      }
-    } @empty {
-      <p>No criteria yet.</p>
-    }
-    <form [formGroup]="criterionForm" (ngSubmit)="onAddCriterion()">
-      <label for="criterion-name">Name</label>
-      <input
-        id="criterion-name"
-        type="text"
-        formControlName="name"
-        placeholder="e.g. Fitment"
-      />
-      <label for="criterion-importance">Importance</label>
-      <input
-        id="criterion-importance"
-        type="number"
-        formControlName="importance"
-        min="1"
-        max="5"
-      />
-      <label for="criterion-context">Context</label>
-      <textarea
-        id="criterion-context"
-        formControlName="context"
-        placeholder="Why does this criterion matter?"
-      ></textarea>
-      <button type="submit" [disabled]="criterionForm.invalid">
-        Add Criterion
+    <form [formGroup]="getOptionScoreForm(option.id, criterion.id)"
+      (ngSubmit)="onSaveOptionScore(option.id, criterion.id)">
+      <label>Score
+        <input type="number" formControlName="score" min="1" max="5" />
+      </label>
+      <label>
+        Comment
+        <input type="text" formControlName="comment" placeholder="Optional comment" />
+      </label>
+      <button type="submit" [disabled]="getOptionScoreForm(option.id, criterion.id).invalid">
+        Save Score
       </button>
     </form>
-
-    <h3>Options</h3>
-
-    <form [formGroup]="optionForm" (ngSubmit)="onAddOption()">
-      <label>
-        Title
-        <input type="text" formControlName="title" />
-      </label>
-      <label>
-        URL
-        <input type="url" formControlName="url" />
-      </label>
-
-      <label>
-        Thumbnail URL
-        <input type="url" formControlName="thumbnailUrl" />
-      </label>
-
-      <label>
-        Description
-        <textarea formControlName="description"></textarea>
-      </label>
-
-      <label>
-        Price
-        <input type="number" formControlName="price" />
-      </label>
-
-      <label>
-        Currency
-        <input type="text" formControlName="currency" />
-      </label>
-
-      <button type="submit">Add Option</button>
-    </form>
-
-    @for (option of decisionOptions(); track option.id) {
-      <article>
-        <h4>{{ option.title }}</h4>
-        <p>{{ option.description }}</p>
-        @if (option.url) {
-          <p>
-            <a [href]="option.url" target="_blank">View Option</a>
-          </p>
-        }
-
-        @if (option.thumbnailUrl) {
-          <img [src]="option.thumbnailUrl" [alt]="option.title" />
-        }
-        @if (option.price !== undefined && option.currency) {
-          <p>Price: {{ option.price }} {{ option.currency }}</p>
-        }
-
-        @for (optionAttribute of optionAttributes()[option.id] ?? []; track optionAttribute.id) {
-          <p>{{ optionAttribute.name }}: {{ optionAttribute.value }}</p>
-        }
-
-        @for (optionScore of optionScores()[option.id] ?? []; track optionScore.criterionId) {
-          <p>
-            Score: {{ optionScore.score }}
-            @if (optionScore.comment) {
-              — {{ optionScore.comment }}
-            }
-          </p>
-        }
-
-        @for (criterion of criteria(); track criterion.id) {
-          <p>{{ criterion.name }} (Importance: {{ criterion.importance }})</p>
-
-          <form
-            [formGroup]="getOptionScoreForm(option.id, criterion.id)"
-            (ngSubmit)="onSaveOptionScore(option.id, criterion.id)"
-          >
-          <label>Score
-            <input
-              type="number"
-              formControlName="score"
-              min="1"
-              max="5"
-            />
-          </label>
-          <label>
-            Comment
-            <input
-              type="text"
-              formControlName="comment"
-              placeholder="Optional comment"
-            />
-          </label>
-          <button
-            type="submit"
-            [disabled]="getOptionScoreForm(option.id, criterion.id).invalid"
-          >
-            Save Score
-          </button>
-          </form>
-        }
-        
-        <button type="button" (click)="openAttributeForm(option.id)">
-          Add Attribute
-        </button>
-      </article>
-    } @empty {
-      <p>No options yet.</p>
     }
-    @if (selectedOptionIdForAttribute()) {
-    <section>
-      <h3>Add Attribute</h3>
 
-      <form [formGroup]="optionAttributesForm" (ngSubmit)="onAddAttribute()">
-        <label>
-          Attribute
-          <input type="text" formControlName="name" />
-        </label>
-
-        <label>
-          Value
-          <input type="text" formControlName="value" />
-        </label>
-        
-        <button type="button" (click)="closeAttributeForm()">
-          Cancel
-        </button>
-        <button
-          type="submit"
-          [disabled]="optionAttributesForm.invalid"
-        >
-          Add
-        </button>
-      </form>
-      @if (attributeSubmitError()) {
-        <p>{{ attributeSubmitError() }}</p>
-      }
-    </section>
+    <button type="button" (click)="openAttributeForm(option.id)">
+      Add Attribute
+    </button>
+  </article>
+  } @empty {
+  <p>No options yet.</p>
   }
-    @if (optionSubmitError()) {
-      <p>{{ optionSubmitError() }}</p>
+  @if (selectedOptionIdForAttribute()) {
+  <section>
+    <h3>Add Attribute</h3>
+
+    <form [formGroup]="optionAttributesForm" (ngSubmit)="onAddAttribute()">
+      <label>
+        Attribute
+        <input type="text" formControlName="name" />
+      </label>
+
+      <label>
+        Value
+        <input type="text" formControlName="value" />
+      </label>
+
+      <button type="button" (click)="closeAttributeForm()">
+        Cancel
+      </button>
+      <button type="submit" [disabled]="optionAttributesForm.invalid">
+        Add
+      </button>
+    </form>
+    @if (attributeSubmitError()) {
+    <p>{{ attributeSubmitError() }}</p>
     }
   </section>
+  }
+  @if (optionSubmitError()) {
+  <p>{{ optionSubmitError() }}</p>
+  }
+</section>
 }
