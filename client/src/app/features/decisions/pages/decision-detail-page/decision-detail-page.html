@@ -75,84 +75,100 @@
   </form>
 
   <label>
+    Group by
+    <select [value]="optionGroupValue()" (change)="onOptionGroupChange($any($event.target).value)">
+      <option value="none">None</option>
+
+      @for (attributeName of availableAttributeNames(); track attributeName) {
+      <option [value]="attributeName">
+        {{ attributeName }}
+      </option>
+      }
+    </select>
+  </label>
+
+  <label>
     Sort by
-    <select
-      [value]="optionSortValue()"
-      (change)="onOptionSortChange($any($event.target).value)"
-    >
+    <select [value]="optionSortValue()" (change)="onOptionSortChange($any($event.target).value)">
       <option value="best">Best</option>
       <option value="price-low">Price: Low to High</option>
       <option value="price-high">Price: High to Low</option>
 
       @for (criterion of criteria(); track criterion.id) {
-        <option [value]="criterion.id">
-          {{ criterion.name }}
-        </option>
+      <option [value]="criterion.id">
+        {{ criterion.name }}
+      </option>
       }
     </select>
   </label>
 
-  @for (option of sortedDecisionOptions(); track option.id) {
-  <article>
-    <h4>{{ option.title }}</h4>
-
-    @if (getWeightedScore(option.id); as weightedScore) {
-    <p>Overall score: {{ weightedScore | number:'1.1-2' }}</p>
-    } @else {
-    <p>Not rated yet</p>
+  @for (group of groupedDecisionOptions(); track group.name) {
+    @if (optionGroup().type === 'attribute') {
+      <h4>{{ group.name }}</h4>
     }
 
-    <p>{{ option.description }}</p>
-    @if (option.url) {
-    <p>
-      <a [href]="option.url" target="_blank">View Option</a>
-    </p>
-    }
+    @for (option of group.options; track option.id) {
+      <article>
+        <h4>{{ option.title }}</h4>
 
-    @if (option.thumbnailUrl) {
-    <img [src]="option.thumbnailUrl" [alt]="option.title" />
-    }
-    @if (option.price !== undefined && option.currency) {
-    <p>Price: {{ option.price }} {{ option.currency }}</p>
-    }
+        @if (getWeightedScore(option.id); as weightedScore) {
+        <p>Overall score: {{ weightedScore | number:'1.1-2' }}</p>
+        } @else {
+        <p>Not rated yet</p>
+        }
 
-    @for (optionAttribute of optionAttributes()[option.id] ?? []; track optionAttribute.id) {
-    <p>{{ optionAttribute.name }}: {{ optionAttribute.value }}</p>
+        <p>{{ option.description }}</p>
+        @if (option.url) {
+        <p>
+          <a [href]="option.url" target="_blank">View Option</a>
+        </p>
+        }
+
+        @if (option.thumbnailUrl) {
+        <img [src]="option.thumbnailUrl" [alt]="option.title" />
+        }
+        @if (option.price !== undefined && option.currency) {
+        <p>Price: {{ option.price }} {{ option.currency }}</p>
+        }
+
+        @for (optionAttribute of optionAttributes()[option.id] ?? []; track optionAttribute.id) {
+        <p>{{ optionAttribute.name }}: {{ optionAttribute.value }}</p>
+        }
+
+        @for (optionScore of optionScores()[option.id] ?? []; track optionScore.criterionId) {
+        <p>
+          Score: {{ optionScore.score }}
+          @if (optionScore.comment) {
+          — {{ optionScore.comment }}
+          }
+        </p>
+        }
+
+        @for (criterion of criteria(); track criterion.id) {
+        <p>{{ criterion.name }} (Importance: {{ criterion.importance }})</p>
+
+        <form [formGroup]="getOptionScoreForm(option.id, criterion.id)"
+          (ngSubmit)="onSaveOptionScore(option.id, criterion.id)">
+          <label>Score
+            <input type="number" formControlName="score" min="1" max="5" />
+          </label>
+          <label>
+            Comment
+            <input type="text" formControlName="comment" placeholder="Optional comment" />
+          </label>
+          <button type="submit" [disabled]="getOptionScoreForm(option.id, criterion.id).invalid">
+            Save Score
+          </button>
+        </form>
+        }
+
+        <button type="button" (click)="openAttributeForm(option.id)">
+          Add Attribute
+        </button>
+      </article>
+    } @empty {
+      <p>No options yet.</p>
     }
-
-    @for (optionScore of optionScores()[option.id] ?? []; track optionScore.criterionId) {
-    <p>
-      Score: {{ optionScore.score }}
-      @if (optionScore.comment) {
-      — {{ optionScore.comment }}
-      }
-    </p>
-    }
-
-    @for (criterion of criteria(); track criterion.id) {
-    <p>{{ criterion.name }} (Importance: {{ criterion.importance }})</p>
-
-    <form [formGroup]="getOptionScoreForm(option.id, criterion.id)"
-      (ngSubmit)="onSaveOptionScore(option.id, criterion.id)">
-      <label>Score
-        <input type="number" formControlName="score" min="1" max="5" />
-      </label>
-      <label>
-        Comment
-        <input type="text" formControlName="comment" placeholder="Optional comment" />
-      </label>
-      <button type="submit" [disabled]="getOptionScoreForm(option.id, criterion.id).invalid">
-        Save Score
-      </button>
-    </form>
-    }
-
-    <button type="button" (click)="openAttributeForm(option.id)">
-      Add Attribute
-    </button>
-  </article>
-  } @empty {
-  <p>No options yet.</p>
   }
   @if (selectedOptionIdForAttribute()) {
   <section>

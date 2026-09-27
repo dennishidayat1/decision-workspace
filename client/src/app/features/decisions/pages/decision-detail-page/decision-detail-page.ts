@@ -22,6 +22,15 @@ type OptionSort =
   | { type: 'price-high' }
   | { type: 'criterion'; criterionId: string };
 
+type OptionGroup =
+  | { type: 'none' }
+  | { type: 'attribute'; attributeName: string };
+
+interface OptionGroupResult {
+  name: string;
+  options: DecisionOption[];
+}
+
 @Component({
   imports: [ReactiveFormsModule, DecimalPipe],
   selector: 'app-decision-detail-page',
@@ -47,19 +56,77 @@ export class DecisionDetailPage implements OnInit {
   readonly selectedOptionIdForAttribute = signal<string | null>(null);
   readonly optionScores = signal<Record<string, OptionScore[]>>({});
   readonly optionScoreForms = new Map<string, FormGroup>();
-  readonly optionSort = signal<OptionSort>({ type: 'best' });
   readonly isLoading = signal(true);
   readonly loadError = signal<string | null>(null);
   readonly optionSubmitError = signal<string | null>(null);
   readonly attributeSubmitError = signal<string | null>(null);
   readonly criterionSubmitError = signal<string | null>(null);
   readonly optionScoreSubmitError = signal<string | null>(null);
+  readonly optionSort = signal<OptionSort>({ type: 'best' });
   readonly optionSortValue = computed(() => {
     const sort = this.optionSort();
 
     return sort.type === 'criterion'
       ? sort.criterionId
       : sort.type;
+  });
+  readonly optionGroup = signal<OptionGroup>({ type: 'none' });
+  readonly optionGroupValue = computed(() => {
+    const group = this.optionGroup();
+
+    return group.type === 'attribute'
+      ? group.attributeName
+      : 'none';
+  });
+  readonly groupedDecisionOptions = computed<OptionGroupResult[]>(() => {
+    const options = this.sortedDecisionOptions();
+    const group = this.optionGroup();
+
+    if (group.type === 'none') {
+      return [
+        {
+          name: 'All',
+          options,
+        },
+      ];
+    }
+
+    const attributesByOption = this.optionAttributes();
+
+    const groups = new Map<string, DecisionOption[]>();
+    const otherOptions: DecisionOption[] = [];
+
+    for (const option of options) {
+      const attributes = attributesByOption[option.id] ?? [];
+
+      const groupingAttribute = attributes.find(
+        (attribute) => attribute.name === group.attributeName,
+      );
+
+      if (!groupingAttribute) {
+        otherOptions.push(option);
+        continue;
+      }
+
+      const groupName = groupingAttribute.value;
+      const existingOptions = groups.get(groupName) ?? [];
+
+      groups.set(groupName, [...existingOptions, option]);
+    }
+
+    const result = Array.from(groups, ([name, options]) => ({
+      name,
+      options,
+    }));
+
+    if (otherOptions.length > 0) {
+      result.push({
+        name: 'Other',
+        options: otherOptions,
+      });
+    }
+
+    return result;
   });
   readonly optionForm = new FormGroup({
     title: new FormControl('', {
@@ -79,6 +146,16 @@ export class DecisionDetailPage implements OnInit {
     currency: new FormControl('', {
       nonNullable: true,
     }),
+  });
+
+  readonly availableAttributeNames = computed(() => {
+    const attributesByOption = this.optionAttributes();
+
+    const names = Object.values(attributesByOption)
+      .flat()
+      .map((attribute) => attribute.name);
+
+    return [...new Set(names)];
   });
 
   readonly optionAttributesForm = new FormGroup({
@@ -607,6 +684,18 @@ export class DecisionDetailPage implements OnInit {
     this.optionSort.set({
       type: 'criterion',
       criterionId: value,
+    });
+  }
+
+  onOptionGroupChange(value: string): void {
+    if (value === 'none') {
+      this.optionGroup.set({ type: 'none' });
+      return;
+    }
+
+    this.optionGroup.set({
+      type: 'attribute',
+      attributeName: value,
     });
   }
 }
