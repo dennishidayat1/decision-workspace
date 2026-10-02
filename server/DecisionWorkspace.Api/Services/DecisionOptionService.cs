@@ -14,11 +14,34 @@ public class DecisionOptionService
         _dbContext = dbContext;
     }
 
-    public async Task<DecisionOption?> CreateAsync(Guid decisionId, CreateDecisionOptionRequest request)
+    public async Task<CreateDecisionOptionResult> CreateAsync(Guid decisionId, CreateDecisionOptionRequest request)
     {
         if (!await DecisionExistsAsync(decisionId))
         {
-            return null;
+            return new CreateDecisionOptionResult
+            {
+                Status = CreateDecisionOptionStatus.DecisionNotFound
+            };
+        }
+
+        var requestedCriterionIds = request.Scores
+            .Select(score => score.CriterionId)
+            .Distinct()
+            .ToList();
+
+        var validCriterionIds = await _dbContext.Criteria
+            .Where(criterion =>
+                criterion.DecisionId == decisionId &&
+                requestedCriterionIds.Contains(criterion.Id))
+            .Select(criterion => criterion.Id)
+            .ToListAsync();
+
+        if (validCriterionIds.Count != requestedCriterionIds.Count)
+        {
+            return new CreateDecisionOptionResult
+            {
+                Status = CreateDecisionOptionStatus.InvalidCriterion
+            };
         }
 
         var now = DateTimeOffset.UtcNow;
@@ -37,9 +60,42 @@ public class DecisionOptionService
         };
 
         _dbContext.DecisionOptions.Add(decisionOption);
+
+        var attributes = request.Attributes
+            .Select(attribute => new DecisionOptionAttribute
+            {
+                Id = Guid.NewGuid(),
+                DecisionOptionId = decisionOption.Id,
+                Name = attribute.Name,
+                Value = attribute.Value,
+                CreatedAt = now,
+                UpdatedAt = now,
+            }
+            );
+
+        _dbContext.DecisionOptionAttributes.AddRange(attributes);
+
+        var scores = request.Scores
+            .Select(score => new OptionScore
+            {
+                DecisionOptionId = decisionOption.Id,
+                CriterionId = score.CriterionId,
+                Score = score.Score,
+                Comment = score.Comment,
+                CreatedAt = now,
+                UpdatedAt = now,
+            }
+            );
+
+        _dbContext.OptionScores.AddRange(scores);
+
         await _dbContext.SaveChangesAsync();
 
-        return decisionOption;
+        return new CreateDecisionOptionResult
+        {
+            Status = CreateDecisionOptionStatus.Success,
+            Option = decisionOption
+        };
     }
 
     private async Task<bool> DecisionExistsAsync(Guid decisionId)
@@ -59,4 +115,18 @@ public class DecisionOptionService
             .Where(d => d.DecisionId == decisionId)
             .ToListAsync();
     }
+}
+
+public enum CreateDecisionOptionStatus
+{
+    Success,
+    DecisionNotFound,
+    InvalidCriterion,
+    DuplicateCriterion
+}
+
+public class CreateDecisionOptionResult
+{
+    public CreateDecisionOptionStatus Status { get; init; }
+    public DecisionOption? Option { get; init; }
 }

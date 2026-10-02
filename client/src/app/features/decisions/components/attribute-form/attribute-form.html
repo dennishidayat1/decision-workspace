@@ -1,0 +1,37 @@
+@for (
+  attribute of attributes().controls;
+  track attribute;
+  let i = $index
+) {
+  <div [formGroup]="attribute">
+    <ion-input
+      label="Attribute"
+      labelPlacement="stacked"
+      placeholder="e.g. Style"
+      formControlName="name"
+    />
+
+    <ion-input
+      label="Value"
+      labelPlacement="stacked"
+      placeholder="e.g. Baggy"
+      formControlName="value"
+    />
+
+    <ion-button
+      type="button"
+      fill="clear"
+      (click)="removeAttribute(i)"
+    >
+      Remove
+    </ion-button>
+  </div>
+}
+
+<ion-button
+  type="button"
+  fill="outline"
+  (click)="addAttribute()"
+>
+  + Add Attribute
+</ion-button>

@@ -1,0 +1,54 @@
+<ion-header>
+    <ion-toolbar>
+        <ion-title>Add Option</ion-title>
+    </ion-toolbar>
+</ion-header>
+
+<ion-content>
+
+    <form [formGroup]="optionForm" (ngSubmit)="onAddOption()">
+
+        <ion-list>
+
+            <ion-item>
+                <ion-input label="Title" labelPlacement="stacked" type="text" formControlName="title" />
+            </ion-item>
+
+            <ion-item>
+                <ion-input label="URL" labelPlacement="stacked" type="url" formControlName="url" />
+            </ion-item>
+
+            <ion-item>
+                <ion-input label="Thumbnail URL" labelPlacement="stacked" type="url" formControlName="thumbnailUrl" />
+            </ion-item>
+
+            <ion-item>
+                <ion-textarea label="Description" labelPlacement="stacked" formControlName="description"
+                    autoGrow="true" />
+            </ion-item>
+
+            <ion-item>
+                <ion-input label="Price" labelPlacement="stacked" type="number" formControlName="price" />
+            </ion-item>
+
+            <ion-item>
+                <ion-input label="Currency" labelPlacement="stacked" type="text" formControlName="currency" />
+            </ion-item>
+
+        </ion-list>
+
+        <ion-button type="submit">
+            Add Option
+        </ion-button>
+    </form>
+
+    <app-attribute-form
+        [attributes]="optionForm.controls.attributes"
+        [suggestedAttributeNames]="availableAttributeNames()"
+    />
+
+    <app-score-form
+        [criteria]="criteria()"
+        [scores]="optionForm.controls.scores"
+    />
+</ion-content>

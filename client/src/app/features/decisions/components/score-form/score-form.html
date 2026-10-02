@@ -1,0 +1,14 @@
+@for (
+  scoreGroup of scores().controls;
+  track scoreGroup.controls.criterionId.value
+) {
+  <div [formGroup]="scoreGroup">
+    <strong>
+      {{ getCriterionName(scoreGroup.controls.criterionId.value) }}
+    </strong>
+
+    <div>
+      Score: {{ scoreGroup.controls.score.value ?? 'Not rated' }}
+    </div>
+  </div>
+}

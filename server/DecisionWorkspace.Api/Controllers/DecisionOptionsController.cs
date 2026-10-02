@@ -18,16 +18,26 @@ public class DecisionOptionsController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateAsync(Guid decisionId, [FromBody] CreateDecisionOptionRequest request)
     {
-        var decisionOption = await _decisionOptionService.CreateAsync(decisionId, request);
+        var result = await _decisionOptionService.CreateAsync(decisionId, request);
 
-        if (decisionOption == null)
+        return result.Status switch
         {
-            return NotFound();
-        }
+            CreateDecisionOptionStatus.Success =>
+                Ok(result.Option),
 
-        return Ok(decisionOption);
+            CreateDecisionOptionStatus.DecisionNotFound =>
+                NotFound(),
+
+            CreateDecisionOptionStatus.InvalidCriterion =>
+                BadRequest("One or more criteria do not belong to this decision."),
+
+            CreateDecisionOptionStatus.DuplicateCriterion =>
+                BadRequest("Each criterion can only be scored once per option."),
+                
+            _ => StatusCode(500),
+        };
     }
-    
+
     [HttpGet]
     public async Task<IActionResult> GetByDecisionId(Guid decisionId)
     {

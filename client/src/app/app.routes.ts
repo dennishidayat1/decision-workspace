@@ -27,6 +27,13 @@ export const routes: Routes = [
             './features/decisions/pages/decision-detail-page/decision-detail-page'
           ).then((m) => m.DecisionDetailPage),
       },
+      {
+        path: 'decisions/:id/options/new',
+        loadComponent: () =>
+          import(
+            './features/decisions/pages/add-option-page/add-option-page'
+          ).then((m) => m.AddOptionPage)
+      }
     ],
   },
 ];

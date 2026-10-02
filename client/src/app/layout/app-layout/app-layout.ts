@@ -1,9 +1,9 @@
 import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { IonRouterOutlet } from '@ionic/angular';
 
 @Component({
   selector: 'app-layout',
-  imports: [RouterOutlet],
+  imports: [IonRouterOutlet],
   templateUrl: './app-layout.html',
   styleUrl: './app-layout.scss',
 })

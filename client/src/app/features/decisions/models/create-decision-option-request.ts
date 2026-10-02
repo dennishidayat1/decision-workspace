@@ -1,3 +1,6 @@
+import { CreateDecisionOptionAttributeRequest } from './create-decision-option-attribute-request'
+import { CreateOptionScoreRequest } from './create-option-score-request';
+
 export interface CreateDecisionOptionRequest {
   title: string;
   url?: string;
@@ -5,4 +8,7 @@ export interface CreateDecisionOptionRequest {
   description?: string;
   price?: number;
   currency?: string;
+
+  attributes: CreateDecisionOptionAttributeRequest[];
+  scores: CreateOptionScoreRequest[];
 }
