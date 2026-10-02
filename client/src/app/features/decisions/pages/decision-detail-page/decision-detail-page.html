@@ -1,204 +1,582 @@
-@if (isLoading()) {
-<p>Loading decision...</p>
-} @else if (loadError()) {
-<p>{{ loadError() }}</p>
-} @else if (decision(); as decision) {
-<section>
-  <h2>{{ decision.title }}</h2>
+<ion-header>
+  <ion-toolbar>
+    <ion-title>
+      <!-- @if (decision(); as decision) {
+        {{ decision.title }}
+      } @else {
+        Decision Workspace
+      } -->
+    </ion-title>
+  </ion-toolbar>
+</ion-header>
 
-  <p>{{ decision.question }}</p>
+<ion-content>
+  @if (isLoading()) {
 
-  @if (decision.category) {
-  <p>Category: {{ decision.category }}</p>
-  }
+    <ion-text>
+      <p>Loading decision...</p>
+    </ion-text>
 
-  @if (decision.context) {
+  } @else if (loadError()) {
 
-  <p>{{ decision.context }}</p>
-  }
+    <ion-text>
+      <p>{{ loadError() }}</p>
+    </ion-text>
 
-  @for (criterion of criteria(); track criterion.id) {
-  <p>Criterion: {{ criterion.name }}</p>
-  <p>Importance: {{ criterion.importance }}</p>
+  } @else if (decision(); as decision) {
 
-  @if (criterion.context) {
-  <p>Context: {{ criterion.context }}</p>
-  }
-  } @empty {
-  <p>No criteria yet.</p>
-  }
-  <form [formGroup]="criterionForm" (ngSubmit)="onAddCriterion()">
-    <label for="criterion-name">Name</label>
-    <input id="criterion-name" type="text" formControlName="name" placeholder="e.g. Fitment" />
-    <label for="criterion-importance">Importance</label>
-    <input id="criterion-importance" type="number" formControlName="importance" min="1" max="5" />
-    <label for="criterion-context">Context</label>
-    <textarea id="criterion-context" formControlName="context" placeholder="Why does this criterion matter?"></textarea>
-    <button type="submit" [disabled]="criterionForm.invalid">
-      Add Criterion
-    </button>
-  </form>
+    <section>
 
-  <h3>Options</h3>
+      <ion-grid class="decision-summary ion-no-padding">
+        <ion-row class="ion-align-items-start">
 
-  <form [formGroup]="optionForm" (ngSubmit)="onAddOption()">
-    <label>
-      Title
-      <input type="text" formControlName="title" />
-    </label>
-    <label>
-      URL
-      <input type="url" formControlName="url" />
-    </label>
+          <ion-col>
+            <div class="decision-meta">
 
-    <label>
-      Thumbnail URL
-      <input type="url" formControlName="thumbnailUrl" />
-    </label>
+              <ion-chip class="decision-category">
+                Shopping
+              </ion-chip>
 
-    <label>
-      Description
-      <textarea formControlName="description"></textarea>
-    </label>
+              <span class="decision-status">
+                In progress
+              </span>
 
-    <label>
-      Price
-      <input type="number" formControlName="price" />
-    </label>
+              <span class="decision-status-dot"></span>
 
-    <label>
-      Currency
-      <input type="text" formControlName="currency" />
-    </label>
+            </div>
 
-    <button type="submit">Add Option</button>
-  </form>
+            <h1 class="decision-title">
+              {{ decision?.title }}
+            </h1>
 
-  <label>
-    Group by
-    <select [value]="optionGroupValue()" (change)="onOptionGroupChange($any($event.target).value)">
-      <option value="none">None</option>
+            @if (decision?.context) {
+              <p class="decision-context">
+                {{ decision?.context }}
+              </p>
+            }
+          </ion-col>
 
-      @for (attributeName of availableAttributeNames(); track attributeName) {
-      <option [value]="attributeName">
-        {{ attributeName }}
-      </option>
-      }
-    </select>
-  </label>
 
-  <label>
-    Sort by
-    <select [value]="optionSortValue()" (change)="onOptionSortChange($any($event.target).value)">
-      <option value="best">Best</option>
-      <option value="price-low">Price: Low to High</option>
-      <option value="price-high">Price: High to Low</option>
+          <ion-col size="auto">
+            <ion-button
+              fill="clear"
+              size="small"
+              class="decision-actions-button"
+              aria-label="Decision actions"
+            >
+              …
+            </ion-button>
+          </ion-col>
 
-      @for (criterion of criteria(); track criterion.id) {
-      <option [value]="criterion.id">
-        {{ criterion.name }}
-      </option>
-      }
-    </select>
-  </label>
+        </ion-row>
+      </ion-grid>
 
-  @for (group of groupedDecisionOptions(); track group.name) {
-    @if (optionGroup().type === 'attribute') {
-      <h4>{{ group.name }}</h4>
-    }
 
-    @for (option of group.options; track option.id) {
-      <article>
-        <h4>{{ option.title }}</h4>
+      <!-- CRITERIA -->
 
-        @if (getWeightedScore(option.id); as weightedScore) {
-        <p>Overall score: {{ weightedScore | number:'1.1-2' }}</p>
-        } @else {
-        <p>Not rated yet</p>
-        }
+      <!-- <h3>Criteria</h3>
 
-        <p>{{ option.description }}</p>
-        @if (option.url) {
-        <p>
-          <a [href]="option.url" target="_blank">View Option</a>
-        </p>
-        }
-
-        @if (option.thumbnailUrl) {
-        <img [src]="option.thumbnailUrl" [alt]="option.title" />
-        }
-        @if (option.price !== undefined && option.currency) {
-        <p>Price: {{ option.price }} {{ option.currency }}</p>
-        }
-
-        @for (optionAttribute of optionAttributes()[option.id] ?? []; track optionAttribute.id) {
-        <p>{{ optionAttribute.name }}: {{ optionAttribute.value }}</p>
-        }
-
-        @for (optionScore of optionScores()[option.id] ?? []; track optionScore.criterionId) {
-        <p>
-          Score: {{ optionScore.score }}
-          @if (optionScore.comment) {
-          — {{ optionScore.comment }}
-          }
-        </p>
-        }
-
+      <ion-list>
         @for (criterion of criteria(); track criterion.id) {
-        <p>{{ criterion.name }} (Importance: {{ criterion.importance }})</p>
 
-        <form [formGroup]="getOptionScoreForm(option.id, criterion.id)"
-          (ngSubmit)="onSaveOptionScore(option.id, criterion.id)">
-          <label>Score
-            <input type="number" formControlName="score" min="1" max="5" />
-          </label>
-          <label>
-            Comment
-            <input type="text" formControlName="comment" placeholder="Optional comment" />
-          </label>
-          <button type="submit" [disabled]="getOptionScoreForm(option.id, criterion.id).invalid">
-            Save Score
-          </button>
+          <ion-item>
+            <ion-label>
+              <h3>{{ criterion.name }}</h3>
+
+              <p>
+                Importance: {{ criterion.importance }}/5
+              </p>
+
+              @if (criterion.context) {
+                <p>{{ criterion.context }}</p>
+              }
+            </ion-label>
+          </ion-item>
+
+        } @empty {
+
+          <ion-item>
+            <ion-label>
+              No criteria yet.
+            </ion-label>
+          </ion-item>
+
+        }
+      </ion-list> -->
+
+
+      <!-- ADD CRITERION -->
+
+      <!-- <ion-button
+        type="button"
+        fill="outline"
+        (click)="isCriterionFormOpen.set(!isCriterionFormOpen())"
+      >
+        {{ isCriterionFormOpen() ? 'Cancel' : 'Add Criterion' }}
+      </ion-button>
+
+      @if (isCriterionFormOpen()) {
+        <form
+          [formGroup]="criterionForm"
+          (ngSubmit)="onAddCriterion()"
+        >
+          
+          <ion-list>
+
+            <ion-item>
+              <ion-input
+                label="Name"
+                labelPlacement="stacked"
+                type="text"
+                formControlName="name"
+                placeholder="e.g. Fitment"
+              />
+            </ion-item>
+
+            <ion-item>
+              <ion-input
+                label="Importance"
+                labelPlacement="stacked"
+                type="number"
+                formControlName="importance"
+                min="1"
+                max="5"
+              />
+            </ion-item>
+
+            <ion-item>
+              <ion-textarea
+                label="Context"
+                labelPlacement="stacked"
+                formControlName="context"
+                placeholder="Why does this criterion matter?"
+                autoGrow="true"
+              />
+            </ion-item>
+
+          </ion-list>
+
+          <ion-button
+            type="submit"
+            [disabled]="criterionForm.invalid"
+          >
+            Add Criterion
+          </ion-button>
         </form>
+      } -->
+
+      <section class="criteria-summary">
+
+        <ion-grid class="ion-no-padding">
+          <ion-row class="ion-align-items-center ion-justify-content-between">
+
+            <ion-col size="auto">
+              <div class="criteria-heading">
+                <span>What matters to you</span>
+                <span class="criteria-hint">
+                  · importance 1–5
+                </span>
+              </div>
+            </ion-col>
+
+            <ion-col size="auto">
+              <ion-button
+                fill="clear"
+                size="small"
+                class="edit-criteria-button"
+              >
+                Edit criteria
+              </ion-button>
+            </ion-col>
+
+          </ion-row>
+        </ion-grid>
+
+
+        <div class="criteria-chips">
+          @for (criterion of criteria(); track criterion.id) {
+
+            <ion-chip class="criterion-chip">
+              <span>{{ criterion.name }}</span>
+
+              <span class="criterion-importance">
+                {{ criterion.importance }}
+              </span>
+            </ion-chip>
+
+          }
+        </div>
+
+      </section>
+
+
+      <!-- OPTIONS -->
+
+      <!-- <h3>Options</h3> -->
+
+
+      <!-- ADD OPTION -->
+
+      <!-- <ion-button
+        type="button"
+        [routerLink]="['/decisions', decisionId, 'options', 'new']"
+      >
+        Add Option
+      </ion-button> -->
+
+      <ion-grid class="options-header ion-no-padding">
+        <ion-row class="ion-align-items-center ion-justify-content-between">
+
+          <ion-col size="auto">
+            <div class="options-heading">
+              <h2>Your options</h2>
+
+              <span class="options-count">
+                {{ decisionOptions().length }}
+              </span>
+            </div>
+          </ion-col>
+
+          <ion-col size="auto">
+            <ion-button
+              type="button"
+              size="small"
+              class="compare-options-button"
+              [disabled]="decisionOptions().length < 2"
+            >
+              Compare options
+            </ion-button>
+          </ion-col>
+
+        </ion-row>
+      </ion-grid>
+
+
+      <!-- GROUP + SORT + VIEW -->
+
+      <div class="option-toolbar">
+
+        <div class="toolbar-control">
+          <span class="toolbar-control-label">
+            Group:
+          </span>
+
+          <ion-select
+            class="toolbar-select"
+            aria-label="Group options"
+            interface="popover"
+            [value]="optionGroupValue()"
+            (ionChange)="onOptionGroupChange($event.detail.value)"
+          >
+            <ion-select-option value="none">
+              None
+            </ion-select-option>
+
+            @for (
+              attributeName of availableAttributeNames();
+              track attributeName
+            ) {
+              <ion-select-option [value]="attributeName">
+                {{ attributeName }}
+              </ion-select-option>
+            }
+          </ion-select>
+        </div>
+
+
+        <div class="toolbar-control">
+          <span class="toolbar-control-label">
+            Sort:
+          </span>
+
+          <ion-select
+            class="toolbar-select"
+            aria-label="Sort options"
+            interface="popover"
+            [value]="optionSortValue()"
+            (ionChange)="onOptionSortChange($event.detail.value)"
+          >
+            <ion-select-option value="best">
+              Best
+            </ion-select-option>
+
+            <ion-select-option value="price-low">
+              Price: Low to High
+            </ion-select-option>
+
+            <ion-select-option value="price-high">
+              Price: High to Low
+            </ion-select-option>
+
+            @for (criterion of criteria(); track criterion.id) {
+              <ion-select-option [value]="criterion.id">
+                {{ criterion.name }}
+              </ion-select-option>
+            }
+          </ion-select>
+        </div>
+
+
+        <ion-segment
+          class="view-segment"
+          [value]="optionView()"
+          (ionChange)="onOptionViewChange($event.detail.value)"
+        >
+          <ion-segment-button
+            value="list"
+            aria-label="Detailed list view"
+          >
+            <ion-icon name="list-outline" />
+          </ion-segment-button>
+
+          <ion-segment-button
+            value="grid"
+            aria-label="Compact grid view"
+          >
+            <ion-icon name="grid-outline" />
+          </ion-segment-button>
+        </ion-segment>
+
+      </div>
+
+
+      <!-- GROUPED OPTIONS -->
+
+      @for (group of groupedDecisionOptions(); track group.name) {
+
+        @if (optionGroup().type === 'attribute') {
+          <h3>{{ group.name }}</h3>
         }
 
-        <button type="button" (click)="openAttributeForm(option.id)">
-          Add Attribute
-        </button>
-      </article>
-    } @empty {
-      <p>No options yet.</p>
-    }
-  }
-  @if (selectedOptionIdForAttribute()) {
-  <section>
-    <h3>Add Attribute</h3>
+        <div
+          class="option-cards"
+          [class.option-cards--grid]="optionView() === 'grid'"
+          [class.option-cards--list]="optionView() === 'list'"
+        >
 
-    <form [formGroup]="optionAttributesForm" (ngSubmit)="onAddAttribute()">
-      <label>
-        Attribute
-        <input type="text" formControlName="name" />
-      </label>
+          @for (option of group.options; track option.id) {
 
-      <label>
-        Value
-        <input type="text" formControlName="value" />
-      </label>
+            @if (optionView() === 'grid') {
 
-      <button type="button" (click)="closeAttributeForm()">
-        Cancel
-      </button>
-      <button type="submit" [disabled]="optionAttributesForm.invalid">
-        Add
-      </button>
-    </form>
-    @if (attributeSubmitError()) {
-    <p>{{ attributeSubmitError() }}</p>
-    }
-  </section>
+              <!-- COMPACT GRID CARD -->
+              <ion-card class="option-card option-card--compact">
+
+                <div class="compact-image">
+
+                  @if (option.thumbnailUrl) {
+                    <img
+                      [src]="option.thumbnailUrl"
+                      [alt]="option.title"
+                      loading="lazy"
+                    />
+                  } @else {
+                    <div class="compact-image-placeholder">
+                      No image
+                    </div>
+                  }
+
+                </div>
+
+                <ion-card-header>
+
+                  <ion-card-title>
+                    {{ option.title }}
+                  </ion-card-title>
+
+                  @if (
+                    option.price !== undefined &&
+                    option.currency
+                  ) {
+                    <ion-text class="compact-price">
+                      {{ option.price }} {{ option.currency }}
+                    </ion-text>
+                  }
+
+                </ion-card-header>
+
+                <ion-card-content>
+
+                  <!-- ATTRIBUTES -->
+                  <div class="compact-attributes">
+                    @for (
+                      attribute of
+                        (optionAttributes()[option.id] ?? []).slice(0, 3);
+                      track attribute.id
+                    ) {
+                      <ion-chip>
+                        {{ attribute.value }}
+                      </ion-chip>
+                    }
+                  </div>
+
+                  <!-- OVERALL SCORE -->
+                  <div class="compact-overall-score">
+                    <span>Overall score</span>
+
+                    @if (getWeightedScore(option.id); as weightedScore) {
+                      <span class="compact-score-badge">
+                        {{ weightedScore | number:'1.1-2' }}
+                      </span>
+                    } @else {
+                      <ion-note>Not rated</ion-note>
+                    }
+                  </div>
+
+                  <!-- IMPORTANT CRITERION SCORES -->
+                  <div class="compact-scores">
+
+                    @for (
+                      optionScore of getCompactOptionScores(option.id);
+                      track optionScore.criterionId
+                    ) {
+                      <ion-chip>
+
+                        {{ getCriterionName(optionScore.criterionId) }}
+
+                        <strong>
+                          ★{{ optionScore.score }}
+                        </strong>
+
+                      </ion-chip>
+                    }
+
+                  </div>
+
+                </ion-card-content>
+
+              </ion-card>
+
+            } @else {
+
+              <!-- DETAILED LIST CARD -->
+
+              <ion-card class="option-card option-card--detailed">
+
+                <ion-card-content>
+
+                  <!-- MAIN SUMMARY -->
+                  <div class="detailed-option-main">
+
+                    <div class="detailed-thumbnail">
+                      @if (option.thumbnailUrl) {
+                        <img
+                          [src]="option.thumbnailUrl"
+                          [alt]="option.title"
+                          loading="lazy"
+                        />
+                      } @else {
+                        <div class="detailed-thumbnail-placeholder">
+                          No image
+                        </div>
+                      }
+                    </div>
+
+                    <div class="detailed-option-info">
+
+                      <h2 class="detailed-option-title">
+                        {{ option.title }}
+                      </h2>
+
+                      @if (
+                        option.price !== undefined &&
+                        option.currency
+                      ) {
+                        <div class="detailed-option-price">
+                          {{ option.price }} {{ option.currency }}
+                        </div>
+                      }
+
+                    </div>
+
+                    <div class="detailed-option-score">
+                      @if (
+                        getWeightedScore(option.id);
+                        as weightedScore
+                      ) {
+                        <strong>
+                          {{ weightedScore | number:'1.1-2' }}
+                        </strong>
+                        <span>Overall score</span>
+                      } @else {
+                        <strong>—</strong>
+                        <span>Not rated</span>
+                      }
+                    </div>
+
+                  </div>
+
+
+                  <!-- ATTRIBUTES -->
+                  <div class="detailed-option-attributes">
+                    @for (
+                      attribute of optionAttributes()[option.id] ?? [];
+                      track attribute.id
+                    ) {
+                      <ion-chip>
+                        {{ attribute.value }}
+                      </ion-chip>
+                    }
+                  </div>
+
+                  <div class="detailed-option-scores">
+                    @for (
+                      optionScore of optionScores()[option.id] ?? [];
+                      track optionScore.criterionId
+                    ) {
+                      <span class="detailed-score">
+                        <span>
+                          {{ getCriterionName(optionScore.criterionId) }}
+                        </span>
+
+                        <strong>
+                          ★{{ optionScore.score }}
+                        </strong>
+                      </span>
+                    }
+                  </div>
+
+                  @if (option.description) {
+                    <p class="detailed-option-description">
+                      {{ option.description }}
+                    </p>
+                  }
+
+                </ion-card-content>
+
+              </ion-card>
+
+            }
+
+          } @empty {
+
+            <ion-text>
+              <p>
+                No options yet.
+              </p>
+            </ion-text>
+
+          }
+
+        </div>
+
+      }
+
+    </section>
   }
-  @if (optionSubmitError()) {
-  <p>{{ optionSubmitError() }}</p>
-  }
-</section>
-}
+
+  <ion-fab
+    vertical="bottom"
+    horizontal="end"
+    slot="fixed"
+    class="add-option-fab"
+  >
+    <ion-fab-button
+      class="add-option-fab-button"
+      [routerLink]="['/decisions', decisionId, 'options', 'new']"
+    >
+      <ion-icon name="add-outline" />
+      <span>Add option</span>
+    </ion-fab-button>
+  </ion-fab>
+
+</ion-content>

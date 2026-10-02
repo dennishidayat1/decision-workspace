@@ -1,20 +1,57 @@
-import { Component, OnInit, signal } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
-import { inject } from '@angular/core';
+import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
 import { DecisionApi } from '../../services/decision-api';
 import { Decision } from '../../models/decision';
 import { finalize } from 'rxjs';
 import { DecisionOption } from '../../models/decision-option';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { CreateDecisionOptionRequest } from '../../models/create-decision-option-request';
-import { DecisionOptionAttribute } from '../../models/decision-option-attribute';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators, FormArray } from '@angular/forms';
 import { CreateDecisionOptionAttributeRequest } from '../../models/create-decision-option-attribute-request';
-import { Criterion } from '../../models/criterion';
 import { CreateCriterionRequest } from '../../models/create-criterion-request';
-import { OptionScore } from '../../models/option-score';
 import { CreateOptionScoreRequest } from '../../models/create-option-score-request';
-import { computed } from '@angular/core';
+import { DecisionState } from '../../state/decision-state';
+import {
+  IonButton,
+  IonCard,
+  IonCardContent,
+  IonCardHeader,
+  IonCardTitle,
+  IonChip,
+  IonContent,
+  IonHeader,
+  // IonInput,
+  // IonItem,
+  // IonLabel,
+  // IonList,
+  IonNote,
+  IonSelect,
+  IonSelectOption,
+  IonText,
+  // IonTextarea,
+  IonTitle,
+  IonToolbar,
+  IonSegment,
+  IonSegmentButton,
+  IonGrid,
+  IonRow,
+  IonCol,
+  IonFab,
+  IonFabButton,
+} from '@ionic/angular';
+
+import { IonIcon } from '@ionic/angular';
+import { addIcons } from 'ionicons';
+import {
+  addOutline,
+  gridOutline,
+  listOutline,
+} from 'ionicons/icons';
+
+addIcons({
+  addOutline,
+  gridOutline,
+  listOutline,
+});
 
 type OptionSort =
   | { type: 'best' }
@@ -31,8 +68,41 @@ interface OptionGroupResult {
   options: DecisionOption[];
 }
 
+type OptionView = 'list' | 'grid';
+
 @Component({
-  imports: [ReactiveFormsModule, DecimalPipe],
+  imports: [
+    ReactiveFormsModule,
+    DecimalPipe,
+    RouterLink,
+    IonButton,
+    IonCard,
+    IonCardContent,
+    IonCardHeader,
+    IonCardTitle,
+    IonChip,
+    IonContent,
+    IonHeader,
+    // IonInput,
+    // IonItem,
+    // IonLabel,
+    // IonList,
+    IonNote,
+    IonSelect,
+    IonSelectOption,
+    IonText,
+    // IonTextarea,
+    IonTitle,
+    IonToolbar,
+    IonSegment,
+    IonSegmentButton,
+    IonIcon,
+    IonGrid,
+    IonRow,
+    IonCol,
+    IonFab,
+    IonFabButton,
+  ],
   selector: 'app-decision-detail-page',
   styleUrl: './decision-detail-page.scss',
   templateUrl: './decision-detail-page.html',
@@ -41,28 +111,35 @@ interface OptionGroupResult {
 export class DecisionDetailPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly decisionApi = inject(DecisionApi);
+  private readonly decisionState = inject(DecisionState);
 
   ngOnInit(): void {
     this.loadDecision();
-    this.loadDecisionOptions();
-    this.loadCriteria();
+  }
+
+  ionViewWillEnter(): void {
+    if (this.decisionId) {
+      this.decisionState.ensureDecisionLoaded(this.decisionId);
+    }
   }
 
   readonly decisionId = this.route.snapshot.paramMap.get('id');
   readonly decision = signal<Decision | null>(null);
-  readonly decisionOptions = signal<DecisionOption[]>([]);
-  readonly optionAttributes = signal<Record<string, DecisionOptionAttribute[]>>({});
-  readonly criteria = signal<Criterion[] | []>([]);
+  readonly decisionOptions = this.decisionState.options;
+  readonly optionAttributes = this.decisionState.optionAttributes;
+  readonly criteria = this.decisionState.criteria;
   readonly selectedOptionIdForAttribute = signal<string | null>(null);
-  readonly optionScores = signal<Record<string, OptionScore[]>>({});
+  readonly optionScores = this.decisionState.optionScores;
   readonly optionScoreForms = new Map<string, FormGroup>();
+  readonly isCriterionFormOpen = signal(false);
+  readonly selectedOptionIdForScoring = signal<string | null>(null);
   readonly isLoading = signal(true);
   readonly loadError = signal<string | null>(null);
-  readonly optionSubmitError = signal<string | null>(null);
   readonly attributeSubmitError = signal<string | null>(null);
   readonly criterionSubmitError = signal<string | null>(null);
   readonly optionScoreSubmitError = signal<string | null>(null);
   readonly optionSort = signal<OptionSort>({ type: 'best' });
+  readonly optionView = signal<OptionView>('grid');
   readonly optionSortValue = computed(() => {
     const sort = this.optionSort();
 
@@ -128,35 +205,34 @@ export class DecisionDetailPage implements OnInit {
 
     return result;
   });
-  readonly optionForm = new FormGroup({
-    title: new FormControl('', {
-      nonNullable: true,
-      validators: [Validators.required],
-    }),
-    url: new FormControl('', {
-      nonNullable: true,
-    }),
-    thumbnailUrl: new FormControl('', {
-      nonNullable: true,
-    }),
-    description: new FormControl('', {
-      nonNullable: true,
-    }),
-    price: new FormControl<number | null>(null),
-    currency: new FormControl('', {
-      nonNullable: true,
-    }),
-  });
+  // readonly optionForm = new FormGroup({
+  //   title: new FormControl('', {
+  //     nonNullable: true,
+  //     validators: [Validators.required],
+  //   }),
+  //   url: new FormControl('', {
+  //     nonNullable: true,
+  //   }),
+  //   thumbnailUrl: new FormControl('', {
+  //     nonNullable: true,
+  //   }),
+  //   description: new FormControl('', {
+  //     nonNullable: true,
+  //   }),
+  //   price: new FormControl<number | null>(null),
+  //   currency: new FormControl('', {
+  //     nonNullable: true,
+  //   }),
 
-  readonly availableAttributeNames = computed(() => {
-    const attributesByOption = this.optionAttributes();
+  //   attributes: new FormArray<
+  //     FormGroup<{
+  //       name: FormControl<string>;
+  //       value: FormControl<string>;
+  //     }>
+  //   >([]),
+  // });
 
-    const names = Object.values(attributesByOption)
-      .flat()
-      .map((attribute) => attribute.name);
-
-    return [...new Set(names)];
-  });
+  readonly availableAttributeNames = this.decisionState.availableAttributeNames;
 
   readonly optionAttributesForm = new FormGroup({
     name: new FormControl('', {
@@ -321,82 +397,7 @@ export class DecisionDetailPage implements OnInit {
       return;
     }
 
-    this.decisionApi.getDecisionOptions(this.decisionId).subscribe({
-      next: (options) => {
-        this.decisionOptions.set(options);
-        options.forEach((option) => {
-          this.loadOptionAttributes(option.id);
-          this.loadOptionScores(option.id)
-        });
-      },
-      error: (error) => {
-        console.error('Failed to load decision options:', error);
-        this.loadError.set('Failed to load decision options. Please try again later.');
-      },
-    });
-  }
-
-  onAddOption(): void {
-    if (!this.decisionId) {
-      console.error('Decision ID is not available in the route parameters.');
-      this.loadError.set('Decision ID is missing.');
-      return;
-    }
-
-    if (this.optionForm.invalid) {
-      console.error('Option form is invalid:', this.optionForm.errors);
-      this.optionSubmitError.set(
-        'Please fill in all required fields for the option.',
-      );
-      return;
-    }
-
-    this.optionSubmitError.set(null);
-
-    const request: CreateDecisionOptionRequest = {
-      title: this.optionForm.value.title!,
-      description: this.optionForm.value.description || undefined,
-      url: this.optionForm.value.url || undefined,
-      thumbnailUrl: this.optionForm.value.thumbnailUrl || undefined,
-      price: this.optionForm.value.price ?? undefined,
-      currency: this.optionForm.value.currency || undefined,
-    };
-
-    this.decisionApi.createDecisionOption(this.decisionId, request).subscribe({
-      next: (createdOption) => {
-        this.decisionOptions.update((options) => [...options, createdOption]);
-        this.optionForm.reset();
-      },
-      error: (error) => {
-        console.error('Failed to create decision option:', error);
-        this.optionSubmitError.set(
-          'Failed to create decision option. Please try again later.',
-        );
-      },
-    });
-  }
-
-  private loadOptionAttributes(decisionOptionId: string): void {
-    if (!this.decisionId) {
-      console.error('Decision ID is not available in the route parameters.');
-      this.loadError.set('Decision ID is missing.');
-      return;
-    }
-
-    this.decisionApi.getDecisionOptionAttributes(this.decisionId, decisionOptionId).subscribe({
-      next: (attributes) => {
-        this.optionAttributes.update((currentAttributes) => ({
-          ...currentAttributes,
-          [decisionOptionId]: attributes,
-        }));
-      },
-      error: (error) => {
-        console.error(`Failed to load attributes for option ${decisionOptionId}:`, error);
-        this.loadError.set(
-          `Failed to load attributes for option ${decisionOptionId}. Please try again later.`,
-        );
-      },
-    });
+    this.decisionState.ensureDecisionLoaded(this.decisionId);
   }
 
   openAttributeForm(decisionOptionId: string): void {
@@ -449,24 +450,6 @@ export class DecisionDetailPage implements OnInit {
     });
   }
 
-  private loadCriteria(): void {
-    if (!this.decisionId) {
-      console.error('Decision ID is not available in the route parameters.');
-      this.loadError.set('Decision ID is missing.');
-      return;
-    }
-
-    this.decisionApi.getCriteria(this.decisionId).subscribe({
-      next: (criteria) => {
-        this.criteria.set(criteria);
-      },
-      error: (error) => {
-        console.error('Failed to load criteria:', error);
-        this.loadError.set('Failed to load criteria. Please try again later.');
-      },
-    });
-  }
-
   onAddCriterion(): void {
     if (!this.decisionId) {
       console.error('Decision ID is not available in the route parameters.');
@@ -508,28 +491,6 @@ export class DecisionDetailPage implements OnInit {
           'Failed to create criterion. Please try again later.',
         );
       },
-    });
-  }
-
-  private loadOptionScores(decisionOptionId: string): void {
-    if (!decisionOptionId) {
-      this.loadError.set('Decision Option Id is empty')
-      console.log('Decision Option Id is empty')
-      return
-    }
-
-    this.decisionApi.getOptionScores(decisionOptionId).subscribe({
-      next: (newOptionScore) => {
-        this.optionScores.update((currentOptionScore) => (
-          { ...currentOptionScore, [decisionOptionId]: newOptionScore })
-        );
-      },
-      error: (error) => {
-        console.error('Failed to load option score:', error);
-        this.loadError.set(
-          'Failed to load option score. Please try again later.',
-        );
-      }
     });
   }
 
@@ -697,5 +658,45 @@ export class DecisionDetailPage implements OnInit {
       type: 'attribute',
       attributeName: value,
     });
+  }
+
+  toggleScoreEditor(optionId: string): void {
+    this.selectedOptionIdForScoring.update((currentId) =>
+      currentId === optionId ? null : optionId
+    );
+  }
+
+  getCriterionName(criterionId: string): string {
+    return this.criteria().find(
+      (criterion) => criterion.id === criterionId
+    )?.name ?? 'Unknown';
+  }
+
+  setOptionView(view: OptionView): void {
+    this.optionView.set(view);
+  }
+
+  onOptionViewChange(value: string | number | undefined): void {
+    if (value === 'list' || value === 'grid') {
+      this.setOptionView(value);
+    }
+  }
+
+  getCompactOptionScores(optionId: string) {
+    return [...(this.optionScores()[optionId] ?? [])]
+      .sort((a, b) => {
+        const aImportance =
+          this.criteria().find(
+            criterion => criterion.id === a.criterionId
+          )?.importance ?? 0;
+
+        const bImportance =
+          this.criteria().find(
+            criterion => criterion.id === b.criterionId
+          )?.importance ?? 0;
+
+        return bImportance - aImportance;
+      })
+      .slice(0, 2);
   }
 }
