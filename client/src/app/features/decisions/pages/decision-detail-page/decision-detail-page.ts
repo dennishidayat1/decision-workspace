@@ -18,23 +18,11 @@ import {
   IonCardTitle,
   IonChip,
   IonContent,
-  IonHeader,
-  // IonInput,
-  // IonItem,
-  // IonLabel,
-  // IonList,
-  IonNote,
   IonSelect,
   IonSelectOption,
   IonText,
-  // IonTextarea,
-  IonTitle,
-  IonToolbar,
   IonSegment,
   IonSegmentButton,
-  IonGrid,
-  IonRow,
-  IonCol,
   IonFab,
   IonFabButton,
 } from '@ionic/angular';
@@ -43,14 +31,32 @@ import { IonIcon } from '@ionic/angular';
 import { addIcons } from 'ionicons';
 import {
   addOutline,
+  arrowBackOutline,
+  bagHandleOutline,
+  chevronForwardOutline,
+  ellipsisHorizontal,
+  gitCompareOutline,
   gridOutline,
+  layersOutline,
   listOutline,
+  optionsOutline,
+  star,
+  swapVerticalOutline,
 } from 'ionicons/icons';
 
 addIcons({
   addOutline,
+  arrowBackOutline,
+  bagHandleOutline,
+  chevronForwardOutline,
+  ellipsisHorizontal,
+  gitCompareOutline,
   gridOutline,
+  layersOutline,
   listOutline,
+  optionsOutline,
+  star,
+  swapVerticalOutline,
 });
 
 type OptionSort =
@@ -82,24 +88,12 @@ type OptionView = 'list' | 'grid';
     IonCardTitle,
     IonChip,
     IonContent,
-    IonHeader,
-    // IonInput,
-    // IonItem,
-    // IonLabel,
-    // IonList,
-    IonNote,
     IonSelect,
     IonSelectOption,
     IonText,
-    // IonTextarea,
-    IonTitle,
-    IonToolbar,
     IonSegment,
     IonSegmentButton,
     IonIcon,
-    IonGrid,
-    IonRow,
-    IonCol,
     IonFab,
     IonFabButton,
   ],
@@ -389,6 +383,22 @@ export class DecisionDetailPage implements OnInit {
         },
       });
   }
+
+  readonly bestOptionId = computed(() => {
+    let bestId: string | null = null;
+    let bestScore = -Infinity;
+
+    for (const option of this.decisionOptions()) {
+      const score = this.getWeightedScore(option.id);
+
+      if (score !== null && score > bestScore) {
+        bestScore = score;
+        bestId = option.id;
+      }
+    }
+
+    return bestId;
+  });
 
   private loadDecisionOptions(): void {
     if (!this.decisionId) {
