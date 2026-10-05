@@ -1,0 +1,200 @@
+:host {
+  display: block;
+}
+
+.attribute-list {
+  margin: 0;
+}
+
+
+/* -----------------------------------------
+   ATTRIBUTE ROW
+----------------------------------------- */
+
+.attribute-row {
+  flex-wrap: nowrap;
+
+  margin-bottom: 8px;
+  gap: 8px;
+}
+
+.attribute-row:last-of-type {
+  margin-bottom: 0;
+}
+
+.attribute-name-col,
+.attribute-value-col,
+.attribute-remove-col {
+  padding: 0;
+}
+
+
+/* Figma: name field ≈ 35% */
+.attribute-name-col {
+  flex: 0 1 35%;
+
+  width: 35%;
+  max-width: 35%;
+  min-width: 0;
+}
+
+
+/* Figma: value fills remaining width */
+.attribute-value-col {
+  flex: 1 1 auto;
+
+  width: auto;
+  max-width: none;
+  min-width: 0;
+}
+
+
+/* -----------------------------------------
+   INPUTS
+----------------------------------------- */
+
+.attribute-row ion-input {
+  min-height: 40px;
+
+  --background: #ffffff;
+
+  --border-color: #e1e7e3;
+  --border-radius: 8px;
+  --border-width: 1px;
+
+  --highlight-color-focused: #247657;
+
+  --padding-start: 12px;
+  --padding-end: 12px;
+
+  --color: #24352e;
+
+  --placeholder-color: #6b7770;
+  --placeholder-opacity: 0.65;
+
+  font-family: "Inter", sans-serif;
+  font-size: 14px;
+}
+
+
+/* Figma distinguishes the attribute-name field */
+.attribute-name-col ion-input {
+  --background: rgba(242, 245, 243, 0.6);
+}
+
+
+/* -----------------------------------------
+   REMOVE BUTTON
+----------------------------------------- */
+
+.attribute-remove-col {
+  flex: 0 0 36px;
+
+  width: 36px;
+}
+
+.attribute-remove {
+  width: 36px;
+  height: 36px;
+  min-height: 36px;
+
+  margin: 0;
+
+  --padding-start: 0;
+  --padding-end: 0;
+
+  --background: transparent;
+  --background-hover: #fff1f1;
+  --background-activated: #fff1f1;
+
+  --color: #6b7770;
+
+  --border-radius: 6px;
+
+  --box-shadow: none;
+}
+
+.attribute-remove:hover {
+  --color: #b42318;
+}
+
+.attribute-remove ion-icon {
+  font-size: 15px;
+}
+
+
+/* -----------------------------------------
+   ADD CUSTOM ATTRIBUTE
+----------------------------------------- */
+
+.attribute-add-col {
+  padding: 0;
+}
+
+.attribute-add {
+  min-height: 32px;
+
+  margin: 0;
+
+  --padding-start: 0;
+  --padding-end: 0;
+
+  --background: transparent;
+  --background-hover: transparent;
+  --background-activated: transparent;
+
+  --color: #247657;
+
+  --box-shadow: none;
+
+  font-family: "Inter", sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+
+  text-transform: none;
+}
+
+.attribute-add ion-icon {
+  margin-right: 6px;
+
+  font-size: 14px;
+}
+
+
+/* -----------------------------------------
+   MOBILE
+----------------------------------------- */
+
+@media (max-width: 380px) {
+  .attribute-row {
+    gap: 6px;
+  }
+
+  .attribute-name-col {
+    flex-basis: 36%;
+
+    width: 36%;
+    max-width: 36%;
+  }
+
+  .attribute-row ion-input {
+    min-height: 40px;
+
+    --padding-start: 10px;
+    --padding-end: 10px;
+
+    font-size: 13px;
+  }
+
+  .attribute-remove-col {
+    flex-basis: 30px;
+
+    width: 30px;
+  }
+
+  .attribute-remove {
+    width: 30px;
+    height: 36px;
+    min-height: 36px;
+  }
+}

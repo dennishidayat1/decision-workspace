@@ -1,37 +1,75 @@
-@for (
-  attribute of attributes().controls;
-  track attribute;
-  let i = $index
-) {
-  <div [formGroup]="attribute">
-    <ion-input
-      label="Attribute"
-      labelPlacement="stacked"
-      placeholder="e.g. Style"
-      formControlName="name"
-    />
+<ion-grid class="attribute-list ion-no-padding">
 
-    <ion-input
-      label="Value"
-      labelPlacement="stacked"
-      placeholder="e.g. Baggy"
-      formControlName="value"
-    />
-
-    <ion-button
-      type="button"
-      fill="clear"
-      (click)="removeAttribute(i)"
+  @for (
+    attribute of attributes().controls;
+    track attribute;
+    let i = $index
+  ) {
+    <ion-row
+      class="attribute-row ion-align-items-center"
+      [formGroup]="attribute"
     >
-      Remove
-    </ion-button>
-  </div>
-}
 
-<ion-button
-  type="button"
-  fill="outline"
-  (click)="addAttribute()"
->
-  + Add Attribute
-</ion-button>
+      <ion-col class="attribute-name-col">
+        <ion-input
+          fill="outline"
+          placeholder="Name"
+          aria-label="Attribute name"
+          formControlName="name"
+        />
+      </ion-col>
+
+      <ion-col class="attribute-value-col">
+        <ion-input
+          fill="outline"
+          placeholder="Add a value"
+          [attr.aria-label]="
+            (attribute.controls.name.value || 'Attribute') + ' value'
+          "
+          formControlName="value"
+        />
+      </ion-col>
+
+      <ion-col
+        size="auto"
+        class="attribute-remove-col"
+      >
+        <ion-button
+          type="button"
+          fill="clear"
+          class="attribute-remove"
+          [attr.aria-label]="
+            'Remove ' +
+            (attribute.controls.name.value || 'attribute')
+          "
+          (click)="removeAttribute(i)"
+        >
+          <ion-icon
+            slot="icon-only"
+            name="close"
+          />
+        </ion-button>
+      </ion-col>
+
+    </ion-row>
+  }
+
+
+  <ion-row>
+    <ion-col class="attribute-add-col">
+      <ion-button
+        type="button"
+        fill="clear"
+        class="attribute-add"
+        (click)="addAttribute()"
+      >
+        <ion-icon
+          slot="start"
+          name="add-outline"
+        />
+        Add custom attribute
+      </ion-button>
+    </ion-col>
+  </ion-row>
+
+</ion-grid>

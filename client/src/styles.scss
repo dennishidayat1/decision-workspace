@@ -10,3 +10,27 @@
 @import "@ionic/angular/css/text-alignment.css";
 @import "@ionic/angular/css/text-transformation.css";
 @import "@ionic/angular/css/flex-utils.css";
+
+@import url(
+  "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap"
+);
+
+:root {
+  --ion-font-family: "Inter", sans-serif;
+}
+
+html,
+body {
+  font-family: "Inter", sans-serif;
+}
+
+:root {
+  --ion-color-primary: #247657;
+  --ion-color-primary-rgb: 36, 118, 87;
+
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+
+  --ion-color-primary-shade: #206a4e;
+  --ion-color-primary-tint: #3a8468;
+}

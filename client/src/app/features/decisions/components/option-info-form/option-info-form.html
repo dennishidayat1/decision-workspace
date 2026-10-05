@@ -1,0 +1,198 @@
+<ion-grid class="option-info ion-no-padding">
+
+  <!-- OPTION TITLE -->
+  <ion-row>
+    <ion-col class="form-field ion-no-padding">
+      <ion-label class="field-label">
+        Option title
+        <ion-text class="required-mark">
+          *
+        </ion-text>
+      </ion-label>
+
+      <ion-input
+        class="field-control"
+        type="text"
+        fill="outline"
+        placeholder="e.g. UNIQLO Wide Straight Jeans"
+        [formControl]="controls().title"
+      />
+
+      @if (
+        controls().title.invalid &&
+        controls().title.touched
+      ) {
+        <ion-note
+          color="danger"
+          class="field-error"
+        >
+          Title is required
+        </ion-note>
+      }
+    </ion-col>
+  </ion-row>
+
+
+  <!-- PRICE + CURRENCY -->
+  <ion-row class="price-row">
+
+    <ion-col class="form-field price-field">
+      <ion-label class="field-label">
+        Price
+
+        <ion-note class="optional-label">
+          (optional)
+        </ion-note>
+      </ion-label>
+
+      <ion-input
+        class="field-control"
+        type="number"
+        fill="outline"
+        min="0"
+        placeholder="0.00"
+        [formControl]="controls().price"
+      />
+    </ion-col>
+
+
+    <ion-col
+      size="auto"
+      class="form-field currency-field"
+    >
+      <ion-label class="field-label">
+        Currency
+      </ion-label>
+
+      <ion-select
+        class="field-control currency-select"
+        fill="outline"
+        interface="popover"
+        [formControl]="controls().currency"
+      >
+        <ion-select-option value="USD">
+          USD
+        </ion-select-option>
+
+        <ion-select-option value="EUR">
+          EUR
+        </ion-select-option>
+
+        <ion-select-option value="GBP">
+          GBP
+        </ion-select-option>
+
+        <ion-select-option value="IDR">
+          IDR
+        </ion-select-option>
+
+        <ion-select-option value="CAD">
+          CAD
+        </ion-select-option>
+
+        <ion-select-option value="AUD">
+          AUD
+        </ion-select-option>
+      </ion-select>
+    </ion-col>
+
+  </ion-row>
+
+
+  <!-- EXTRA DETAILS TOGGLE -->
+  <ion-row>
+    <ion-col class="extra-toggle-col ion-no-padding">
+      <ion-button
+        type="button"
+        fill="clear"
+        class="extra-toggle"
+        [attr.aria-expanded]="showExtraDetails()"
+        (click)="toggleExtraDetails()"
+      >
+        <ion-icon
+          slot="start"
+          name="add-outline"
+        />
+
+        {{
+          showExtraDetails()
+            ? 'Hide extra details'
+            : 'Add link, image or a note'
+        }}
+
+        <ion-icon
+          slot="end"
+          name="chevron-down-outline"
+          class="extra-chevron"
+          [class.extra-chevron--open]="
+            showExtraDetails()
+          "
+        />
+      </ion-button>
+    </ion-col>
+  </ion-row>
+
+
+  <!-- EXTRA DETAILS -->
+  @if (showExtraDetails()) {
+
+    <ion-row class="extra-details">
+
+      <ion-col
+        size="12"
+        class="form-field ion-no-padding"
+      >
+        <ion-label class="field-label">
+          Product URL
+        </ion-label>
+
+        <ion-input
+          class="field-control"
+          type="url"
+          fill="outline"
+          placeholder="https://"
+          [formControl]="controls().url"
+        />
+      </ion-col>
+
+
+      <ion-col
+        size="12"
+        class="form-field ion-no-padding"
+      >
+        <ion-label class="field-label thumbnail-label">
+          <ion-icon name="image-outline" />
+          Thumbnail URL
+        </ion-label>
+
+        <ion-input
+          class="field-control"
+          type="url"
+          fill="outline"
+          placeholder="https://…/image.jpg"
+          [formControl]="controls().thumbnailUrl"
+        />
+      </ion-col>
+
+
+      <ion-col
+        size="12"
+        class="form-field ion-no-padding"
+      >
+        <ion-label class="field-label">
+          A quick note
+        </ion-label>
+
+        <ion-textarea
+          class="field-control note-field"
+          fill="outline"
+          rows="2"
+          placeholder="What caught your eye?"
+          [formControl]="controls().description"
+        />
+      </ion-col>
+
+    </ion-row>
+  }
+
+</ion-grid>

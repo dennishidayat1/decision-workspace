@@ -3,35 +3,43 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators, FormArray } fr
 import { ActivatedRoute, Router } from '@angular/router';
 import { DecisionApi } from '../../services/decision-api';
 import { CreateDecisionOptionRequest } from '../../models/create-decision-option-request';
+import { OptionInfoForm } from '../../components/option-info-form/option-info-form';
 import { AttributeForm } from '../../components/attribute-form/attribute-form';
 import { ScoreForm } from '../../components/score-form/score-form';
 import { DecisionState } from '../../state/decision-state';
 import {
   IonContent,
-  IonHeader,
-  IonTitle,
-  IonToolbar,
-  IonItem,
+  IonBadge,
   IonButton,
-  IonList,
-  IonInput,
-  IonTextarea
+  IonGrid,
+  IonRow,
+  IonCol,
+  IonText,
+  IonNote,
+  IonIcon
 } from '@ionic/angular';
+import { arrowBackOutline } from 'ionicons/icons';
+import { addIcons } from 'ionicons';
+
+addIcons({
+  arrowBackOutline,
+});
 
 @Component({
   imports: [
+    OptionInfoForm,
     AttributeForm,
     ScoreForm,
     ReactiveFormsModule,
     IonContent,
-    IonHeader,
-    IonTitle,
-    IonToolbar,
-    IonItem,
+    IonGrid,
+    IonRow,
+    IonCol,
     IonButton,
-    IonList,
-    IonInput,
-    IonTextarea
+    IonIcon,
+    IonText,
+    IonNote,
+    IonBadge
   ],
   selector: 'app-add-option-page',
   styleUrl: './add-option-page.scss',
@@ -66,7 +74,7 @@ export class AddOptionPage {
       nonNullable: true,
     }),
     price: new FormControl<number | null>(null),
-    currency: new FormControl('', {
+    currency: new FormControl('IDR', {
       nonNullable: true,
     }),
 
@@ -92,27 +100,6 @@ export class AddOptionPage {
     }
 
     this.decisionState.ensureDecisionLoaded(this.decisionId);
-
-    const attributes = this.optionForm.controls.attributes;
-
-    attributes.clear();
-
-    for (const attributeName of this.availableAttributeNames()) {
-      attributes.push(
-        new FormGroup({
-          name: new FormControl(attributeName, {
-            nonNullable: true,
-          }),
-          value: new FormControl('', {
-            nonNullable: true,
-          }),
-        }),
-      );
-    }
-    console.log(
-      'Suggested attributes:',
-      this.optionForm.controls.attributes.getRawValue(),
-    );
   }
 
   onAddOption(): void {
@@ -123,10 +110,12 @@ export class AddOptionPage {
     }
 
     if (this.optionForm.invalid) {
-      console.error('Option form is invalid:', this.optionForm.errors);
+      this.optionForm.markAllAsTouched();
+
       this.optionSubmitError.set(
         'Please fill in all required fields for the option.',
       );
+
       return;
     }
 
@@ -174,5 +163,13 @@ export class AddOptionPage {
           );
         },
       });
+  }
+
+  onCancel(): void {
+    if (!this.decisionId) {
+      return;
+    }
+
+    this.router.navigate(['/decisions', this.decisionId]);
   }
 }

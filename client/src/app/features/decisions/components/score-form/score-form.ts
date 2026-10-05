@@ -1,12 +1,33 @@
-import { Component, effect, input } from '@angular/core';
+import { Component, effect, input, signal } from '@angular/core';
 import {
   ReactiveFormsModule,
   FormArray,
   FormControl,
   FormGroup,
 } from '@angular/forms';
-
+import {
+  IonGrid,
+  IonRow,
+  IonCol,
+  IonButton,
+  IonLabel,
+  IonNote,
+  IonIcon,
+  IonInput,
+} from '@ionic/angular';
 import { Criterion } from '../../models/criterion';
+import { addIcons } from 'ionicons';
+import {
+  chatboxOutline,
+  star,
+  starOutline,
+} from 'ionicons/icons';
+
+addIcons({
+  chatboxOutline,
+  star,
+  starOutline,
+});
 
 type ScoreFormGroup = FormGroup<{
   criterionId: FormControl<string>;
@@ -16,7 +37,16 @@ type ScoreFormGroup = FormGroup<{
 
 @Component({
   imports: [
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    IonGrid,
+    IonRow,
+    IonCol,
+    IonButton,
+    IonLabel,
+    IonNote,
+    IonIcon,
+    IonInput,
+
   ],
   selector: 'app-score-form',
   styleUrl: './score-form.scss',
@@ -25,6 +55,7 @@ type ScoreFormGroup = FormGroup<{
 export class ScoreForm {
   readonly criteria = input.required<readonly Criterion[]>();
   readonly scores = input.required<FormArray<ScoreFormGroup>>();
+  readonly ratingValues = [1, 2, 3, 4, 5] as const;
 
   private readonly populateCriteria = effect(() => {
     const criteria = this.criteria();
@@ -53,11 +84,55 @@ export class ScoreForm {
     }
   });
 
+  readonly expandedCommentCriterionId =
+    signal<string | null>(null);
+
+  toggleComment(criterionId: string): void {
+    this.expandedCommentCriterionId.update(
+      (current) =>
+        current === criterionId
+          ? null
+          : criterionId,
+    );
+  }
+
+  closeComment(): void {
+    this.expandedCommentCriterionId.set(null);
+  }
+
+  getCriterionImportance(
+    criterionId: string,
+  ): number | null {
+    return (
+      this.criteria().find(
+        (criterion) => criterion.id === criterionId,
+      )?.importance ?? null
+    );
+  }
+
   getCriterionName(criterionId: string): string {
     return (
       this.criteria().find(
         (criterion) => criterion.id === criterionId,
       )?.name ?? 'Unknown criterion'
     );
+  }
+
+
+  setScore(
+    scoreGroup: ScoreFormGroup,
+    value: number,
+  ): void {
+    const scoreControl = scoreGroup.controls.score;
+
+    scoreControl.setValue(
+      scoreControl.value === value
+        ? null
+        : value,
+    );
+  }
+
+  clearScore(scoreGroup: ScoreFormGroup): void {
+    scoreGroup.controls.score.setValue(null);
   }
 }

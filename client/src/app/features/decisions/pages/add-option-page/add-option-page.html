@@ -1,54 +1,168 @@
-<ion-header>
-    <ion-toolbar>
-        <ion-title>Add Option</ion-title>
-    </ion-toolbar>
-</ion-header>
-
 <ion-content>
+  <ion-grid class="add-option-layout ion-no-padding">
+    <ion-row class="ion-justify-content-center">
+      <ion-col class="add-option-container">
 
-    <form [formGroup]="optionForm" (ngSubmit)="onAddOption()">
+        <!-- PAGE HEADER -->
+        <ion-grid class="page-header ion-no-padding">
+          <ion-row>
+            <ion-col class="ion-no-padding">
 
-        <ion-list>
+              <ion-button
+                type="button"
+                fill="clear"
+                size="small"
+                class="back-button"
+                (click)="onCancel()"
+              >
+                <ion-icon
+                  slot="start"
+                  name="arrow-back-outline"
+                />
+                Back to decision
+              </ion-button>
 
-            <ion-item>
-                <ion-input label="Title" labelPlacement="stacked" type="text" formControlName="title" />
-            </ion-item>
+              <ion-text>
+                <h1>Add an option</h1>
+              </ion-text>
 
-            <ion-item>
-                <ion-input label="URL" labelPlacement="stacked" type="url" formControlName="url" />
-            </ion-item>
+              <ion-note class="page-subtitle">
+                Found something you like? Get it on your shortlist.
+                Only a title is required.
+              </ion-note>
 
-            <ion-item>
-                <ion-input label="Thumbnail URL" labelPlacement="stacked" type="url" formControlName="thumbnailUrl" />
-            </ion-item>
+            </ion-col>
+          </ion-row>
+        </ion-grid>
 
-            <ion-item>
-                <ion-textarea label="Description" labelPlacement="stacked" formControlName="description"
-                    autoGrow="true" />
-            </ion-item>
 
-            <ion-item>
-                <ion-input label="Price" labelPlacement="stacked" type="number" formControlName="price" />
-            </ion-item>
+        <form
+          [formGroup]="optionForm"
+          (ngSubmit)="onAddOption()"
+        >
 
-            <ion-item>
-                <ion-input label="Currency" labelPlacement="stacked" type="text" formControlName="currency" />
-            </ion-item>
+          <!-- BASIC INFORMATION -->
+          <ion-grid
+            class="option-form-section option-form-section--basic ion-no-padding"
+          >
+            <ion-row class="form-section-heading ion-align-items-start">
+              <ion-col size="auto" class="section-number-col">
+                <ion-badge class="section-number">
+                  01
+                </ion-badge>
+              </ion-col>
 
-        </ion-list>
+              <ion-col class="section-heading-copy">
+                <ion-text>
+                  <h2>Basic information</h2>
+                </ion-text>
 
-        <ion-button type="submit">
-            Add Option
-        </ion-button>
-    </form>
+                <ion-note>
+                  Start with a name. Everything else can come later.
+                </ion-note>
+              </ion-col>
+            </ion-row>
 
-    <app-attribute-form
-        [attributes]="optionForm.controls.attributes"
-        [suggestedAttributeNames]="availableAttributeNames()"
-    />
+            <ion-row>
+              <ion-col class="basic-info-content ion-no-padding">
+                <app-option-info-form
+                  [controls]="optionForm.controls"
+                />
+              </ion-col>
+            </ion-row>
+          </ion-grid>
 
-    <app-score-form
-        [criteria]="criteria()"
-        [scores]="optionForm.controls.scores"
-    />
+
+          <!-- ATTRIBUTES -->
+          <ion-grid
+            class="option-form-section option-form-section--attributes ion-no-padding"
+          >
+            <ion-row class="form-section-heading ion-align-items-start">
+              <ion-col size="auto" class="section-number-col">
+                <ion-badge class="section-number">
+                  02
+                </ion-badge>
+              </ion-col>
+
+              <ion-col class="section-heading-copy">
+                <ion-text>
+                  <h2>Attributes</h2>
+                </ion-text>
+
+                <ion-note>
+                  What it is, not how it scores. Empty fields won’t be saved.
+                </ion-note>
+              </ion-col>
+            </ion-row>
+
+            <ion-row>
+              <ion-col class="attribute-content ion-no-padding">
+                <app-attribute-form
+                  [attributes]="optionForm.controls.attributes"
+                  [suggestedAttributeNames]="availableAttributeNames().slice(0, 5)"
+                />
+              </ion-col>
+            </ion-row>
+          </ion-grid>
+
+
+          <!-- SCORES -->
+          <ion-grid
+            class="option-form-section option-form-section--rating ion-no-padding"
+          >
+            <ion-row class="form-section-heading ion-align-items-start">
+              <ion-col size="auto" class="section-number-col">
+                <ion-badge class="section-number">
+                  03
+                </ion-badge>
+              </ion-col>
+
+              <ion-col class="section-heading-copy">
+                <ion-text>
+                  <h2>Initial rating</h2>
+                </ion-text>
+
+                <ion-note>
+                  Your first impression. Tap a star, or leave it for later.
+                </ion-note>
+              </ion-col>
+            </ion-row>
+
+            <ion-row>
+              <ion-col class="rating-content ion-no-padding">
+                <app-score-form
+                  [criteria]="criteria()"
+                  [scores]="optionForm.controls.scores"
+                />
+              </ion-col>
+            </ion-row>
+          </ion-grid>
+
+
+          <!-- ACTIONS -->
+          <ion-grid class="option-form-actions ion-no-padding">
+            <ion-row class="ion-justify-content-end">
+              <ion-col size="auto">
+                <ion-button
+                  type="button"
+                  fill="clear"
+                  (click)="onCancel()"
+                >
+                  Cancel
+                </ion-button>
+              </ion-col>
+
+              <ion-col size="auto">
+                <ion-button type="submit">
+                  Add option
+                </ion-button>
+              </ion-col>
+            </ion-row>
+          </ion-grid>
+
+        </form>
+
+      </ion-col>
+    </ion-row>
+  </ion-grid>
 </ion-content>

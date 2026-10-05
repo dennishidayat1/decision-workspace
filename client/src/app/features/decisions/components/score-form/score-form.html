@@ -1,14 +1,124 @@
-@for (
-  scoreGroup of scores().controls;
-  track scoreGroup.controls.criterionId.value
-) {
-  <div [formGroup]="scoreGroup">
-    <strong>
-      {{ getCriterionName(scoreGroup.controls.criterionId.value) }}
-    </strong>
+<ion-grid class="score-list ion-no-padding">
 
-    <div>
-      Score: {{ scoreGroup.controls.score.value ?? 'Not rated' }}
-    </div>
-  </div>
-}
+  @for (
+    scoreGroup of scores().controls;
+    track scoreGroup.controls.criterionId.value
+  ) {
+    @let criterionId = scoreGroup.controls.criterionId.value;
+
+    <ion-row
+      class="score-entry"
+      [formGroup]="scoreGroup"
+    >
+      <ion-col
+        size="12"
+        class="score-entry-content"
+      >
+
+        <ion-grid class="ion-no-padding">
+          <ion-row
+            class="score-main-row ion-align-items-center ion-justify-content-between"
+          >
+
+            <!-- NAME + IMPORTANCE -->
+            <ion-col class="score-meta">
+              <ion-label class="score-name">
+                {{ getCriterionName(criterionId) }}
+              </ion-label>
+
+              <ion-note class="score-importance">
+                Importance {{ getCriterionImportance(criterionId) }}/5
+              </ion-note>
+            </ion-col>
+
+
+            <!-- STARS + COMMENT -->
+            <ion-col
+              size="auto"
+              class="score-control-col"
+            >
+              <div class="score-actions">
+
+                @for (rating of ratingValues; track rating) {
+                  <ion-button
+                    type="button"
+                    fill="clear"
+                    class="score-star"
+                    [class.score-star--active]="
+                      rating <= (scoreGroup.controls.score.value ?? 0)
+                    "
+                    [attr.aria-label]="
+                      getCriterionName(criterionId) +
+                      ': ' +
+                      rating +
+                      ' out of 5'
+                    "
+                    [attr.aria-pressed]="
+                      scoreGroup.controls.score.value === rating
+                    "
+                    (click)="setScore(scoreGroup, rating)"
+                  >
+                    <ion-icon
+                      slot="icon-only"
+                      [name]="
+                        rating <= (scoreGroup.controls.score.value ?? 0)
+                          ? 'star'
+                          : 'star-outline'
+                      "
+                    />
+                  </ion-button>
+                }
+
+                <ion-button
+                  type="button"
+                  fill="clear"
+                  class="score-comment-button"
+                  [attr.aria-label]="
+                    'Add comment for ' +
+                    getCriterionName(criterionId)
+                  "
+                  (click)="toggleComment(criterionId)"
+                >
+                  <ion-icon
+                    slot="icon-only"
+                    name="chatbox-outline"
+                  />
+                </ion-button>
+
+              </div>
+            </ion-col>
+
+          </ion-row>
+        </ion-grid>
+
+
+        <!-- EXPANDED COMMENT EDITOR -->
+        @if (expandedCommentCriterionId() === criterionId) {
+          <ion-input
+            class="score-comment-input"
+            fill="outline"
+            [placeholder]="
+              'A note about ' +
+              getCriterionName(criterionId).toLowerCase() +
+              ' (optional)'
+            "
+            formControlName="comment"
+          />
+        }
+
+
+        <!-- SAVED COMMENT -->
+        @if (
+          expandedCommentCriterionId() !== criterionId &&
+          scoreGroup.controls.comment.value.trim()
+        ) {
+          <ion-note class="score-comment-text">
+            {{ scoreGroup.controls.comment.value }}
+          </ion-note>
+        }
+
+      </ion-col>
+    </ion-row>
+  }
+
+</ion-grid>

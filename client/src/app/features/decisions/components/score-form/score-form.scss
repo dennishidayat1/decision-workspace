@@ -1,0 +1,285 @@
+:host {
+  display: block;
+}
+
+.score-list {
+  margin: 0;
+}
+
+/* --------------------------------------------------
+   SCORE ROW
+-------------------------------------------------- */
+
+.score-entry {
+  padding: 8px 0;
+
+  border-bottom: 1px solid #e1e7e3;
+}
+
+.score-entry:first-child {
+  padding-top: 0;
+}
+
+.score-entry:last-child {
+  padding-bottom: 0;
+
+  border-bottom: 0;
+}
+
+.score-entry-content,
+.score-meta,
+.score-control-col {
+  padding: 0;
+}
+
+.score-main-row {
+  flex-wrap: nowrap;
+  gap: 8px;
+}
+
+
+/* --------------------------------------------------
+   CRITERION TEXT
+-------------------------------------------------- */
+
+.score-meta {
+  flex: 1 1 auto;
+
+  min-width: 0;
+}
+
+.score-name {
+  display: block;
+
+  color: #24352e;
+
+  font-family: "Inter", sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+
+  white-space: nowrap;
+}
+
+.score-importance {
+  display: block;
+
+  margin-top: 2px;
+
+  color: #6b7770;
+
+  font-family: "Inter", sans-serif;
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 14px;
+
+  white-space: nowrap;
+}
+
+
+/* --------------------------------------------------
+   STAR + COMMENT CONTROL
+-------------------------------------------------- */
+
+.score-control-col {
+  flex: 0 0 auto;
+
+  width: auto;
+  max-width: none;
+}
+
+.score-actions {
+  display: flex;
+  align-items: center;
+
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+}
+
+
+/* --------------------------------------------------
+   STAR BUTTON
+-------------------------------------------------- */
+
+.score-star {
+  width: 28px;
+  height: 28px;
+  min-height: 28px;
+
+  margin: 0;
+
+  --padding-start: 0;
+  --padding-end: 0;
+
+  --border-radius: 6px;
+
+  --background: transparent;
+  --background-hover: #e8f4ed;
+  --background-activated: #e8f4ed;
+
+  --color: #c8d0ca;
+
+  --box-shadow: none;
+}
+
+.score-star ion-icon {
+  font-size: 19px;
+}
+
+.score-star--active {
+  --color: #b08a39;
+}
+
+
+/* --------------------------------------------------
+   COMMENT BUTTON
+-------------------------------------------------- */
+
+.score-comment-button {
+  width: 28px;
+  height: 28px;
+  min-height: 28px;
+
+  margin: 0 0 0 4px;
+
+  --padding-start: 0;
+  --padding-end: 0;
+
+  --border-radius: 6px;
+
+  --background: transparent;
+  --background-hover: #f2f5f3;
+  --background-activated: #f2f5f3;
+
+  --color: #6b7770;
+
+  --box-shadow: none;
+}
+
+.score-comment-button ion-icon {
+  font-size: 13px;
+}
+
+
+/* --------------------------------------------------
+   COMMENT INPUT
+-------------------------------------------------- */
+
+.score-comment-input {
+  margin-top: 8px;
+
+  min-height: 40px;
+
+  --background: #ffffff;
+
+  --border-color: #e1e7e3;
+  --border-radius: 8px;
+  --border-width: 1px;
+
+  --highlight-color-focused: #247657;
+
+  --padding-start: 12px;
+  --padding-end: 12px;
+
+  --color: #24352e;
+
+  --placeholder-color: #6b7770;
+  --placeholder-opacity: 0.65;
+
+  font-family: "Inter", sans-serif;
+  font-size: 14px;
+}
+
+
+/* --------------------------------------------------
+   SAVED COMMENT
+-------------------------------------------------- */
+
+.score-comment-text {
+  display: block;
+
+  margin-top: 4px;
+
+  color: #6b7770;
+
+  font-family: "Inter", sans-serif;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 18px;
+}
+
+
+/* --------------------------------------------------
+   TABLET / DESKTOP
+-------------------------------------------------- */
+
+@media (min-width: 640px) {
+  .score-star {
+    width: 32px;
+    height: 32px;
+    min-height: 32px;
+  }
+}
+
+
+/* --------------------------------------------------
+   SMALL MOBILE
+-------------------------------------------------- */
+
+@media (max-width: 380px) {
+  .score-main-row {
+    flex-wrap: nowrap;
+    gap: 4px;
+  }
+
+  .score-meta {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .score-name,
+  .score-importance {
+    white-space: normal;
+  }
+
+  .score-control-col {
+    flex: 0 0 auto;
+    width: auto;
+    min-width: 0;
+  }
+
+  .score-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    flex-shrink: 0;
+  }
+
+  .score-star {
+    flex: 0 0 23px;
+
+    width: 23px;
+    min-width: 23px;
+    height: 28px;
+    min-height: 28px;
+  }
+
+  .score-star ion-icon {
+    font-size: 17px;
+  }
+
+  .score-comment-button {
+    flex: 0 0 24px;
+
+    width: 24px;
+    min-width: 24px;
+    height: 28px;
+    min-height: 28px;
+
+    margin-left: 2px;
+  }
+
+  .score-comment-button ion-icon {
+    font-size: 13px;
+  }
+}

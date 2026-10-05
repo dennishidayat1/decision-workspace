@@ -1,0 +1,225 @@
+:host {
+  display: block;
+}
+
+.option-info {
+  margin: 0;
+}
+
+
+/* -----------------------------------------
+   FIELD
+----------------------------------------- */
+
+.form-field {
+  display: block;
+
+  min-width: 0;
+  padding: 0;
+}
+
+.field-label {
+  display: block;
+
+  margin-bottom: 6px;
+
+  color: #24352e;
+
+  font-family: "Inter", sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+}
+
+.required-mark {
+  color: #247657;
+}
+
+.optional-label {
+  margin-left: 3px;
+
+  color: #6b7770;
+
+  font-size: 12px;
+  font-weight: 400;
+}
+
+
+/* -----------------------------------------
+   INPUT / SELECT / TEXTAREA
+----------------------------------------- */
+
+.field-control {
+  width: 100%;
+
+  min-height: 40px;
+
+  --background: #ffffff;
+
+  --border-color: #e1e7e3;
+  --border-radius: 8px;
+  --border-width: 1px;
+
+  --highlight-color-focused: #247657;
+
+  --padding-start: 12px;
+  --padding-end: 12px;
+
+  --color: #24352e;
+
+  --placeholder-color: #6b7770;
+  --placeholder-opacity: 0.65;
+
+  font-family: "Inter", sans-serif;
+  font-size: 14px;
+}
+
+.field-error {
+  display: block;
+
+  margin-top: 5px;
+
+  font-size: 11px;
+}
+
+
+/* -----------------------------------------
+   PRICE + CURRENCY
+----------------------------------------- */
+
+.price-row {
+  flex-wrap: nowrap;
+  align-items: flex-end;
+  gap: 12px;
+
+  margin-top: 16px;
+}
+
+.price-field {
+  flex: 1 1 auto !important;
+
+  width: auto !important;
+  max-width: none !important;
+  min-width: 0;
+}
+
+.currency-field {
+  flex: 0 0 100px !important;
+
+  width: 100px !important;
+  max-width: 100px !important;
+}
+
+.currency-select {
+  width: 100%;
+}
+
+
+/* -----------------------------------------
+   EXTRA DETAILS TOGGLE
+----------------------------------------- */
+
+.extra-toggle-col {
+  margin-top: 8px;
+}
+
+.extra-toggle {
+  min-height: 32px;
+
+  margin: 0;
+
+  --padding-start: 0;
+  --padding-end: 0;
+
+  --background: transparent;
+  --background-hover: transparent;
+  --background-activated: transparent;
+
+  --color: #247657;
+
+  --box-shadow: none;
+
+  font-family: "Inter", sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+
+  text-transform: none;
+}
+
+.extra-toggle ion-icon {
+  font-size: 13px;
+}
+
+.extra-chevron {
+  transition: transform 160ms ease;
+}
+
+.extra-chevron--open {
+  transform: rotate(180deg);
+}
+
+
+/* -----------------------------------------
+   EXTRA DETAILS
+----------------------------------------- */
+
+.extra-details {
+  margin-top: 8px;
+}
+
+.extra-details .form-field {
+  margin-top: 12px;
+}
+
+.thumbnail-label {
+  display: flex;
+  align-items: center;
+
+  gap: 6px;
+}
+
+.thumbnail-label ion-icon {
+  font-size: 13px;
+
+  color: #6b7770;
+}
+
+.note-field {
+  min-height: 64px;
+}
+
+
+/* -----------------------------------------
+   MOBILE
+----------------------------------------- */
+
+@media (max-width: 575px) {
+  .price-field {
+    flex: 1 1 auto !important;
+
+    width: auto !important;
+    max-width: none !important;
+
+    min-width: 0;
+  }
+
+  .currency-field {
+    flex: 0 0 110px !important;
+
+    width: 110px !important;
+    max-width: 110px !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .price-row {
+    gap: 8px;
+  }
+
+  .currency-field {
+    flex-basis: 92px !important;
+
+    width: 92px !important;
+    max-width: 92px !important;
+  }
+}

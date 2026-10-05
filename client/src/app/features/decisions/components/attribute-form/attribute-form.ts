@@ -5,7 +5,25 @@ import {
   FormControl,
   FormGroup,
 } from '@angular/forms';
-import { IonButton, IonInput } from '@ionic/angular';
+import {
+  IonButton,
+  IonInput,
+  IonGrid,
+  IonRow,
+  IonCol,
+} from '@ionic/angular';
+import { IonIcon } from '@ionic/angular';
+
+import { addIcons } from 'ionicons';
+import {
+  addOutline,
+  close,
+} from 'ionicons/icons';
+
+addIcons({
+  addOutline,
+  close,
+});
 
 export type AttributeFormGroup = FormGroup<{
   name: FormControl<string>;
@@ -16,7 +34,11 @@ export type AttributeFormGroup = FormGroup<{
   imports: [
     ReactiveFormsModule,
     IonInput,
-    IonButton
+    IonButton,
+    IonGrid,
+    IonRow,
+    IonCol,
+    IonIcon
   ],
   selector: 'app-attribute-form',
   styleUrl: './attribute-form.scss',
@@ -40,20 +62,26 @@ export class AttributeForm {
     this.attributes().removeAt(index);
   }
 
-  private readonly populateSuggestedAttributes = effect(() => {
-    const suggestions = this.suggestedAttributeNames();
-    const attributes = this.attributes();
+private readonly populateSuggestedAttributes = effect(() => {
+  const suggestions = this.suggestedAttributeNames();
+  const attributes = this.attributes();
 
-    const existingNames = new Set(
-      attributes.controls.map((attribute) =>
-        attribute.controls.name.value.trim().toLowerCase(),
-      ),
-    );
+  const existingNames = new Set(
+    attributes.controls.map((attribute) =>
+      attribute.controls.name.value.trim().toLowerCase(),
+    ),
+  );
 
-    for (const name of suggestions) {
-      if (!existingNames.has(name.trim().toLowerCase())) {
-        this.addAttribute(name);
-      }
+  for (const name of suggestions) {
+    const normalizedName = name.trim().toLowerCase();
+
+    if (!normalizedName || existingNames.has(normalizedName)) {
+      continue;
     }
-  });
+
+    this.addAttribute(name.trim());
+
+    existingNames.add(normalizedName);
+  }
+});
 }
