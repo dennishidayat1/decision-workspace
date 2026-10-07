@@ -572,6 +572,7 @@ ion-content {
 }
 
 .option-card {
+  cursor: pointer;
   margin: 0;
 
   --background: #ffffff;
@@ -1544,3 +1545,7 @@ ion-content {
       9px;
   }
 }
+
+// .option-detail-outlet {
+//   pointer-events: none;
+// }

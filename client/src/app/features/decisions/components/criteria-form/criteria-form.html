@@ -1,0 +1,192 @@
+<ion-accordion-group
+  class="criteria-list"
+  [value]="expandedAccordionValue()"
+  (ionChange)="onAccordionChange($event.detail.value)"
+>
+
+  @for (
+    criterion of criteria().controls;
+    track criterion;
+    let i = $index
+  ) {
+
+    <ion-accordion
+      class="criterion"
+      [value]="i.toString()"
+    >
+
+      <ion-item
+        slot="header"
+        lines="none"
+        class="criterion-header"
+      >
+
+        <ion-label>
+
+          <strong class="criterion-name">
+            {{
+              criterion.controls.name.value ||
+              'New criterion'
+            }}
+          </strong>
+
+          @if (criterion.controls.context.value) {
+            <span class="criterion-context-preview">
+              {{ criterion.controls.context.value }}
+            </span>
+          }
+
+        </ion-label>
+
+
+        <span
+          slot="end"
+          class="criterion-importance-badge"
+        >
+          {{ criterion.controls.importance.value }}
+        </span>
+
+      </ion-item>
+
+
+      <div
+        slot="content"
+        class="criterion-editor"
+      >
+
+        <div class="criterion-field">
+
+          <label class="field-label">
+            Criterion name
+          </label>
+
+          <ion-input
+            fill="outline"
+            class="criterion-input"
+            placeholder="e.g. Typing feel"
+            [formControl]="criterion.controls.name"
+          />
+
+        </div>
+
+
+        <div class="criterion-field">
+
+          <div class="importance-heading">
+
+            <label class="field-label">
+              Importance
+            </label>
+
+            <output class="importance-value">
+              {{
+                criterion.controls.importance.value
+              }}
+            </output>
+
+          </div>
+
+
+          <ion-range
+            class="importance-range"
+            [min]="1"
+            [max]="5"
+            [step]="1"
+            [snaps]="true"
+            [ticks]="false"
+            [formControl]="criterion.controls.importance"
+          />
+
+
+          <div class="importance-endpoints">
+            <span>
+              Less important
+            </span>
+
+            <span>
+              Very important
+            </span>
+          </div>
+
+        </div>
+
+
+        <div class="criterion-field">
+
+          <label class="field-label">
+            Context
+
+            <span>
+              (optional)
+            </span>
+          </label>
+
+          <ion-textarea
+            fill="outline"
+            class="criterion-textarea"
+            [rows]="2"
+            [autoGrow]="true"
+            placeholder="What does this mean for you?"
+            [formControl]="criterion.controls.context"
+          />
+
+        </div>
+
+
+        <div class="criterion-actions">
+
+          <ion-button
+            type="button"
+            fill="clear"
+            size="small"
+            class="remove-criterion"
+            (click)="removeCriterion(criterion)"
+          >
+            <ion-icon
+              slot="start"
+              name="trash-outline"
+            />
+
+            Remove
+          </ion-button>
+
+
+          <ion-button
+            type="button"
+            size="small"
+            class="done-criterion"
+            [disabled]="!criterion.controls.name.value.trim()"
+            (click)="finishCriterion(criterion)"
+          >
+            Done
+          </ion-button>
+
+        </div>
+
+      </div>
+
+    </ion-accordion>
+
+  }
+
+</ion-accordion-group>
+
+
+<ion-button
+  type="button"
+  fill="clear"
+  class="add-criterion"
+  [disabled]="hasIncompleteCriterion()"
+  (click)="addCriterion()"
+>
+  <ion-icon
+    slot="start"
+    name="add-outline"
+  />
+
+  {{
+    criteria().length
+      ? 'Add another criterion'
+      : 'Add criterion'
+  }}
+</ion-button>

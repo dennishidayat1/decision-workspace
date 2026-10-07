@@ -1,0 +1,520 @@
+<!-- Desktop: keep Decision Detail visible behind panel -->
+
+<div
+  class="option-detail-overlay"
+  (click)="
+    $event.target === $event.currentTarget &&
+    backToDecision()
+  "
+>
+  <ion-content class="option-detail-content">
+    <main class="option-detail-panel">
+
+      @if (option(); as option) {
+
+        <!-- TOP NAV -->
+        <div class="detail-navigation">
+
+          <button
+            type="button"
+            class="back-button"
+            (click)="backToDecision()"
+          >
+            <span>
+              <ion-icon name="arrow-back-outline" />
+              Back to decision
+            </span>
+
+            <ion-icon
+              class="close-icon"
+              name="close-outline"
+            />
+          </button>
+
+        </div>
+
+
+        <!-- SUMMARY -->
+        <section class="option-summary">
+
+          <div class="option-thumbnail">
+
+            @if (option.thumbnailUrl) {
+              <img
+                [src]="option.thumbnailUrl"
+                [alt]="option.title"
+              />
+            } @else {
+              <ion-icon name="bag-handle-outline" />
+            }
+
+          </div>
+
+
+          <div class="option-summary-copy">
+
+            <p class="option-status">
+                On your shortlist
+              <!-- {{
+                isChosen()
+                  ? 'Your choice'
+                  : 'On your shortlist'
+              }} -->
+            </p>
+
+            <h1>
+              {{ option.title }}
+            </h1>
+
+            @if (
+              option.price !== undefined &&
+              option.currency
+            ) {
+              <p class="option-price">
+                {{ option.price }}
+                {{ option.currency }}
+              </p>
+            }
+
+          </div>
+
+
+          <div
+            class="score-badge"
+            [class.score-badge--good]="
+              (weightedScore() ?? 0) >= 4
+            "
+          >
+            <strong>
+              {{
+                weightedScore() !== null
+                  ? (weightedScore() | number:'1.2-2')
+                  : '—'
+              }}
+
+              <small>/5</small>
+            </strong>
+
+            <span>
+              Overall score
+            </span>
+          </div>
+
+        </section>
+
+
+        @if (option.description) {
+          <p class="option-description">
+            {{ option.description }}
+          </p>
+        }
+
+
+        <!-- CHOOSE -->
+        <!-- <ion-button
+          expand="block"
+          class="choose-button"
+          (click)="toggleChoice()"
+        >
+          <ion-icon
+            slot="start"
+            name="checkmark-outline"
+          />
+
+          {{
+            isChosen()
+              ? 'Undo this choice'
+              : 'Choose this option'
+          }}
+        </ion-button> -->
+
+
+        <!-- SCORES -->
+        <section class="detail-section scores-section">
+
+          <div class="section-header">
+
+            <h2>Scores</h2>
+
+            <span>Tap to update</span>
+
+          </div>
+
+
+          <div
+            class="scores-wrapper"
+            [class.scores-wrapper--collapsed]="
+              !showMoreScores() &&
+              criteria().length > 5
+            "
+          >
+            <app-score-form
+              [criteria]="criteria()"
+              [scores]="optionForm.controls.scores"
+            />
+          </div>
+
+
+          @if (criteria().length > 5) {
+            <button
+              type="button"
+              class="section-more-button"
+              (click)="
+                showMoreScores.update(
+                  value => !value
+                )
+              "
+            >
+              {{
+                showMoreScores()
+                  ? 'Show less'
+                  : 'See ' +
+                    (criteria().length - 5) +
+                    ' more'
+              }}
+            </button>
+          }
+
+        </section>
+
+
+        <!-- ATTRIBUTES -->
+        <section class="detail-section">
+
+          <div class="section-header">
+
+            <h2>Attributes</h2>
+
+            <button
+              type="button"
+              class="section-edit-button"
+              (click)="toggleAttributesEdit()"
+            >
+              {{
+                editingAttributes()
+                  ? 'Cancel'
+                  : 'Edit'
+              }}
+            </button>
+
+          </div>
+
+
+          @if (editingAttributes()) {
+
+            <app-attribute-form
+              [attributes]="
+                optionForm.controls.attributes
+              "
+              [suggestedAttributeNames]="[]"
+            />
+
+            <ion-button
+              expand="block"
+              class="section-save-button"
+              (click)="saveAttributes()"
+            >
+              Save attributes
+            </ion-button>
+
+          } @else {
+
+            @if (attributes().length > 0) {
+
+              <dl class="attribute-list">
+
+                @for (
+                  attribute of visibleAttributes();
+                  track attribute.id
+                ) {
+
+                  <div>
+                    <dt>
+                      {{ attribute.name }}
+                    </dt>
+
+                    <dd>
+                      {{ attribute.value }}
+                    </dd>
+                  </div>
+
+                }
+
+              </dl>
+
+
+              @if (attributes().length > 5) {
+                <button
+                  type="button"
+                  class="section-more-button"
+                  (click)="
+                    showMoreAttributes.update(
+                      value => !value
+                    )
+                  "
+                >
+                  {{
+                    showMoreAttributes()
+                      ? 'Show less'
+                      : 'See ' +
+                        (attributes().length - 5) +
+                        ' more'
+                  }}
+                </button>
+              }
+
+            } @else {
+
+              <p class="empty-copy">
+                No attributes added yet.
+              </p>
+
+            }
+
+          }
+
+        </section>
+
+
+        <!-- BASIC DETAILS -->
+        <section class="detail-section">
+
+          <div class="section-header">
+
+            <h2>
+              Basic details
+            </h2>
+
+            <button
+              type="button"
+              class="section-edit-button"
+              (click)="toggleBasicEdit()"
+            >
+              {{
+                editingBasic()
+                  ? 'Cancel'
+                  : 'Edit'
+              }}
+            </button>
+
+          </div>
+
+
+          @if (editingBasic()) {
+
+            <div
+              class="basic-edit-form"
+              [formGroup]="optionForm"
+            >
+
+              <label>
+                <span>Title</span>
+
+                <ion-input
+                  fill="outline"
+                  formControlName="title"
+                />
+              </label>
+
+
+              <div class="price-row">
+
+                <label>
+                  <span>Price</span>
+
+                  <ion-input
+                    fill="outline"
+                    type="number"
+                    formControlName="price"
+                  />
+                </label>
+
+
+                <label>
+                  <span>Currency</span>
+
+                  <ion-select
+                    fill="outline"
+                    formControlName="currency"
+                  >
+                    <ion-select-option value="USD">
+                      USD
+                    </ion-select-option>
+
+                    <ion-select-option value="EUR">
+                      EUR
+                    </ion-select-option>
+
+                    <ion-select-option value="GBP">
+                      GBP
+                    </ion-select-option>
+
+                    <ion-select-option value="IDR">
+                      IDR
+                    </ion-select-option>
+
+                    <ion-select-option value="CAD">
+                      CAD
+                    </ion-select-option>
+
+                    <ion-select-option value="AUD">
+                      AUD
+                    </ion-select-option>
+                  </ion-select>
+                </label>
+
+              </div>
+
+
+              <label>
+                <span>Product URL</span>
+
+                <ion-input
+                  fill="outline"
+                  type="url"
+                  formControlName="url"
+                />
+              </label>
+
+
+              <label>
+                <span>Image URL</span>
+
+                <ion-input
+                  fill="outline"
+                  type="url"
+                  formControlName="thumbnailUrl"
+                />
+              </label>
+
+
+              <label>
+                <span>Note</span>
+
+                <ion-textarea
+                  fill="outline"
+                  rows="2"
+                  formControlName="description"
+                />
+              </label>
+
+
+              <ion-button
+                expand="block"
+                class="section-save-button"
+                (click)="saveBasicDetails()"
+              >
+                Save details
+              </ion-button>
+
+            </div>
+
+          } @else {
+
+            <div class="basic-details-read">
+
+              <div>
+                <span>
+                  Price
+                </span>
+
+                <strong>
+                  @if (
+                    option.price !== undefined &&
+                    option.currency
+                  ) {
+                    {{ option.price }}
+                    {{ option.currency }}
+                  } @else {
+                    —
+                  }
+                </strong>
+              </div>
+
+
+              @if (option.url) {
+                <a
+                  [href]="option.url"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  View product website
+
+                  <ion-icon
+                    name="open-outline"
+                  />
+                </a>
+              }
+
+
+              @if (option.description) {
+                <p>
+                  {{ option.description }}
+                </p>
+              }
+
+            </div>
+
+          }
+
+        </section>
+
+
+        <!-- REMOVE -->
+        <div class="remove-section">
+
+          @if (deleting()) {
+
+            <div class="delete-confirmation">
+
+              <span>
+                Remove this option?
+              </span>
+
+
+              <div>
+                <button
+                  type="button"
+                  class="confirm-remove"
+                  (click)="removeOption()"
+                >
+                  Remove
+                </button>
+
+                <button
+                  type="button"
+                  (click)="deleting.set(false)"
+                >
+                  Cancel
+                </button>
+              </div>
+
+            </div>
+
+          } @else {
+
+            <button
+              type="button"
+              class="remove-button"
+              (click)="deleting.set(true)"
+            >
+              <ion-icon name="trash-outline" />
+
+              Remove option
+            </button>
+
+          }
+
+        </div>
+
+      } @else {
+
+        <div class="loading-state">
+          Loading option...
+        </div>
+
+      }
+
+    </main>
+  </ion-content>
+</div>

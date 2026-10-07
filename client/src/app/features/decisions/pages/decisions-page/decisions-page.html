@@ -1,0 +1,168 @@
+<ion-content>
+  <ion-grid class="decisions-page ion-no-padding">
+
+    <ion-row>
+      <ion-col>
+
+        <p class="eyebrow">
+          A little clarity, one decision at a time.
+        </p>
+
+        <div class="page-heading">
+          <h1>My decisions</h1>
+
+          @if (decisions().length > 0) {
+            <ion-button
+              class="create-button create-button--desktop"
+              [routerLink]="['/decisions/new']"
+            >
+              <ion-icon
+                slot="start"
+                name="add-outline"
+              />
+
+              Create decision
+            </ion-button>
+          }
+        </div>
+
+
+        @if (isLoading()) {
+
+          <div class="page-state">
+            Loading decisions...
+          </div>
+
+        } @else if (loadError()) {
+
+          <div class="page-state page-state--error">
+            {{ loadError() }}
+          </div>
+
+        } @else if (decisions().length > 0) {
+
+          <div class="decision-list">
+
+            @for (
+              decision of decisions();
+              track decision.id
+            ) {
+
+              <ion-card
+                class="decision-card"
+                [routerLink]="[
+                  '/decisions',
+                  decision.id
+                ]"
+              >
+                <ion-card-content>
+
+                  <div class="decision-card-inner">
+
+                    <div class="decision-icon">
+                      <ion-icon
+                        [name]="
+                          decision.category === 'Shopping'
+                            ? 'bag-handle-outline'
+                            : 'layers-outline'
+                        "
+                      />
+                    </div>
+
+
+                    <div class="decision-copy">
+
+                      <p class="decision-meta">
+                        @if (decision.category) {
+                          {{ decision.category }} ·
+                        }
+
+                        {{
+                          decision.status === 'decided'
+                            ? 'Decided'
+                            : 'In progress'
+                        }}
+                      </p>
+
+                      <h2>
+                        {{ decision.title }}
+                      </h2>
+
+                    </div>
+
+
+                    <ion-icon
+                      class="decision-arrow"
+                      name="arrow-forward-outline"
+                    />
+
+                  </div>
+
+                </ion-card-content>
+              </ion-card>
+
+            }
+
+          </div>
+
+        } @else {
+
+          <div class="empty-state">
+
+            <h2>
+              A little clarity starts here.
+            </h2>
+
+            <p>
+              Keep the things you're considering
+              in one place.
+            </p>
+
+            <ion-button
+              class="create-button"
+              [routerLink]="['/decisions/new']"
+            >
+              <ion-icon
+                slot="start"
+                name="add-outline"
+              />
+
+              Create decision
+            </ion-button>
+
+          </div>
+
+        }
+
+      </ion-col>
+    </ion-row>
+
+  </ion-grid>
+
+
+  @if (
+    !isLoading() &&
+    !loadError() &&
+    decisions().length > 0
+  ) {
+
+    <ion-fab
+      class="create-fab"
+      horizontal="end"
+      vertical="bottom"
+      slot="fixed"
+    >
+      <ion-fab-button
+        class="create-fab-button"
+        [routerLink]="['/decisions/new']"
+      >
+        <ion-icon name="add-outline" />
+
+        <span>
+          Create decision
+        </span>
+      </ion-fab-button>
+    </ion-fab>
+
+  }
+</ion-content>

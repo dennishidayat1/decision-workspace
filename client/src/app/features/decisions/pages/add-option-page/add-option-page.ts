@@ -1,5 +1,5 @@
 import { Component, signal, inject } from '@angular/core';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators, FormArray } from '@angular/forms';
+import { ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DecisionApi } from '../../services/decision-api';
 import { CreateDecisionOptionRequest } from '../../models/create-decision-option-request';
@@ -7,7 +7,9 @@ import { OptionInfoForm } from '../../components/option-info-form/option-info-fo
 import { AttributeForm } from '../../components/attribute-form/attribute-form';
 import { ScoreForm } from '../../components/score-form/score-form';
 import { DecisionState } from '../../state/decision-state';
+import { createOptionForm } from '../../forms/option-form';
 import {
+  NavController,
   IonContent,
   IonBadge,
   IonButton,
@@ -50,6 +52,7 @@ export class AddOptionPage {
   private readonly router = inject(Router);
   private readonly decisionApi = inject(DecisionApi);
   private readonly decisionState = inject(DecisionState);
+  private readonly navController = inject(NavController);
 
   readonly decisionId = this.route.snapshot.paramMap.get('id');
 
@@ -59,40 +62,7 @@ export class AddOptionPage {
   readonly availableAttributeNames = this.decisionState.availableAttributeNames;
   readonly criteria = this.decisionState.criteria;
 
-  readonly optionForm = new FormGroup({
-    title: new FormControl('', {
-      nonNullable: true,
-      validators: [Validators.required],
-    }),
-    url: new FormControl('', {
-      nonNullable: true,
-    }),
-    thumbnailUrl: new FormControl('', {
-      nonNullable: true,
-    }),
-    description: new FormControl('', {
-      nonNullable: true,
-    }),
-    price: new FormControl<number | null>(null),
-    currency: new FormControl('IDR', {
-      nonNullable: true,
-    }),
-
-    attributes: new FormArray<
-      FormGroup<{
-        name: FormControl<string>;
-        value: FormControl<string>;
-      }>
-    >([]),
-
-    scores: new FormArray<
-      FormGroup<{
-        criterionId: FormControl<string>;
-        score: FormControl<number | null>;
-        comment: FormControl<string>;
-      }>
-    >([]),
-  });
+  readonly optionForm = createOptionForm();
 
   ionViewWillEnter(): void {
     if (!this.decisionId) {
@@ -154,7 +124,7 @@ export class AddOptionPage {
       .subscribe({
         next: () => {
           this.decisionState.invalidateDecision(this.decisionId!);
-          this.router.navigate(['/decisions', this.decisionId]);
+          this.navController.navigateBack(['/decisions', this.decisionId]);
         },
         error: (error) => {
           console.error('Failed to create decision option:', error);
@@ -170,6 +140,6 @@ export class AddOptionPage {
       return;
     }
 
-    this.router.navigate(['/decisions', this.decisionId]);
+    this.navController.navigateBack(['/decisions',this.decisionId]);
   }
 }

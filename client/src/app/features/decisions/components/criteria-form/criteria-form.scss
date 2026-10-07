@@ -1,0 +1,277 @@
+:host {
+  display: block;
+}
+
+
+.criteria-list {
+  display: block;
+}
+
+
+.criterion {
+  overflow: hidden;
+
+  margin-bottom: 10px;
+
+  background: #ffffff;
+
+  border:
+    1px solid
+    #e1e7e3;
+
+  border-radius: 12px;
+}
+
+
+.criterion-header {
+  --background: #ffffff;
+
+  --min-height: 52px;
+
+  --padding-start: 16px;
+  --inner-padding-end: 12px;
+}
+
+
+.criterion-header ion-label {
+  min-width: 0;
+
+  margin:
+    10px
+    0;
+}
+
+
+.criterion-name {
+  display: block;
+
+  overflow: hidden;
+
+  color: #24352e;
+
+  font-size: 12px;
+  font-weight: 600;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+
+.criterion-context-preview {
+  display: block;
+
+  overflow: hidden;
+
+  margin-top: 4px;
+
+  color: #6b7770;
+
+  font-size: 11px;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+
+.criterion-importance-badge {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  width: 24px;
+  height: 24px;
+
+  margin-right: 6px;
+
+  background: #edf3ef;
+
+  border-radius: 6px;
+
+  color: #247657;
+
+  font-size: 12px;
+  font-weight: 600;
+
+  font-variant-numeric: tabular-nums;
+}
+
+
+.criterion-editor {
+  padding:
+    16px;
+
+  border-top:
+    1px solid
+    #e1e7e3;
+}
+
+
+.criterion-field + .criterion-field {
+  margin-top: 16px;
+}
+
+
+.field-label {
+  display: block;
+
+  margin-bottom: 6px;
+
+  color: #24352e;
+
+  font-size: 12px;
+  font-weight: 500;
+}
+
+
+.field-label span {
+  margin-left: 4px;
+
+  color: #6b7770;
+
+  font-weight: 400;
+}
+
+
+.criterion-input,
+.criterion-textarea {
+  --background: #ffffff;
+
+  --border-color: #e1e7e3;
+  --border-radius: 8px;
+
+  --highlight-color-focused: #247657;
+
+  --color: #24352e;
+
+  --placeholder-color: #6b7770;
+  --placeholder-opacity: 0.65;
+
+  font-size: 14px;
+}
+
+
+.importance-heading {
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 4px;
+}
+
+
+.importance-heading .field-label {
+  margin: 0;
+}
+
+
+.importance-value {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  width: 24px;
+  height: 24px;
+
+  background: #e8f4ed;
+
+  border-radius: 6px;
+
+  color: #247657;
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+
+.importance-range {
+  padding:
+    0
+    2px;
+
+  --bar-background: #e1e7e3;
+  --bar-background-active: #247657;
+
+  --bar-height: 4px;
+  --bar-border-radius: 999px;
+
+  --knob-background: #247657;
+  --knob-size: 18px;
+}
+
+
+.importance-endpoints {
+  display: flex;
+
+  justify-content: space-between;
+
+  margin-top: 2px;
+
+  color: #6b7770;
+
+  font-size: 10px;
+}
+
+
+.criterion-actions {
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  margin-top: 16px;
+}
+
+
+.remove-criterion {
+  margin: 0;
+
+  --color: #6b7770;
+
+  --padding-start: 0;
+  --padding-end: 0;
+
+  font-size: 11px;
+
+  text-transform: none;
+}
+
+
+.done-criterion {
+  margin: 0;
+
+  --background: #e8f4ed;
+  --background-hover: #edf3ef;
+
+  --color: #247657;
+
+  --box-shadow: none;
+
+  --border-radius: 8px;
+
+  font-size: 12px;
+
+  text-transform: none;
+}
+
+
+.add-criterion {
+  min-height: auto;
+
+  margin:
+    4px
+    0
+    0;
+
+  --padding-start: 0;
+  --padding-end: 4px;
+
+  --color: #247657;
+
+  font-size: 12px;
+  font-weight: 500;
+
+  text-transform: none;
+}

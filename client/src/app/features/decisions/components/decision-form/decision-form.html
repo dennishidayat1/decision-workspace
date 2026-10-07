@@ -1,0 +1,111 @@
+<div class="decision-primary-field">
+  <label
+    class="field-label"
+    for="decision-question"
+  >
+    What are you deciding?
+  </label>
+
+  <ion-input
+    id="decision-question"
+    class="decision-input decision-question"
+    fill="outline"
+    placeholder="Which mechanical keyboard should I buy?"
+    [formControl]="question()"
+  />
+
+  @if (
+    question().touched &&
+    question().hasError('required')
+  ) {
+    <p class="field-error">
+      Tell us what you're deciding.
+    </p>
+  }
+</div>
+
+
+<ion-accordion-group
+  class="optional-details"
+>
+  <ion-accordion value="details">
+
+    <ion-item
+      slot="header"
+      lines="none"
+      class="optional-details-header"
+    >
+      <ion-label>
+        <span class="optional-details-title">
+          Add category or context
+        </span>
+
+        <span class="optional-label">
+          Optional
+        </span>
+      </ion-label>
+    </ion-item>
+
+
+    <div
+      slot="content"
+      class="optional-details-content"
+    >
+
+      <div class="field-group category-field">
+
+        <label
+          class="field-label"
+          for="decision-category"
+        >
+          Category
+
+          <span>
+            (optional)
+          </span>
+        </label>
+
+        <ion-input
+          id="decision-category"
+          class="decision-input"
+          fill="outline"
+          placeholder="e.g. Shopping"
+          [formControl]="category()"
+        />
+
+      </div>
+
+
+      <div class="field-group">
+
+        <label
+          class="field-label"
+          for="decision-context"
+        >
+          Context
+
+          <span>
+            (optional)
+          </span>
+        </label>
+
+        <p class="field-helper">
+          Anything worth remembering while you decide.
+        </p>
+
+        <ion-textarea
+          id="decision-context"
+          class="decision-textarea"
+          fill="outline"
+          [rows]="3"
+          [autoGrow]="true"
+          placeholder="I want something wireless for work and gaming, around Rp2–3 million."
+          [formControl]="context()"
+        />
+
+      </div>
+
+    </div>
+
+  </ion-accordion>
+</ion-accordion-group>

@@ -1,34 +1,233 @@
-<section>
-  <h2>Create Decision</h2>
+<ion-content>
 
-  <form [formGroup]="decisionForm" (ngSubmit)="onSubmit()">
-    <label for="title">Title</label>
-    <input id="title" type="text" formControlName="title" />
+  <ion-grid
+    class="create-decision-grid ion-no-padding"
+  >
 
-    <label for="question">Question</label>
-    <input id="question" type="text" formControlName="question" />
+    <ion-row
+      class="ion-justify-content-center"
+    >
 
-    <label for="context">Context</label>
-    <textarea id="context" formControlName="context"></textarea>
+      <ion-col
+        size="12"
+        class="create-decision-column"
+      >
 
-    <label for="category">Category</label>
-    <input id="category" type="text" formControlName="category" placeholder="e.g. Shopping, Career, Travel" />
+        <header class="screen-header">
 
-    <button type="submit" [disabled]="decisionForm.invalid || isSubmitting()">
-      @if (isSubmitting()) {
-      Creating...
-      } @else {
-      Create Decision
-      }
-    </button>
+          <ion-button
+            type="button"
+            fill="clear"
+            class="back-button"
+            (click)="goBack()"
+          >
 
-    @if (submitError()) {
-      <p>{{ submitError() }}</p>
-    }
+            <ion-icon
+              slot="start"
+              name="arrow-back-outline"
+            />
 
-    <button>
-      <a routerLink="/">Cancel</a>
-    </button>
+            Back to my decisions
 
-  </form>
-</section>
+          </ion-button>
+
+
+          <h1>
+            Create a decision
+          </h1>
+
+          <p>
+            Start with what you're trying to decide.
+            You can add options and define what matters
+            now or later.
+          </p>
+
+        </header>
+
+
+        <form
+          [formGroup]="decisionForm"
+          (ngSubmit)="onSubmit()"
+        >
+
+          <ion-card class="decision-form-card">
+
+            <ion-card-content>
+
+              <app-decision-form
+                [question]="decisionForm.controls.question"
+                [category]="decisionForm.controls.category"
+                [context]="decisionForm.controls.context"
+              />
+
+            </ion-card-content>
+
+          </ion-card>
+
+
+          <ion-card class="criteria-card">
+
+            <ion-card-content>
+
+              <div class="criteria-heading">
+
+                <div>
+
+                  <h2>
+                    What matters to you
+
+                    <span>
+                      Optional
+                    </span>
+                  </h2>
+
+                  <p>
+                    Use criteria if you want to rate and
+                    compare your options. You can also do
+                    this later.
+                  </p>
+
+                </div>
+
+
+                @if (showCriteria()) {
+
+                  <ion-button
+                    type="button"
+                    fill="clear"
+                    class="hide-criteria-button"
+                    (click)="hideCriteria()"
+                  >
+                    Hide
+                  </ion-button>
+
+                }
+
+              </div>
+
+
+              @if (showCriteria()) {
+
+                <div class="criteria-editor">
+
+                  <app-criteria-form
+                    [criteria]="decisionForm.controls.criteria"
+                  />
+
+                </div>
+
+              } @else {
+
+                <ion-button
+                  type="button"
+                  fill="clear"
+                  class="show-criteria-button"
+                  (click)="openCriteria()"
+                >
+
+                  <ion-icon
+                    slot="start"
+                    name="add-outline"
+                  />
+
+                  Add criteria
+
+                </ion-button>
+
+              }
+
+            </ion-card-content>
+
+          </ion-card>
+
+
+          @if (submitError()) {
+
+            <ion-note
+              color="danger"
+              class="submit-error"
+            >
+              {{ submitError() }}
+            </ion-note>
+
+          }
+
+
+          <!-- Allows Enter inside an input to submit. -->
+          <button
+            type="submit"
+            hidden
+          ></button>
+
+        </form>
+
+      </ion-col>
+
+    </ion-row>
+
+  </ion-grid>
+
+</ion-content>
+
+
+<ion-footer class="form-footer">
+
+  <ion-toolbar>
+
+    <ion-grid
+      class="footer-grid ion-no-padding"
+    >
+
+      <ion-row
+        class="
+          ion-align-items-center
+          ion-justify-content-between
+        "
+      >
+
+        <ion-col size="auto">
+
+          <ion-button
+            type="button"
+            fill="clear"
+            class="cancel-button"
+            (click)="goBack()"
+          >
+            Cancel
+          </ion-button>
+
+        </ion-col>
+
+
+        <ion-col size="auto">
+
+          <ion-button
+            type="button"
+            class="create-button"
+            [disabled]="!canSubmit()"
+            (click)="onSubmit()"
+          >
+
+            @if (isSubmitting()) {
+
+              <ion-spinner
+                name="crescent"
+              />
+
+            } @else {
+
+              Create decision
+
+            }
+
+          </ion-button>
+
+        </ion-col>
+
+      </ion-row>
+
+    </ion-grid>
+
+  </ion-toolbar>
+
+</ion-footer>

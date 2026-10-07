@@ -11,6 +11,7 @@ import { CreateCriterionRequest } from '../../models/create-criterion-request';
 import { CreateOptionScoreRequest } from '../../models/create-option-score-request';
 import { DecisionState } from '../../state/decision-state';
 import {
+  NavController,
   IonButton,
   IonCard,
   IonCardContent,
@@ -25,6 +26,7 @@ import {
   IonSegmentButton,
   IonFab,
   IonFabButton,
+
 } from '@ionic/angular';
 
 import { IonIcon } from '@ionic/angular';
@@ -106,6 +108,7 @@ export class DecisionDetailPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly decisionApi = inject(DecisionApi);
   private readonly decisionState = inject(DecisionState);
+  private readonly navController = inject(NavController);
 
   ngOnInit(): void {
     this.loadDecision();
@@ -708,5 +711,31 @@ export class DecisionDetailPage implements OnInit {
         return bImportance - aImportance;
       })
       .slice(0, 2);
+  }
+
+  openOption(optionId: string): void {
+    if (!this.decisionId) {
+      return;
+    }
+
+    this.navController.navigateForward([
+      '/decisions',
+      this.decisionId,
+      'options',
+      optionId,
+    ]);
+  }
+
+  openAddOption(): void {
+    if (!this.decisionId) {
+      return;
+    }
+
+    this.navController.navigateForward([
+      '/decisions',
+      this.decisionId,
+      'options',
+      'new',
+    ]);
   }
 }

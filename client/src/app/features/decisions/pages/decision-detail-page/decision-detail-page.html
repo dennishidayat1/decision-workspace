@@ -330,6 +330,10 @@
 
                   <ion-card
                     class="option-card option-card--compact"
+                    role="button"
+                    tabindex="0"
+                    (click)="openOption(option.id)"
+                    (keydown.enter)="openOption(option.id)"
                   >
 
                     <div class="compact-image-shell">
@@ -494,6 +498,10 @@
                   <!-- DETAILED LIST -->
                   <ion-card
                     class="option-card option-card--detailed"
+                    role="button"
+                    tabindex="0"
+                    (click)="openOption(option.id)"
+                    (keydown.enter)="openOption(option.id)"
                   >
 
                     <ion-card-content>
@@ -783,12 +791,7 @@
     >
       <ion-fab-button
         class="add-option-fab-button"
-        [routerLink]="[
-          '/decisions',
-          decisionId,
-          'options',
-          'new'
-        ]"
+        (click)="openAddOption()"
       >
         <ion-icon name="add-outline" />
         <span>Add option</span>
@@ -797,3 +800,5 @@
   }
 
 </ion-content>
+
+<!-- <ion-router-outlet class="option-detail-outlet" /> -->

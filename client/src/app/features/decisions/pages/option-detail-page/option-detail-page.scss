@@ -1,0 +1,685 @@
+:host {
+    display: block;
+
+    width: 100%;
+    height: 100%;
+
+    pointer-events: auto;
+
+    color: #24352e;
+}
+
+
+/* --------------------------------------------------
+   BACKGROUND DECISION PAGE
+-------------------------------------------------- */
+
+// .decision-background {
+//   display: none;
+// }
+
+
+/* --------------------------------------------------
+   OVERLAY / PANEL
+-------------------------------------------------- */
+
+.option-detail-overlay {
+    width: 100%;
+    height: 100%;
+
+    background: #f7f9f8;
+}
+
+.option-detail-content {
+    width: 100%;
+    height: 100%;
+
+    --background: #f7f9f8;
+}
+
+.option-detail-panel {
+    width: 100%;
+    max-width: 650px;
+
+    margin: 0 auto;
+
+    padding: 28px 20px 48px;
+}
+
+
+/* --------------------------------------------------
+   NAVIGATION
+-------------------------------------------------- */
+
+.detail-navigation {
+    margin-bottom: 24px;
+}
+
+.back-button {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    width: 100%;
+
+    padding: 0;
+
+    border: 0;
+    background: transparent;
+
+    color: #6b7770;
+
+    font-family: "Inter", sans-serif;
+    font-size: 12px;
+
+    cursor: pointer;
+}
+
+.back-button>span {
+    display: flex;
+    align-items: center;
+
+    gap: 6px;
+}
+
+.back-button ion-icon {
+    font-size: 14px;
+}
+
+.back-button .close-icon {
+    font-size: 17px;
+}
+
+
+/* --------------------------------------------------
+   SUMMARY
+-------------------------------------------------- */
+
+.option-summary {
+    display: flex;
+    align-items: center;
+
+    gap: 16px;
+}
+
+.option-thumbnail {
+    flex: 0 0 80px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 80px;
+    height: 80px;
+
+    overflow: hidden;
+
+    border-radius: 12px;
+
+    background: #edf0ec;
+
+    color: rgba(107, 119, 112, 0.5);
+}
+
+.option-thumbnail img {
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+}
+
+.option-thumbnail ion-icon {
+    font-size: 24px;
+}
+
+.option-summary-copy {
+    flex: 1 1 auto;
+
+    min-width: 0;
+}
+
+.option-status {
+    margin: 0;
+
+    color: #247657;
+
+    font-family: "Inter", sans-serif;
+    font-size: 10px;
+    font-weight: 500;
+}
+
+.option-summary h1 {
+    margin: 4px 0 0;
+
+    color: #24352e;
+
+    font-family: "Manrope", sans-serif;
+    font-size: 20px;
+    font-weight: 800;
+    line-height: 1.375;
+}
+
+.option-price {
+    margin: 8px 0 0;
+
+    color: #24352e;
+
+    font-family: "Inter", sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+
+/* --------------------------------------------------
+   SCORE BADGE
+-------------------------------------------------- */
+
+.score-badge {
+    flex: 0 0 auto;
+
+    padding: 8px 12px;
+
+    border-radius: 12px;
+
+    background: #f5f0e4;
+
+    color: #80652c;
+
+    text-align: center;
+}
+
+.score-badge--good {
+    background: #e8f4ed;
+
+    color: #247657;
+}
+
+.score-badge strong {
+    display: block;
+
+    font-family: "Manrope", sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    line-height: 1;
+
+    font-variant-numeric: tabular-nums;
+}
+
+.score-badge strong small {
+    margin-left: 2px;
+
+    font-family: "Inter", sans-serif;
+    font-size: 10px;
+    font-weight: 500;
+
+    opacity: 0.65;
+}
+
+.score-badge span {
+    display: block;
+
+    margin-top: 4px;
+
+    font-family: "Inter", sans-serif;
+    font-size: 9px;
+    font-weight: 500;
+}
+
+
+/* --------------------------------------------------
+   DESCRIPTION / CHOOSE
+-------------------------------------------------- */
+
+.option-description {
+    margin:
+        20px 0 0;
+
+    color: #6b7770;
+
+    font-family: "Inter", sans-serif;
+    font-size: 12px;
+    line-height: 24px;
+}
+
+.choose-button {
+    width: 100%;
+
+    margin-top: 20px;
+
+    min-height: 44px;
+
+    --background: #247657;
+    --background-hover: #1b6045;
+
+    --color: #ffffff;
+
+    --border-radius: 12px;
+
+    --box-shadow: none;
+
+    font-family: "Inter", sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+
+    text-transform: none;
+}
+
+.choose-button ion-icon {
+    font-size: 15px;
+}
+
+
+/* --------------------------------------------------
+   COMMON SECTION CARD
+-------------------------------------------------- */
+
+.detail-section {
+    margin-top: 16px;
+
+    padding: 16px;
+
+    background: #ffffff;
+
+    border: 1px solid #e1e7e3;
+    border-radius: 12px;
+}
+
+.scores-section {
+    margin-top: 28px;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 12px;
+
+    margin-bottom: 16px;
+}
+
+.section-header h2 {
+    margin: 0;
+
+    color: #24352e;
+
+    font-family: "Manrope", sans-serif;
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.section-header>span {
+    color: #6b7770;
+
+    font-family: "Inter", sans-serif;
+    font-size: 10px;
+}
+
+.section-edit-button,
+.section-more-button {
+    padding: 0;
+
+    border: 0;
+
+    background: transparent;
+
+    color: #247657;
+
+    font-family: "Inter", sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+
+    cursor: pointer;
+}
+
+.section-more-button {
+    margin-top: 12px;
+
+    font-size: 12px;
+}
+
+
+/* --------------------------------------------------
+   SCORES
+-------------------------------------------------- */
+
+/*
+ * ScoreForm already matches the Figma score rows.
+ * When collapsed, visually show its first five rows.
+ */
+.scores-wrapper--collapsed {
+    max-height: 240px;
+
+    overflow: hidden;
+}
+
+
+/* --------------------------------------------------
+   ATTRIBUTES READ MODE
+-------------------------------------------------- */
+
+.attribute-list {
+    display: flex;
+    flex-direction: column;
+
+    gap: 12px;
+
+    margin: 0;
+}
+
+.attribute-list>div {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+
+    gap: 16px;
+
+    font-family: "Inter", sans-serif;
+    font-size: 12px;
+}
+
+.attribute-list dt {
+    color: #6b7770;
+}
+
+.attribute-list dd {
+    margin: 0;
+
+    color: #24352e;
+
+    font-weight: 500;
+
+    text-align: right;
+}
+
+.empty-copy {
+    margin: 0;
+
+    color: #6b7770;
+
+    font-size: 12px;
+}
+
+
+/* --------------------------------------------------
+   SAVE BUTTON
+-------------------------------------------------- */
+
+.section-save-button {
+    width: 100%;
+
+    margin-top: 12px;
+
+    min-height: 40px;
+
+    --background: #247657;
+    --background-hover: #1b6045;
+
+    --color: #ffffff;
+
+    --border-radius: 12px;
+
+    --box-shadow: none;
+
+    font-family: "Inter", sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+
+    text-transform: none;
+}
+
+
+/* --------------------------------------------------
+   BASIC DETAILS READ
+-------------------------------------------------- */
+
+.basic-details-read {
+    display: flex;
+    flex-direction: column;
+
+    gap: 12px;
+
+    font-family: "Inter", sans-serif;
+    font-size: 12px;
+}
+
+.basic-details-read>div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 16px;
+}
+
+.basic-details-read>div span {
+    color: #6b7770;
+}
+
+.basic-details-read>div strong {
+    font-weight: 500;
+}
+
+.basic-details-read a {
+    display: inline-flex;
+    align-items: center;
+
+    gap: 6px;
+
+    width: fit-content;
+
+    color: #247657;
+
+    text-decoration: none;
+}
+
+.basic-details-read a ion-icon {
+    font-size: 12px;
+}
+
+.basic-details-read p {
+    margin: 0;
+
+    color: #6b7770;
+
+    line-height: 20px;
+}
+
+
+/* --------------------------------------------------
+   BASIC DETAILS EDIT
+-------------------------------------------------- */
+
+.basic-edit-form {
+    display: flex;
+    flex-direction: column;
+
+    gap: 12px;
+}
+
+.basic-edit-form label {
+    display: flex;
+    flex-direction: column;
+
+    gap: 4px;
+
+    color: #24352e;
+
+    font-family: "Inter", sans-serif;
+    font-size: 12px;
+}
+
+.basic-edit-form ion-input,
+.basic-edit-form ion-select,
+.basic-edit-form ion-textarea {
+    min-height: 40px;
+
+    --background: #ffffff;
+
+    --border-color: #e1e7e3;
+    --border-radius: 8px;
+
+    --highlight-color-focused: #247657;
+
+    --color: #24352e;
+
+    font-family: "Inter", sans-serif;
+    font-size: 14px;
+}
+
+.price-row {
+    display: grid;
+
+    grid-template-columns:
+        minmax(0, 1fr) minmax(0, 1fr);
+
+    gap: 12px;
+}
+
+
+/* --------------------------------------------------
+   REMOVE
+-------------------------------------------------- */
+
+.remove-section {
+    margin-top: 24px;
+}
+
+.remove-button {
+    display: inline-flex;
+    align-items: center;
+
+    gap: 6px;
+
+    padding: 0;
+
+    border: 0;
+    background: transparent;
+
+    color: #6b7770;
+
+    font-family: "Inter", sans-serif;
+    font-size: 11px;
+
+    cursor: pointer;
+}
+
+.remove-button:hover {
+    color: #b42318;
+}
+
+.remove-button ion-icon {
+    font-size: 12px;
+}
+
+.delete-confirmation {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 12px;
+
+    padding: 12px;
+
+    border-radius: 8px;
+
+    background: #fff1f1;
+
+    color: #9b1c1c;
+
+    font-family: "Inter", sans-serif;
+    font-size: 12px;
+}
+
+.delete-confirmation>div {
+    display: flex;
+
+    gap: 12px;
+}
+
+.delete-confirmation button {
+    padding: 0;
+
+    border: 0;
+    background: transparent;
+
+    color: inherit;
+
+    cursor: pointer;
+}
+
+.delete-confirmation .confirm-remove {
+    font-weight: 700;
+}
+
+
+/* --------------------------------------------------
+   LOADING
+-------------------------------------------------- */
+
+.loading-state {
+    padding: 48px 0;
+
+    color: #6b7770;
+
+    text-align: center;
+
+    font-size: 13px;
+}
+
+
+/* --------------------------------------------------
+   TABLET
+-------------------------------------------------- */
+
+@media (min-width: 640px) {
+    .option-detail-panel {
+        padding-inline: 32px;
+    }
+}
+
+
+/* --------------------------------------------------
+   DESKTOP SIDE PANEL
+-------------------------------------------------- */
+
+@media (min-width: 1100px) {
+    .option-detail-panel {
+        padding-inline: 32px;
+    }
+}
+
+
+/* --------------------------------------------------
+   SMALL MOBILE
+-------------------------------------------------- */
+
+@media (max-width: 420px) {
+
+    .option-summary {
+        gap: 12px;
+    }
+
+    .option-thumbnail {
+        flex-basis: 72px;
+
+        width: 72px;
+        height: 72px;
+    }
+
+    .option-summary h1 {
+        font-size: 18px;
+    }
+
+    .score-badge {
+        padding:
+            7px 9px;
+    }
+
+    .score-badge strong {
+        font-size: 16px;
+    }
+
+    .detail-section {
+        padding: 14px;
+    }
+}
