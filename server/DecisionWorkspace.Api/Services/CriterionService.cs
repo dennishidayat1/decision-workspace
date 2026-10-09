@@ -21,7 +21,7 @@ public class CriterionService
             return null;
         }
 
-        var now  = DateTimeOffset.UtcNow;
+        var now = DateTimeOffset.UtcNow;
         var criterion = new Criterion
         {
             Id = Guid.NewGuid(),
@@ -54,5 +54,54 @@ public class CriterionService
         return await _dbContext.Criteria
             .Where(criterion => criterion.DecisionId == decisionId)
             .ToListAsync();
+    }
+
+    public async Task<Criterion?> UpdateCriterionAsync(Guid decisionId, Guid criterionId, CreateCriterionRequest request)
+    {
+        var criterion = await _dbContext.Criteria
+            .FirstOrDefaultAsync(
+                criterion =>
+                    criterion.Id == criterionId &&
+                    criterion.DecisionId == decisionId
+            );
+
+        if (criterion == null)
+        {
+            return null;
+        }
+
+        criterion.Name = request.Name;
+        criterion.Importance = request.Importance;
+        criterion.Context = request.Context;
+        criterion.UpdatedAt = DateTimeOffset.UtcNow;
+
+        await _dbContext.SaveChangesAsync();
+
+        return criterion;
+    }
+
+
+    public async Task<bool> DeleteCriterionAsync(
+        Guid decisionId,
+        Guid criterionId
+    )
+    {
+        var criterion = await _dbContext.Criteria
+            .FirstOrDefaultAsync(
+                criterion =>
+                    criterion.Id == criterionId &&
+                    criterion.DecisionId == decisionId
+            );
+
+        if (criterion == null)
+        {
+            return false;
+        }
+
+        _dbContext.Criteria.Remove(criterion);
+
+        await _dbContext.SaveChangesAsync();
+
+        return true;
     }
 }

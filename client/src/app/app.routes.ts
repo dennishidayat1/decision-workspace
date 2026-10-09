@@ -49,6 +49,22 @@ export const routes: Routes = [
             './features/decisions/pages/option-detail-page/option-detail-page'
           ).then((m) => m.OptionDetailPage),
       },
+
+      {
+        path: 'decisions/:id/edit',
+        loadComponent: () =>
+          import(
+            './features/decisions/pages/edit-decision-page/edit-decision-page'
+          ).then(m => m.EditDecisionPage),
+      },
+
+      {
+        path: 'decisions/:id/criteria',
+        loadComponent: () =>
+          import(
+            './features/decisions/pages/edit-criteria-page/edit-criteria-page'
+          ).then(m => m.EditCriteriaPage),
+      },
     ],
   },
 ];

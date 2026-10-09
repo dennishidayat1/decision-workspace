@@ -115,6 +115,65 @@ public class DecisionOptionService
             .Where(d => d.DecisionId == decisionId)
             .ToListAsync();
     }
+
+    public async Task<DecisionOption?> UpdateAsync(
+        Guid decisionId,
+        Guid decisionOptionId,
+        CreateDecisionOptionRequest request
+    )
+    {
+        var decisionOption =
+            await _dbContext.DecisionOptions
+                .FirstOrDefaultAsync(
+                    option =>
+                        option.Id == decisionOptionId &&
+                        option.DecisionId == decisionId
+                );
+
+        if (decisionOption == null)
+        {
+            return null;
+        }
+
+        decisionOption.Title = request.Title;
+        decisionOption.Url = request.Url;
+        decisionOption.ThumbnailUrl = request.ThumbnailUrl;
+        decisionOption.Description = request.Description;
+        decisionOption.Price = request.Price;
+        decisionOption.Currency = request.Currency;
+        decisionOption.UpdatedAt = DateTimeOffset.UtcNow;
+
+        await _dbContext.SaveChangesAsync();
+
+        return decisionOption;
+    }
+
+    public async Task<bool> DeleteAsync(
+        Guid decisionId,
+        Guid decisionOptionId
+    )
+    {
+        var decisionOption =
+            await _dbContext.DecisionOptions
+                .FirstOrDefaultAsync(
+                    option =>
+                        option.Id == decisionOptionId &&
+                        option.DecisionId == decisionId
+                );
+
+        if (decisionOption == null)
+        {
+            return false;
+        }
+
+        _dbContext.DecisionOptions.Remove(
+            decisionOption
+        );
+
+        await _dbContext.SaveChangesAsync();
+
+        return true;
+    }
 }
 
 public enum CreateDecisionOptionStatus

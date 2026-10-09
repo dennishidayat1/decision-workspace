@@ -30,6 +30,7 @@ import { DecisionState } from '../../state/decision-state';
 import { AttributeFormGroup, ScoreFormGroup, createOptionForm } from '../../forms/option-form';
 import { AttributeForm } from '../../components/attribute-form/attribute-form';
 import { ScoreForm } from '../../components/score-form/score-form';
+import { DecisionApi } from '../../services/decision-api';
 
 addIcons({
   arrowBackOutline,
@@ -67,6 +68,7 @@ export class OptionDetailPage {
   private readonly router = inject(Router);
   private readonly decisionState = inject(DecisionState);
   private readonly navController = inject(NavController);
+  private readonly decisionApi = inject(DecisionApi);
 
   readonly decisionId = this.route.snapshot.paramMap.get('id') ?? null;
   readonly optionId = this.route.snapshot.paramMap.get('optionId');
@@ -78,8 +80,7 @@ export class OptionDetailPage {
 
   readonly showMoreScores = signal(false);
   readonly showMoreAttributes = signal(false);
-
-  // readonly isChosen = signal(false);
+  readonly formHydrated = signal(false);
   readonly deleting = signal(false);
 
   readonly option = computed(() => {
@@ -166,6 +167,7 @@ export class OptionDetailPage {
   private hydratedOptionId: string | null = null;
 
   private readonly hydrateForm = effect(() => {
+
     const option = this.option();
     const loadStatus =
       this.decisionState.loadStatus();
@@ -205,16 +207,32 @@ export class OptionDetailPage {
       );
     }
 
-    const scoreArray =
-      this.optionForm.controls.scores;
-
-    scoreArray.clear();
+    const scoreArray = this.optionForm.controls.scores;
 
     for (const criterion of this.criteria()) {
-      const existingScore = this.scores().find(
+      const persistedScore = this.scores().find(
         score =>
           score.criterionId === criterion.id,
       );
+
+      const existingForm =
+        scoreArray.controls.find(
+          scoreGroup =>
+            scoreGroup.controls.criterionId.value ===
+            criterion.id,
+        );
+
+      if (existingForm) {
+        existingForm.patchValue({
+          score:
+            persistedScore?.score ?? null,
+
+          comment:
+            persistedScore?.comment ?? '',
+        });
+
+        continue;
+      }
 
       scoreArray.push(
         new FormGroup({
@@ -226,11 +244,11 @@ export class OptionDetailPage {
           ),
 
           score: new FormControl<number | null>(
-            existingScore?.score ?? null,
+            persistedScore?.score ?? null,
           ),
 
           comment: new FormControl(
-            existingScore?.comment ?? '',
+            persistedScore?.comment ?? '',
             {
               nonNullable: true,
             },
@@ -240,6 +258,10 @@ export class OptionDetailPage {
     }
 
     this.hydratedOptionId = option.id;
+
+
+    this.hydratedOptionId = option.id;
+    this.formHydrated.set(true);
   });
 
   ionViewWillEnter(): void {
@@ -257,7 +279,7 @@ export class OptionDetailPage {
       return;
     }
 
-    this.navController.navigateBack(['/decisions',this.decisionId]);
+    this.navController.navigateBack(['/decisions', this.decisionId]);
   }
 
   toggleAttributesEdit(): void {
@@ -273,31 +295,181 @@ export class OptionDetailPage {
   // }
 
   saveAttributes(): void {
-    /*
-     * UI/state is ready.
-     * Wire this to the attribute update API once the
-     * backend update/replace endpoint exists.
-     */
-    this.editingAttributes.set(false);
+    if (
+      !this.decisionId ||
+      !this.optionId
+    ) {
+      return;
+    }
+
+    const requests =
+      this.optionForm.controls.attributes.controls
+        .map(attribute => {
+          const value =
+            attribute.getRawValue();
+
+          return {
+            name: value.name.trim(),
+            value: value.value.trim(),
+          };
+        })
+        .filter(attribute =>
+          attribute.name &&
+          attribute.value
+        );
+
+    this.decisionApi
+      .updateDecisionOptionAttributes(
+        this.decisionId,
+        this.optionId,
+        requests,
+      )
+      .subscribe({
+        next: updatedAttributes => {
+          this.decisionState
+            .updateOptionAttributes(
+              this.optionId!,
+              updatedAttributes,
+            );
+
+          this.editingAttributes.set(false);
+        },
+
+        error: error => {
+          console.error(
+            'Failed to save attributes:',
+            error,
+          );
+        },
+      });
   }
 
   saveBasicDetails(): void {
-    if (this.optionForm.controls.title.invalid) {
+    if (
+      !this.decisionId ||
+      !this.optionId
+    ) {
+      return;
+    }
+
+    if (
+      this.optionForm.controls.title.invalid
+    ) {
       this.optionForm.controls.title.markAsTouched();
       return;
     }
 
-    /*
-     * UI/form is ready.
-     * Wire this to updateDecisionOption(...) once that
-     * backend endpoint is available.
-     */
-    this.editingBasic.set(false);
+    const value =
+      this.optionForm.getRawValue();
+
+    this.decisionApi
+      .updateDecisionOption(
+        this.decisionId,
+        this.optionId,
+        {
+          title: value.title.trim(),
+          url:
+            value.url.trim() || undefined,
+          thumbnailUrl:
+            value.thumbnailUrl.trim() || undefined,
+          description:
+            value.description.trim() || undefined,
+          price: value.price ?? undefined,
+          currency:
+            value.currency || undefined,
+
+          attributes: [],
+          scores: [],
+        },
+      )
+      .subscribe({
+        next: updatedOption => {
+          this.decisionState.updateOption(
+            updatedOption,
+          );
+
+          this.editingBasic.set(false);
+        },
+
+        error: (error) => {
+          console.error(
+            'Failed to update option:',
+            error,
+          );
+        },
+      });
+  }
+
+  saveScore(event: {
+    criterionId: string;
+    score: number;
+    comment: string;
+  }): void {
+    if (!this.optionId) {
+      return;
+    }
+
+    this.decisionApi
+      .createOptionScore(
+        this.optionId,
+        {
+          criterionId: event.criterionId,
+          score: event.score,
+          comment:
+            event.comment || undefined,
+        },
+      )
+      .subscribe({
+        next: updatedScore => {
+          this.decisionState.updateOptionScore(
+            this.optionId!,
+            updatedScore,
+          );
+        },
+
+        error: error => {
+          console.error(
+            'Failed to save score:',
+            error,
+          );
+        },
+      });
   }
 
   removeOption(): void {
-    /*
-     * Wire to deleteDecisionOption(...) once confirmed.
-     */
+    if (
+      !this.decisionId ||
+      !this.optionId
+    ) {
+      return;
+    }
+
+    this.deleting.set(true);
+
+    this.decisionApi
+      .deleteDecisionOption(
+        this.decisionId,
+        this.optionId,
+      )
+      .subscribe({
+        next: () => {
+          this.decisionState.removeOption(
+            this.optionId!,
+          );
+
+          this.navController.navigateBack(
+            ['/decisions', this.decisionId],
+          );
+        },
+
+        error: error => {
+          console.error(
+            'Failed to delete option:',
+            error,
+          );
+
+          this.deleting.set(false);
+        },
+      });
   }
 }

@@ -33,7 +33,7 @@ public class DecisionOptionsController : ControllerBase
 
             CreateDecisionOptionStatus.DuplicateCriterion =>
                 BadRequest("Each criterion can only be scored once per option."),
-                
+
             _ => StatusCode(500),
         };
     }
@@ -49,5 +49,47 @@ public class DecisionOptionsController : ControllerBase
         }
 
         return Ok(decisionOptions);
+    }
+
+    [HttpPut("{decisionOptionId:guid}")]
+    public async Task<IActionResult> UpdateAsync(
+        Guid decisionId,
+        Guid decisionOptionId,
+        [FromBody] CreateDecisionOptionRequest request
+    )
+    {
+        var decisionOption =
+            await _decisionOptionService.UpdateAsync(
+                decisionId,
+                decisionOptionId,
+                request
+            );
+
+        if (decisionOption == null)
+        {
+            return NotFound();
+        }
+
+        return Ok(decisionOption);
+    }
+
+    [HttpDelete("{decisionOptionId:guid}")]
+        public async Task<IActionResult> DeleteAsync(
+        Guid decisionId,
+        Guid decisionOptionId
+    )
+    {
+        var deleted =
+            await _decisionOptionService.DeleteAsync(
+                decisionId,
+                decisionOptionId
+            );
+
+        if (!deleted)
+        {
+            return NotFound();
+        }
+
+        return NoContent();
     }
 }

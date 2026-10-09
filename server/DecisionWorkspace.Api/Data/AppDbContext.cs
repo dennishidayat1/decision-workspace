@@ -23,6 +23,34 @@ public class AppDbContext : DbContext
                 optionScore.DecisionOptionId,
                 optionScore.CriterionId
             });
+
+
+        modelBuilder.Entity<OptionScore>()
+            .HasOne(optionScore => optionScore.Criterion)
+            .WithMany()
+            .HasForeignKey(optionScore => optionScore.CriterionId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+
+        modelBuilder.Entity<OptionScore>()
+            .HasOne(optionScore => optionScore.DecisionOption)
+            .WithMany()
+            .HasForeignKey(optionScore => optionScore.DecisionOptionId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+
+        modelBuilder.Entity<Criterion>()
+            .HasOne(criterion => criterion.Decision)
+            .WithMany()
+            .HasForeignKey(criterion => criterion.DecisionId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+
+        modelBuilder.Entity<DecisionOption>()
+            .HasOne(option => option.Decision)
+            .WithMany()
+            .HasForeignKey(option => option.DecisionId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 
     public DbSet<OptionScore> OptionScores { get; set; }

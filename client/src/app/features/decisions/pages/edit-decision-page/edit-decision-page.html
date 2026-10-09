@@ -1,0 +1,213 @@
+<ion-content class="edit-page">
+
+  <ion-grid class="page-grid">
+
+    <!-- Back -->
+    <ion-row>
+      <ion-col size="12">
+        <ion-button
+          class="back-button"
+          fill="clear"
+          size="small"
+          (click)="cancel()"
+        >
+          <ion-icon
+            slot="start"
+            name="arrow-back-outline"
+          />
+          Back to decision
+        </ion-button>
+      </ion-col>
+    </ion-row>
+
+    <!-- Heading -->
+    <ion-row>
+      <ion-col size="12">
+        <header class="page-heading">
+          <h1>Edit decision</h1>
+
+          <p>
+            Update what you're deciding and any context worth keeping.
+          </p>
+        </header>
+      </ion-col>
+    </ion-row>
+
+    @if (isLoading()) {
+      <ion-row>
+        <ion-col class="ion-text-center">
+          <ion-spinner />
+        </ion-col>
+      </ion-row>
+    }
+
+    @if (!isLoading() && !loadError()) {
+
+      <form
+        [formGroup]="decisionForm"
+        (ngSubmit)="onSubmit()"
+      >
+
+        <ion-card class="form-card">
+          <ion-card-content>
+
+            <ion-grid class="form-grid">
+
+              <!-- Question -->
+              <ion-row>
+                <ion-col size="12">
+
+                  <label class="field-label">
+                    What are you deciding?
+                  </label>
+
+                  <ion-input
+                    class="form-input question-input"
+                    fill="outline"
+                    formControlName="question"
+                    maxlength="240"
+                    placeholder="Which mechanical keyboard should I buy?"
+                  />
+
+                </ion-col>
+              </ion-row>
+
+              <!-- Optional details -->
+              <ion-row>
+                <ion-col size="12">
+
+                  <ion-accordion-group value="details">
+
+                    <ion-accordion value="details">
+
+                      <ion-item
+                        slot="header"
+                        lines="none"
+                        class="details-header"
+                      >
+                        <ion-label>
+                          Category & context
+                          <span>Optional</span>
+                        </ion-label>
+                      </ion-item>
+
+                      <div
+                        slot="content"
+                        class="details-content"
+                      >
+
+                        <ion-grid class="details-grid">
+
+                          <!-- Category -->
+                          <ion-row>
+                            <ion-col
+                              size="12"
+                              sizeMd="6"
+                            >
+                              <label class="field-label">
+                                Category
+                                <span>(optional)</span>
+                              </label>
+
+                              <ion-input
+                                class="form-input"
+                                fill="outline"
+                                formControlName="category"
+                                maxlength="60"
+                                placeholder="e.g. Shopping"
+                              />
+                            </ion-col>
+                          </ion-row>
+
+                          <!-- Context -->
+                          <ion-row>
+                            <ion-col size="12">
+
+                              <label class="field-label">
+                                Context
+                                <span>(optional)</span>
+                              </label>
+
+                              <p class="field-helper">
+                                Anything worth remembering while you decide.
+                              </p>
+
+                              <ion-textarea
+                                class="form-input context-input"
+                                fill="outline"
+                                formControlName="context"
+                                maxlength="2000"
+                                rows="3"
+                                [autoGrow]="true"
+                                placeholder="I want something wireless for work and gaming..."
+                              />
+
+                            </ion-col>
+                          </ion-row>
+
+                        </ion-grid>
+
+                      </div>
+
+                    </ion-accordion>
+
+                  </ion-accordion-group>
+
+                </ion-col>
+              </ion-row>
+
+            </ion-grid>
+
+          </ion-card-content>
+        </ion-card>
+
+        <!-- Actions -->
+        <div class="actions">
+
+          <ion-grid>
+            <ion-row
+              class="ion-justify-content-end ion-align-items-center"
+            >
+
+              <ion-col
+                size="auto"
+              >
+                <ion-button
+                class="cancel-button"
+                type="button"
+                fill="outline"
+                (click)="cancel()"
+                >
+                Cancel
+                </ion-button>
+
+                <ion-button
+                class="save-button"
+                type="submit"
+                [disabled]="
+                    decisionForm.invalid ||
+                    decisionForm.pristine ||
+                    isSubmitting()
+                "
+                >
+                <ion-icon
+                    slot="start"
+                    name="checkmark-outline"
+                />
+
+                Save changes
+                </ion-button>
+              </ion-col>
+
+            </ion-row>
+          </ion-grid>
+
+        </div>
+
+      </form>
+
+    }
+
+  </ion-grid>
+
+</ion-content>

@@ -42,5 +42,38 @@ namespace DecisionWorkspace.Api.Controllers
 
             return Ok(decision);
         }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(Guid id, CreateDecisionRequest request)
+        {
+            var decision =
+                await _decisionService.UpdateAsync(
+                    id,
+                    request
+                );
+
+            if (decision == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(decision);
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(Guid id)
+        {
+            var deleted =
+                await _decisionService.DeleteAsync(
+                    id
+                );
+
+            if (!deleted)
+            {
+                return NotFound();
+            }
+
+            return NoContent();
+        }
     }
 }

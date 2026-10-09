@@ -75,12 +75,16 @@ export class CriteriaForm {
 
     this.criteria().push(criterion);
 
+    this.criteria().markAsDirty();
+
     const newIndex =
       this.criteria().length - 1;
 
-    this.expandedAccordionValue.set(
-      newIndex.toString(),
-    );
+    setTimeout(() => {
+      this.expandedAccordionValue.set(
+        newIndex.toString(),
+      );
+    });
   }
 
 
@@ -95,6 +99,8 @@ export class CriteriaForm {
     }
 
     this.criteria().removeAt(index);
+
+    this.criteria().markAsDirty();
 
     this.expandedAccordionValue.set(null);
   }
@@ -120,11 +126,14 @@ export class CriteriaForm {
         ? value[0]
         : value;
 
-    this.expandedAccordionValue.set(
+    if (
       typeof next === 'string'
-        ? next
-        : null,
-    );
+    ) {
+      this.expandedAccordionValue.set(next);
+      return;
+    }
+
+    this.expandedAccordionValue.set(null);
   }
 
 

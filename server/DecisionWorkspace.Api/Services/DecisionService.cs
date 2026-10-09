@@ -46,4 +46,47 @@ public class DecisionService
         return await _dbContext.Decisions
             .FirstOrDefaultAsync(d => d.Id == id);
     }
+
+    public async Task<Decision?> UpdateAsync(Guid id, CreateDecisionRequest request)
+    {
+        var decision = await _dbContext.Decisions
+            .FirstOrDefaultAsync(d => d.Id == id);
+
+        if (decision == null)
+        {
+            return null;
+        }
+
+        decision.Title = request.Title;
+        decision.Question = request.Question;
+        decision.Context = request.Context;
+        decision.Category = request.Category;
+        decision.UpdatedAt = DateTimeOffset.UtcNow;
+
+        await _dbContext.SaveChangesAsync();
+
+        return decision;
+    }
+
+    public async Task<bool> DeleteAsync(Guid id)
+    {
+        var decision =
+            await _dbContext.Decisions
+                .FirstOrDefaultAsync(
+                    d => d.Id == id
+                );
+
+        if (decision == null)
+        {
+            return false;
+        }
+
+        _dbContext.Decisions.Remove(
+            decision
+        );
+
+        await _dbContext.SaveChangesAsync();
+
+        return true;
+    }
 }

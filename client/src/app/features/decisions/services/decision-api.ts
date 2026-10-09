@@ -17,7 +17,7 @@ export class DecisionApi {
   private readonly http = inject(HttpClient);
 
   private readonly apiUrl = `${environment.apiUrl}`;
-  
+
   createDecision(request: CreateDecisionRequest) {
     return this.http.post<Decision>(
       `${this.apiUrl}/decisions`,
@@ -36,6 +36,24 @@ export class DecisionApi {
     );
   }
 
+  updateDecision(
+    id: string,
+    request: CreateDecisionRequest,
+  ) {
+    return this.http.put<Decision>(
+      `${this.apiUrl}/decisions/${id}`,
+      request,
+    );
+  }
+
+  deleteDecision(
+    id: string,
+  ) {
+    return this.http.delete<void>(
+      `${this.apiUrl}/decisions/${id}`,
+    );
+  }
+
   getDecisionOptions(decisionId: string) {
     return this.http.get<DecisionOption[]>(
       `${this.apiUrl}/decisions/${decisionId}/options`,
@@ -45,6 +63,17 @@ export class DecisionApi {
   createDecisionOption(decisionId: string, request: CreateDecisionOptionRequest) {
     return this.http.post<DecisionOption>(
       `${this.apiUrl}/decisions/${decisionId}/options`,
+      request,
+    );
+  }
+
+  updateDecisionOption(
+    decisionId: string,
+    decisionOptionId: string,
+    request: CreateDecisionOptionRequest,
+  ) {
+    return this.http.put<DecisionOption>(
+      `${this.apiUrl}/decisions/${decisionId}/options/${decisionOptionId}`,
       request,
     );
   }
@@ -62,6 +91,26 @@ export class DecisionApi {
     );
   }
 
+  updateDecisionOptionAttributes(
+    decisionId: string,
+    decisionOptionId: string,
+    requests: CreateDecisionOptionAttributeRequest[],
+  ) {
+    return this.http.put<DecisionOptionAttribute[]>(
+      `${this.apiUrl}/decisions/${decisionId}/options/${decisionOptionId}/attributes`,
+      requests,
+    );
+  }
+
+  deleteDecisionOption(
+    decisionId: string,
+    decisionOptionId: string,
+  ) {
+    return this.http.delete<void>(
+      `${this.apiUrl}/decisions/${decisionId}/options/${decisionOptionId}`,
+    );
+  }
+
   getCriteria(decisionId: string) {
     return this.http.get<Criterion[]>(
       `${this.apiUrl}/decisions/${decisionId}/criteria`,
@@ -74,7 +123,27 @@ export class DecisionApi {
       request,
     );
   }
-  
+
+  updateCriterion(
+    decisionId: string,
+    criterionId: string,
+    request: CreateCriterionRequest,
+  ) {
+    return this.http.put<Criterion>(
+      `${this.apiUrl}/decisions/${decisionId}/criteria/${criterionId}`,
+      request,
+    );
+  }
+
+  deleteCriterion(
+    decisionId: string,
+    criterionId: string,
+  ) {
+    return this.http.delete<void>(
+      `${this.apiUrl}/decisions/${decisionId}/criteria/${criterionId}`,
+    );
+  }
+
   getOptionScores(decisionOptionId: string) {
     return this.http.get<OptionScore[]>(
       `${this.apiUrl}/decision-options/${decisionOptionId}/scores`

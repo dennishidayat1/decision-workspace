@@ -26,7 +26,11 @@ import {
   IonSegmentButton,
   IonFab,
   IonFabButton,
-
+  IonItem,
+  IonLabel,
+  IonList,
+  IonPopover,
+  IonModal
 } from '@ionic/angular';
 
 import { IonIcon } from '@ionic/angular';
@@ -44,6 +48,9 @@ import {
   optionsOutline,
   star,
   swapVerticalOutline,
+  createOutline,
+  trashOutline,
+  closeOutline
 } from 'ionicons/icons';
 
 addIcons({
@@ -59,6 +66,9 @@ addIcons({
   optionsOutline,
   star,
   swapVerticalOutline,
+  createOutline,
+  trashOutline,
+  closeOutline
 });
 
 type OptionSort =
@@ -98,26 +108,34 @@ type OptionView = 'list' | 'grid';
     IonIcon,
     IonFab,
     IonFabButton,
+    IonItem,
+    IonLabel,
+    IonList,
+    IonPopover,
+    IonModal
   ],
   selector: 'app-decision-detail-page',
   styleUrl: './decision-detail-page.scss',
   templateUrl: './decision-detail-page.html',
 })
 
-export class DecisionDetailPage implements OnInit {
+export class DecisionDetailPage {
   private readonly route = inject(ActivatedRoute);
   private readonly decisionApi = inject(DecisionApi);
   private readonly decisionState = inject(DecisionState);
   private readonly navController = inject(NavController);
 
-  ngOnInit(): void {
-    this.loadDecision();
-  }
 
   ionViewWillEnter(): void {
-    if (this.decisionId) {
-      this.decisionState.ensureDecisionLoaded(this.decisionId);
+    if (!this.decisionId) {
+      return;
     }
+
+    this.loadDecision();
+
+    this.decisionState.ensureDecisionLoaded(
+      this.decisionId,
+    );
   }
 
   readonly decisionId = this.route.snapshot.paramMap.get('id');
@@ -130,6 +148,9 @@ export class DecisionDetailPage implements OnInit {
   readonly optionScoreForms = new Map<string, FormGroup>();
   readonly isCriterionFormOpen = signal(false);
   readonly selectedOptionIdForScoring = signal<string | null>(null);
+  readonly isDecisionActionsOpen = signal(false);
+  readonly isDeleteDecisionOpen = signal(false);
+  readonly decisionActionsEvent = signal<Event | undefined>(undefined);
   readonly isLoading = signal(true);
   readonly loadError = signal<string | null>(null);
   readonly attributeSubmitError = signal<string | null>(null);
@@ -731,11 +752,58 @@ export class DecisionDetailPage implements OnInit {
       return;
     }
 
-    this.navController.navigateForward([
-      '/decisions',
-      this.decisionId,
-      'options',
-      'new',
-    ]);
+    this.navController.navigateForward(['/decisions', this.decisionId, 'options', 'new',]);
+  }
+
+  openDecisionActions(
+    event: Event,
+  ): void {
+    this.decisionActionsEvent.set(event);
+    this.isDecisionActionsOpen.set(true);
+  }
+
+
+  closeDecisionActions(): void {
+    this.isDecisionActionsOpen.set(false);
+  }
+
+
+  onDeleteDecision(): void {
+    this.closeDecisionActions();
+
+    if (!this.decisionId) {
+      return;
+    }
+
+    this.isDeleteDecisionOpen.set(true);
+  }
+
+  closeDeleteDecision(): void {
+    this.isDeleteDecisionOpen.set(false);
+  }
+
+  confirmDeleteDecision(): void {
+    if (!this.decisionId) {
+      return;
+    }
+
+    this.decisionApi
+      .deleteDecision(this.decisionId)
+      .subscribe({
+        next: () => {
+          this.isDeleteDecisionOpen.set(false);
+
+          this.navController.navigateRoot(
+            '/decisions',
+          );
+        },
+
+        error: (error) => {
+          console.error(
+            'Failed to delete decision:',
+            error,
+          );
+        },
+      });
   }
 }

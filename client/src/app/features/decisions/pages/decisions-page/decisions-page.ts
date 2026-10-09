@@ -10,8 +10,6 @@ import {
   IonCardContent,
   IonCol,
   IonContent,
-  IonFab,
-  IonFabButton,
   IonGrid,
   IonIcon,
   IonRow,
@@ -42,8 +40,6 @@ addIcons({
     IonCardContent,
     IonCol,
     IonContent,
-    IonFab,
-    IonFabButton,
     IonGrid,
     IonIcon,
     IonRow,
@@ -52,9 +48,9 @@ addIcons({
   templateUrl: './decisions-page.html',
   styleUrl: './decisions-page.scss',
 })
-export class DecisionsPage implements OnInit {
+export class DecisionsPage {
 
-  ngOnInit(): void {
+  ionViewWillEnter(): void {
     this.loadDecisions();
   }
 

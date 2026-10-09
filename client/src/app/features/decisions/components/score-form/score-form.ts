@@ -1,4 +1,4 @@
-import { Component, effect, input, signal } from '@angular/core';
+import { Component, effect, input, output, signal } from '@angular/core';
 import {
   ReactiveFormsModule,
   FormArray,
@@ -56,33 +56,38 @@ export class ScoreForm {
   readonly criteria = input.required<readonly Criterion[]>();
   readonly scores = input.required<FormArray<ScoreFormGroup>>();
   readonly ratingValues = [1, 2, 3, 4, 5] as const;
+  readonly scoreChanged = output<{
+    criterionId: string;
+    score: number;
+    comment: string;
+  }>();
 
-  private readonly populateCriteria = effect(() => {
-    const criteria = this.criteria();
-    const scores = this.scores();
+  // private readonly populateCriteria = effect(() => {
+  //   const criteria = this.criteria();
+  //   const scores = this.scores();
 
-    const existingCriterionIds = new Set(
-      scores.controls.map(
-        (score) => score.controls.criterionId.value,
-      ),
-    );
+  //   const existingCriterionIds = new Set(
+  //     scores.controls.map(
+  //       (score) => score.controls.criterionId.value,
+  //     ),
+  //   );
 
-    for (const criterion of criteria) {
-      if (!existingCriterionIds.has(criterion.id)) {
-        scores.push(
-          new FormGroup({
-            criterionId: new FormControl(criterion.id, {
-              nonNullable: true,
-            }),
-            score: new FormControl<number | null>(null),
-            comment: new FormControl('', {
-              nonNullable: true,
-            }),
-          }),
-        );
-      }
-    }
-  });
+  //   for (const criterion of criteria) {
+  //     if (!existingCriterionIds.has(criterion.id)) {
+  //       scores.push(
+  //         new FormGroup({
+  //           criterionId: new FormControl(criterion.id, {
+  //             nonNullable: true,
+  //           }),
+  //           score: new FormControl<number | null>(null),
+  //           comment: new FormControl('', {
+  //             nonNullable: true,
+  //           }),
+  //         }),
+  //       );
+  //     }
+  //   }
+  // });
 
   readonly expandedCommentCriterionId =
     signal<string | null>(null);
@@ -123,13 +128,17 @@ export class ScoreForm {
     scoreGroup: ScoreFormGroup,
     value: number,
   ): void {
-    const scoreControl = scoreGroup.controls.score;
+    scoreGroup.controls.score.setValue(value);
 
-    scoreControl.setValue(
-      scoreControl.value === value
-        ? null
-        : value,
-    );
+    this.scoreChanged.emit({
+      criterionId:
+        scoreGroup.controls.criterionId.value,
+
+      score: value,
+
+      comment:
+        scoreGroup.controls.comment.value.trim(),
+    });
   }
 
   clearScore(scoreGroup: ScoreFormGroup): void {

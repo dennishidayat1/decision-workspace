@@ -1,5 +1,5 @@
-import { Component, signal, inject } from '@angular/core';
-import { ReactiveFormsModule } from '@angular/forms';
+import { Component, signal, inject, effect } from '@angular/core';
+import { ReactiveFormsModule, FormGroup, FormControl } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DecisionApi } from '../../services/decision-api';
 import { CreateDecisionOptionRequest } from '../../models/create-decision-option-request';
@@ -7,7 +7,7 @@ import { OptionInfoForm } from '../../components/option-info-form/option-info-fo
 import { AttributeForm } from '../../components/attribute-form/attribute-form';
 import { ScoreForm } from '../../components/score-form/score-form';
 import { DecisionState } from '../../state/decision-state';
-import { createOptionForm } from '../../forms/option-form';
+import { ScoreFormGroup, createOptionForm } from '../../forms/option-form';
 import {
   NavController,
   IonContent,
@@ -41,7 +41,7 @@ addIcons({
     IonIcon,
     IonText,
     IonNote,
-    IonBadge
+    IonBadge,
   ],
   selector: 'app-add-option-page',
   styleUrl: './add-option-page.scss',
@@ -71,6 +71,53 @@ export class AddOptionPage {
 
     this.decisionState.ensureDecisionLoaded(this.decisionId);
   }
+
+  private readonly populateScores = effect(() => {
+    const criteria = this.criteria();
+    const scoreArray =
+      this.optionForm.controls.scores;
+
+    const existingCriterionIds =
+      new Set(
+        scoreArray.controls.map(
+          score =>
+            score.controls.criterionId.value,
+        ),
+      );
+
+    for (const criterion of criteria) {
+      if (
+        existingCriterionIds.has(
+          criterion.id,
+        )
+      ) {
+        continue;
+      }
+
+      scoreArray.push(
+        new FormGroup({
+          criterionId: new FormControl(
+            criterion.id,
+            {
+              nonNullable: true,
+            },
+          ),
+
+          score:
+            new FormControl<number | null>(
+              null,
+            ),
+
+          comment: new FormControl(
+            '',
+            {
+              nonNullable: true,
+            },
+          ),
+        }) as ScoreFormGroup,
+      );
+    }
+  });
 
   onAddOption(): void {
     if (!this.decisionId) {
@@ -140,6 +187,6 @@ export class AddOptionPage {
       return;
     }
 
-    this.navController.navigateBack(['/decisions',this.decisionId]);
+    this.navController.navigateBack(['/decisions', this.decisionId]);
   }
 }

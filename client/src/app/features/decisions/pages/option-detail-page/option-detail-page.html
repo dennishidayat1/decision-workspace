@@ -148,10 +148,13 @@
               criteria().length > 5
             "
           >
-            <app-score-form
-              [criteria]="criteria()"
-              [scores]="optionForm.controls.scores"
-            />
+            @if (formHydrated()) {
+              <app-score-form
+                [criteria]="criteria()"
+                [scores]="optionForm.controls.scores"
+                (scoreChanged)="saveScore($event)"
+              />
+            }
           </div>
 
 

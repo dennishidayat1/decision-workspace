@@ -74,12 +74,74 @@
           fill="clear"
           class="decision-actions-button"
           aria-label="Decision actions"
+          (click)="openDecisionActions($event)"
         >
           <ion-icon
             slot="icon-only"
             name="ellipsis-horizontal"
           />
         </ion-button>
+
+        <ion-popover
+          class="decision-actions-popover"
+          [isOpen]="isDecisionActionsOpen()"
+          [event]="decisionActionsEvent()"
+          side="bottom"
+          alignment="end"
+          [showBackdrop]="false"
+          [dismissOnSelect]="true"
+          (didDismiss)="closeDecisionActions()"
+        >
+          <ng-template>
+
+            <ion-list
+              lines="none"
+              class="decision-actions-list"
+            >
+
+              <ion-item
+                button
+                detail="false"
+                class="decision-action-item"
+                [routerLink]="[
+                  '/decisions',
+                  decisionId,
+                  'edit'
+                ]"
+                routerDirection="forward"
+                (click)="closeDecisionActions()"
+              >
+                <ion-icon
+                  slot="start"
+                  name="create-outline"
+                />
+
+                <ion-label>
+                  Edit decision
+                </ion-label>
+              </ion-item>
+
+
+              <ion-item
+                button
+                detail="false"
+                class="decision-action-item delete-action"
+                (click)="onDeleteDecision()"
+              >
+                <ion-icon
+                  slot="start"
+                  name="trash-outline"
+                />
+
+                <ion-label>
+                  Delete decision
+                </ion-label>
+              </ion-item>
+
+            </ion-list>
+
+          </ng-template>
+        </ion-popover>
 
       </section>
 
@@ -102,6 +164,7 @@
             type="button"
             fill="clear"
             class="edit-criteria-button"
+            [routerLink]="['/decisions', decisionId, 'criteria']"
           >
             <ion-icon
               slot="start"
@@ -152,19 +215,36 @@
             </span>
           </div>
 
+          <div class="options-actions">
 
-          <ion-button
-            type="button"
-            class="compare-options-button"
-            [disabled]="decisionOptions().length < 2"
-          >
-            <ion-icon
-              slot="start"
-              name="git-compare-outline"
-            />
 
-            Compare options
-          </ion-button>
+            <ion-button
+              type="button"
+              class="compare-options-button"
+              [disabled]="decisionOptions().length < 2"
+            >
+              <ion-icon
+                slot="start"
+                name="git-compare-outline"
+              />
+
+              Compare options
+            </ion-button>
+
+            <ion-button
+              type="button"
+              class="add-option-desktop"
+              (click)="openAddOption()"
+            >
+              <ion-icon
+                slot="start"
+                name="add-outline"
+              />
+
+              Add option
+            </ion-button>
+
+          </div>
 
         </div>
 
@@ -741,12 +821,7 @@
                   </p>
 
                   <ion-button
-                    [routerLink]="[
-                      '/decisions',
-                      decisionId,
-                      'options',
-                      'new'
-                    ]"
+                    (click)="openAddOption()"
                   >
                     <ion-icon
                       slot="start"
@@ -801,4 +876,79 @@
 
 </ion-content>
 
-<!-- <ion-router-outlet class="option-detail-outlet" /> -->
+<ion-modal
+  class="delete-decision-modal"
+  [isOpen]="isDeleteDecisionOpen()"
+  (didDismiss)="closeDeleteDecision()"
+>
+  <ng-template>
+
+    <div class="delete-sheet">
+
+      <header class="delete-sheet-header">
+
+        <div class="sheet-handle"></div>
+
+        <div class="delete-sheet-title-row">
+
+          <h2>
+            Delete this decision?
+          </h2>
+
+          <ion-button
+            type="button"
+            fill="clear"
+            class="close-delete-button"
+            aria-label="Close delete confirmation"
+            (click)="closeDeleteDecision()"
+          >
+            <ion-icon
+              slot="icon-only"
+              name="close-outline"
+            />
+          </ion-button>
+
+        </div>
+
+      </header>
+
+
+      <div class="delete-sheet-body">
+
+        <p>
+          This decision, its options, and their ratings
+          will be removed.
+        </p>
+
+        <span>
+          This action can’t be undone.
+        </span>
+
+      </div>
+
+
+      <footer class="delete-sheet-actions">
+
+        <ion-button
+          type="button"
+          fill="clear"
+          class="cancel-delete-button"
+          (click)="closeDeleteDecision()"
+        >
+          Cancel
+        </ion-button>
+
+        <ion-button
+          type="button"
+          class="confirm-delete-button"
+          (click)="confirmDeleteDecision()"
+        >
+          Delete decision
+        </ion-button>
+
+      </footer>
+
+    </div>
+
+  </ng-template>
+</ion-modal>

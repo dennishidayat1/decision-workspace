@@ -40,4 +40,43 @@ public class CriteriaController : ControllerBase
 
         return Ok(criteria);
     }
+
+    [HttpPut("{criterionId:guid}")]
+    public async Task<IActionResult> UpdateCriterion(Guid decisionId, Guid criterionId, [FromBody] CreateCriterionRequest request)
+    {
+        var criterion =
+            await _criterionService.UpdateCriterionAsync(
+                decisionId,
+                criterionId,
+                request
+            );
+
+        if (criterion == null)
+        {
+            return NotFound();
+        }
+
+        return Ok(criterion);
+    }
+
+
+    [HttpDelete("{criterionId:guid}")]
+    public async Task<IActionResult> DeleteCriterion(
+        Guid decisionId,
+        Guid criterionId
+    )
+    {
+        var deleted =
+            await _criterionService.DeleteCriterionAsync(
+                decisionId,
+                criterionId
+            );
+
+        if (!deleted)
+        {
+            return NotFound();
+        }
+
+        return NoContent();
+    }
 }

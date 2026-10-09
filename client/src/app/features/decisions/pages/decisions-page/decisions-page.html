@@ -146,23 +146,17 @@
     decisions().length > 0
   ) {
 
-    <ion-fab
-      class="create-fab"
-      horizontal="end"
-      vertical="bottom"
-      slot="fixed"
-    >
-      <ion-fab-button
-        class="create-fab-button"
-        [routerLink]="['/decisions/new']"
-      >
-        <ion-icon name="add-outline" />
+  <ion-button
+    class="create-mobile-button"
+    [routerLink]="['/decisions/new']"
+  >
+    <ion-icon
+      slot="start"
+      name="add-outline"
+    />
 
-        <span>
-          Create decision
-        </span>
-      </ion-fab-button>
-    </ion-fab>
+    Create decision
+  </ion-button>
 
   }
 </ion-content>

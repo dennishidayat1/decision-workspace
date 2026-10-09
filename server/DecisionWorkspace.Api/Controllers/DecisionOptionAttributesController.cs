@@ -40,4 +40,27 @@ public class DecisionOptionAttributesController : ControllerBase
 
         return Ok(decisionOptionAttributes);
     }
+
+    [HttpPut]
+    public async Task<IActionResult> UpdateAsync(
+        Guid decisionId,
+        Guid decisionOptionId,
+        [FromBody] List<CreateDecisionOptionAttributeRequest> requests
+    )
+    {
+        var attributes =
+            await _decisionOptionAttributeService
+                .UpdateAsync(
+                    decisionId,
+                    decisionOptionId,
+                    requests
+                );
+
+        if (attributes == null)
+        {
+            return NotFound();
+        }
+
+        return Ok(attributes);
+    }
 }

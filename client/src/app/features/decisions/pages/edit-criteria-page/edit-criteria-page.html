@@ -1,0 +1,212 @@
+<ion-content class="criteria-page">
+
+  <ion-grid class="page-grid">
+
+    <!-- BACK -->
+
+    <ion-row>
+      <ion-col size="12">
+
+        <ion-button
+          type="button"
+          fill="clear"
+          size="small"
+          class="back-button"
+          (click)="cancel()"
+        >
+          <ion-icon
+            slot="start"
+            name="arrow-back-outline"
+          />
+
+          Back to decision
+        </ion-button>
+
+      </ion-col>
+    </ion-row>
+
+
+    <!-- HEADER -->
+
+    <ion-row>
+      <ion-col size="12">
+
+        <header class="page-heading">
+
+          <h1>
+            What matters to you
+          </h1>
+
+          <p>
+            Define what matters when comparing
+            your options.
+          </p>
+
+        </header>
+
+      </ion-col>
+    </ion-row>
+
+
+    <!-- LOADING -->
+
+    @if (
+      decisionState.loadStatus()
+        === 'loading'
+    ) {
+
+      <ion-row>
+        <ion-col
+          size="12"
+          class="loading-state"
+        >
+          <ion-spinner />
+        </ion-col>
+      </ion-row>
+
+    }
+
+
+    <!-- ERROR -->
+
+    @if (loadError()) {
+
+      <ion-row>
+        <ion-col size="12">
+
+          <div class="error-state">
+            {{ loadError() }}
+          </div>
+
+        </ion-col>
+      </ion-row>
+
+    }
+
+
+    @if (
+      decisionState.loadStatus()
+        === 'loaded' &&
+      !loadError()
+    ) {
+
+      <form (ngSubmit)="save()">
+
+        <ion-row>
+          <ion-col size="12">
+
+            <p class="importance-hint">
+              Importance affects your weighted scores.
+            </p>
+
+          </ion-col>
+        </ion-row>
+
+
+        <!-- EMPTY STATE -->
+
+        @if (
+          criteria.length === 0
+        ) {
+
+          <ion-row>
+            <ion-col size="12">
+
+              <section class="empty-card">
+
+                <h2>
+                  What matters when comparing
+                  your options?
+                </h2>
+
+                <p>
+                  Add a few things you care about.
+                  You can change them anytime.
+                </p>
+
+              </section>
+
+            </ion-col>
+          </ion-row>
+
+        }
+
+
+        <!-- REUSABLE CRITERIA FORM -->
+
+        @if (!hydrated()) {
+          <div class="loading-state">
+            <ion-spinner name="crescent" />
+          </div>
+        } @else {
+          <ion-row>
+            <ion-col size="12">
+
+              <app-criteria-form
+                [criteria]="criteria"
+              />
+
+            </ion-col>
+          </ion-row>
+        }
+
+
+        <!-- ACTIONS -->
+
+        <div class="actions">
+
+          <ion-grid>
+            <ion-row
+              class="
+                ion-align-items-center
+                ion-justify-content-end
+              "
+            >
+
+              <ion-col size="auto">
+
+                <ion-button
+                  type="button"
+                  fill="outline"
+                  class="cancel-button"
+                  (click)="cancel()"
+                  [disabled]="isSubmitting()"
+                >
+                  Cancel
+                </ion-button>
+
+              </ion-col>
+
+
+              <ion-col size="auto">
+
+                <ion-button
+                  type="submit"
+                  class="save-button"
+                  [disabled]="
+                    hasIncompleteCriterion() ||
+                    isSubmitting()
+                  "
+                >
+                  <ion-icon
+                    slot="start"
+                    name="checkmark-outline"
+                  />
+
+                  Save criteria
+                </ion-button>
+
+              </ion-col>
+
+            </ion-row>
+          </ion-grid>
+
+        </div>
+
+      </form>
+
+    }
+
+  </ion-grid>
+
+</ion-content>

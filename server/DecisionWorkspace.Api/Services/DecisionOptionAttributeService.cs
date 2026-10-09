@@ -55,4 +55,56 @@ public class DecisionOptionAttributeService
             .Where(attr => attr.DecisionOptionId == decisionOptionId)
             .ToListAsync();
     }
+
+    public async Task<List<DecisionOptionAttribute>?> UpdateAsync(
+        Guid decisionId,
+        Guid decisionOptionId,
+        List<CreateDecisionOptionAttributeRequest> requests
+    )
+    {
+        if (!await DecisionOptionExistsAsync(
+            decisionId,
+            decisionOptionId
+        ))
+        {
+            return null;
+        }
+
+        var existingAttributes =
+            await _dbContext.DecisionOptionAttributes
+                .Where(attribute =>
+                    attribute.DecisionOptionId ==
+                    decisionOptionId
+                )
+                .ToListAsync();
+
+        _dbContext.DecisionOptionAttributes
+            .RemoveRange(existingAttributes);
+
+        var now = DateTimeOffset.UtcNow;
+
+        var newAttributes = requests
+            .Select(request =>
+                new DecisionOptionAttribute
+                {
+                    Id = Guid.NewGuid(),
+                    DecisionOptionId =
+                        decisionOptionId,
+
+                    Name = request.Name,
+                    Value = request.Value,
+
+                    CreatedAt = now,
+                    UpdatedAt = now,
+                }
+            )
+            .ToList();
+
+        _dbContext.DecisionOptionAttributes
+            .AddRange(newAttributes);
+
+        await _dbContext.SaveChangesAsync();
+
+        return newAttributes;
+    }
 }
