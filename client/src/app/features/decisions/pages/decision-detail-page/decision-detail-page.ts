@@ -10,6 +10,7 @@ import { CreateDecisionOptionAttributeRequest } from '../../models/create-decisi
 import { CreateCriterionRequest } from '../../models/create-criterion-request';
 import { CreateOptionScoreRequest } from '../../models/create-option-score-request';
 import { DecisionState } from '../../state/decision-state';
+import { OptionDetailPage } from '../option-detail-page/option-detail-page';
 import {
   NavController,
   IonButton,
@@ -93,6 +94,9 @@ type OptionView = 'list' | 'grid';
     ReactiveFormsModule,
     DecimalPipe,
     RouterLink,
+
+    OptionDetailPage,
+
     IonButton,
     IonCard,
     IonCardContent,
@@ -143,6 +147,7 @@ export class DecisionDetailPage {
   readonly decisionOptions = this.decisionState.options;
   readonly optionAttributes = this.decisionState.optionAttributes;
   readonly criteria = this.decisionState.criteria;
+  readonly selectedOptionId = signal<string | null>(null);
   readonly selectedOptionIdForAttribute = signal<string | null>(null);
   readonly optionScores = this.decisionState.optionScores;
   readonly optionScoreForms = new Map<string, FormGroup>();
@@ -739,12 +744,26 @@ export class DecisionDetailPage {
       return;
     }
 
+    const useDesktopPanel =
+      window.matchMedia(
+        '(min-width: 768px)',
+      ).matches;
+
+    if (useDesktopPanel) {
+      this.selectedOptionId.set(optionId);
+      return;
+    }
+
     this.navController.navigateForward([
       '/decisions',
       this.decisionId,
       'options',
       optionId,
     ]);
+  }
+
+  closeOptionPanel(): void {
+    this.selectedOptionId.set(null);
   }
 
   openAddOption(): void {

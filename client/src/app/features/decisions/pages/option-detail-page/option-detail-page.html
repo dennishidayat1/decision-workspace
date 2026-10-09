@@ -2,6 +2,9 @@
 
 <div
   class="option-detail-overlay"
+  [class.option-detail-overlay--panel]="
+    presentation() === 'panel'
+  "
   (click)="
     $event.target === $event.currentTarget &&
     backToDecision()
@@ -13,25 +16,49 @@
       @if (option(); as option) {
 
         <!-- TOP NAV -->
-        <div class="detail-navigation">
+        @if (presentation() === 'panel') {
 
-          <button
-            type="button"
-            class="back-button"
-            (click)="backToDecision()"
-          >
-            <span>
-              <ion-icon name="arrow-back-outline" />
-              Back to decision
-            </span>
+          <header class="detail-navigation detail-navigation--panel">
 
-            <ion-icon
-              class="close-icon"
-              name="close-outline"
-            />
-          </button>
+            <strong class="detail-navigation-title">
+              Option detail
+            </strong>
 
-        </div>
+            <button
+              type="button"
+              class="close-detail-button"
+              aria-label="Close option detail"
+              (click)="backToDecision()"
+            >
+              <ion-icon name="close-outline" />
+            </button>
+
+          </header>
+
+        } @else {
+
+          <!-- Keep the original mobile/page navigation -->
+          <div class="detail-navigation detail-navigation--page">
+
+            <button
+              type="button"
+              class="back-button"
+              (click)="backToDecision()"
+            >
+              <span>
+                <ion-icon name="arrow-back-outline" />
+                Back to decision
+              </span>
+
+              <ion-icon
+                class="close-icon"
+                name="close-outline"
+              />
+            </button>
+
+          </div>
+
+        }
 
 
         <!-- SUMMARY -->
@@ -285,7 +312,11 @@
           <div class="section-header">
 
             <h2>
-              Basic details
+              {{
+                presentation() === 'panel'
+                  ? 'Details'
+                  : 'Basic details'
+              }}
             </h2>
 
             <button

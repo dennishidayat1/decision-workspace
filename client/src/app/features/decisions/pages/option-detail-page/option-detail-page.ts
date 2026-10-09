@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal, input, output } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
@@ -70,8 +70,41 @@ export class OptionDetailPage {
   private readonly navController = inject(NavController);
   private readonly decisionApi = inject(DecisionApi);
 
-  readonly decisionId = this.route.snapshot.paramMap.get('id') ?? null;
-  readonly optionId = this.route.snapshot.paramMap.get('optionId');
+  // readonly decisionId = this.route.snapshot.paramMap.get('id') ?? null;
+  // readonly optionId = this.route.snapshot.paramMap.get('optionId');
+  private readonly routeDecisionId =
+    this.route.snapshot.paramMap.get('id') ?? null;
+
+  private readonly routeOptionId =
+    this.route.snapshot.paramMap.get('optionId');
+
+
+  readonly panelDecisionId =
+    input<string | null>(null);
+
+  readonly panelOptionId =
+    input<string | null>(null);
+
+  readonly presentation =
+    input<'page' | 'panel'>('page');
+
+  readonly closeRequested =
+    output<void>();
+
+
+  get decisionId(): string | null {
+    return (
+      this.panelDecisionId() ??
+      this.routeDecisionId
+    );
+  }
+
+  get optionId(): string | null {
+    return (
+      this.panelOptionId() ??
+      this.routeOptionId
+    );
+  }
 
   readonly optionForm = createOptionForm();
 
@@ -275,11 +308,19 @@ export class OptionDetailPage {
   }
 
   backToDecision(): void {
+    if (this.presentation() === 'panel') {
+      this.closeRequested.emit();
+      return;
+    }
+
     if (!this.decisionId) {
       return;
     }
 
-    this.navController.navigateBack(['/decisions', this.decisionId]);
+    this.navController.navigateBack([
+      '/decisions',
+      this.decisionId,
+    ]);
   }
 
   toggleAttributesEdit(): void {
@@ -457,9 +498,15 @@ export class OptionDetailPage {
             this.optionId!,
           );
 
-          this.navController.navigateBack(
-            ['/decisions', this.decisionId],
-          );
+          if (this.presentation() === 'panel') {
+            this.closeRequested.emit();
+            return;
+          }
+
+          this.navController.navigateBack([
+            '/decisions',
+            this.decisionId,
+          ]);
         },
 
         error: error => {

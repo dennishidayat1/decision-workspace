@@ -877,6 +877,28 @@
 </ion-content>
 
 <ion-modal
+  class="option-detail-drawer"
+  [isOpen]="selectedOptionId() !== null"
+  [backdropDismiss]="true"
+  (didDismiss)="closeOptionPanel()"
+>
+  <ng-template>
+
+    @if (selectedOptionId(); as optionId) {
+
+      <app-option-detail-page
+        [panelDecisionId]="decisionId"
+        [panelOptionId]="optionId"
+        presentation="panel"
+        (closeRequested)="closeOptionPanel()"
+      />
+
+    }
+
+  </ng-template>
+</ion-modal>
+
+<ion-modal
   class="delete-decision-modal"
   [isOpen]="isDeleteDecisionOpen()"
   (didDismiss)="closeDeleteDecision()"
