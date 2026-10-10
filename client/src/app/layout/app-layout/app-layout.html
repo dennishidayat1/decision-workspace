@@ -1,1 +1,134 @@
-<ion-router-outlet />
+<!-- MOBILE ACCOUNT DRAWER -->
+<ion-menu
+  side="end"
+  type="overlay"
+  menuId="account-menu"
+  contentId="workspace-main"
+  class="account-menu"
+  [swipeGesture]="true"
+>
+  <ion-content>
+    <div class="account-drawer">
+
+      <div class="account-section">
+        <div class="account-label">
+          Signed in as
+        </div>
+
+        <div class="account-email">
+          {{ userEmail }}
+        </div>
+      </div>
+
+      <button
+        type="button"
+        class="sign-out-row"
+        (click)="signOut()"
+      >
+        <ion-icon [icon]="logOutOutline" />
+
+        <span>
+          Sign out
+        </span>
+      </button>
+
+    </div>
+  </ion-content>
+</ion-menu>
+
+
+<!-- MAIN APP -->
+<div
+  id="workspace-main"
+  class="ion-page workspace-main"
+>
+
+  <!-- DESKTOP ONLY -->
+  <ion-header
+    class="
+      ion-display-none
+      ion-display-lg-block
+    "
+  >
+    <ion-toolbar class="workspace-toolbar">
+
+      <ion-buttons slot="start">
+        <div class="brand">
+
+          <span class="brand-icon">
+            <ion-icon [icon]="layersOutline" />
+          </span>
+
+          <span class="brand-name">
+            Decision Workspace<span class="brand-dot">.</span>
+          </span>
+
+        </div>
+      </ion-buttons>
+
+
+      <ion-buttons slot="end">
+
+        <ion-button
+          id="desktop-account-trigger"
+          fill="clear"
+          shape="round"
+          class="account-trigger"
+          aria-label="Account"
+        >
+          {{ userInitial }}
+        </ion-button>
+
+      </ion-buttons>
+
+    </ion-toolbar>
+  </ion-header>
+
+
+  <!-- DESKTOP ACCOUNT POPOVER -->
+  <ion-popover
+    trigger="desktop-account-trigger"
+    triggerAction="click"
+    side="bottom"
+    alignment="end"
+    class="account-popover"
+  >
+    <ng-template>
+
+      <div class="account-popover-content">
+
+        <div class="account-section">
+
+          <div class="account-label">
+            Signed in as
+          </div>
+
+          <div class="account-email">
+            {{ userEmail }}
+          </div>
+
+        </div>
+
+        <button
+          type="button"
+          class="sign-out-row"
+          (click)="signOut()"
+        >
+          <ion-icon [icon]="logOutOutline" />
+
+          <span>
+            Sign out
+          </span>
+        </button>
+
+      </div>
+
+    </ng-template>
+  </ion-popover>
+
+
+  <div class="workspace-router">
+    <ion-router-outlet />
+  </div>
+
+</div>

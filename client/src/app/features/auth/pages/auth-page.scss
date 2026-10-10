@@ -1,0 +1,151 @@
+.auth-content {
+  --background: #f7f9f8;
+}
+
+.auth-page {
+  display: flex;
+  justify-content: center;
+
+  min-height: 100%;
+  padding: 32px 20px;
+
+  background: #f7f9f8;
+}
+
+.auth-card {
+  display: flex;
+  flex-direction: column;
+
+  width: 100%;
+  max-width: 430px;
+
+  background: transparent;
+}
+
+.auth-form ion-input {
+  --background: #ffffff;
+}
+
+.auth-form ion-input::part(native) {
+  background: #ffffff;
+}
+
+@media (min-width: 640px) {
+  .auth-page {
+    align-items: center;
+    padding: 48px 32px;
+  }
+
+  .auth-card {
+    padding: 36px;
+
+    border: 1px solid #e1e7e3;
+    border-radius: 16px;
+
+    background: #ffffff;
+
+    box-shadow:
+      0 18px 50px rgba(36, 53, 46, 0.04);
+  }
+}
+
+.auth-heading {
+  margin-bottom: 24px;
+}
+
+.auth-brand {
+  color: #247657;
+
+  font-family: "Inter", sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.auth-heading h1 {
+  margin: 8px 0 6px;
+
+  color: #24352e;
+
+  font-family: "Manrope", sans-serif;
+  font-size: 26px;
+  font-weight: 800;
+}
+
+.auth-heading p {
+  margin: 0;
+
+  color: #6b7770;
+
+  font-family: "Inter", sans-serif;
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+
+  gap: 16px;
+}
+
+.auth-form label {
+  display: flex;
+  flex-direction: column;
+
+  gap: 6px;
+
+  color: #24352e;
+
+  font-family: "Inter", sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.auth-form ion-input {
+  --background: #ffffff;
+
+  --border-color: #e1e7e3;
+  --border-radius: 10px;
+
+  --highlight-color-focused: #247657;
+
+  font-size: 14px;
+}
+
+.auth-submit {
+  margin-top: 4px;
+
+  --background: #247657;
+  --background-hover: #1b6045;
+
+  --border-radius: 10px;
+  --box-shadow: none;
+
+  min-height: 44px;
+
+  text-transform: none;
+
+  font-weight: 600;
+}
+
+.auth-message {
+  font-size: 12px;
+}
+
+.switch-mode {
+  display: block;
+
+  margin: 20px auto 0;
+  padding: 4px;
+
+  border: 0;
+  background: transparent;
+
+  color: #247657;
+
+  font-family: "Inter", sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+
+  cursor: pointer;
+}
