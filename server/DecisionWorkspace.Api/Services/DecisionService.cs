@@ -13,12 +13,18 @@ public class DecisionService
     {
         _dbContext = dbContext;
     }
-    public async Task<Decision> CreateAsync(CreateDecisionRequest request)
+
+    public async Task<Decision> CreateAsync(
+        Guid userId,
+        CreateDecisionRequest request
+    )
     {
         var now = DateTimeOffset.UtcNow;
+
         var decision = new Decision
         {
             Id = Guid.NewGuid(),
+            UserId = userId,
             Title = request.Title,
             Question = request.Question,
             Context = request.Context,
@@ -34,23 +40,37 @@ public class DecisionService
         return decision;
     }
 
-    public async Task<List<Decision>> GetAllAsync()
+    public async Task<List<Decision>> GetAllAsync(Guid userId)
     {
         return await _dbContext.Decisions
-        .OrderByDescending(d => d.CreatedAt)
-        .ToListAsync();
+            .Where(d => d.UserId == userId)
+            .OrderByDescending(d => d.CreatedAt)
+            .ToListAsync();
     }
 
-    public async Task<Decision?> GetByIdAsync(Guid id)
+    public async Task<Decision?> GetByIdAsync(
+        Guid userId,
+        Guid id
+    )
     {
         return await _dbContext.Decisions
-            .FirstOrDefaultAsync(d => d.Id == id);
+            .FirstOrDefaultAsync(
+                d => d.Id == id &&
+                     d.UserId == userId
+            );
     }
 
-    public async Task<Decision?> UpdateAsync(Guid id, CreateDecisionRequest request)
+    public async Task<Decision?> UpdateAsync(
+        Guid userId,
+        Guid id,
+        CreateDecisionRequest request
+    )
     {
         var decision = await _dbContext.Decisions
-            .FirstOrDefaultAsync(d => d.Id == id);
+            .FirstOrDefaultAsync(
+                d => d.Id == id &&
+                     d.UserId == userId
+            );
 
         if (decision == null)
         {
@@ -68,22 +88,23 @@ public class DecisionService
         return decision;
     }
 
-    public async Task<bool> DeleteAsync(Guid id)
+    public async Task<bool> DeleteAsync(
+        Guid userId,
+        Guid id
+    )
     {
-        var decision =
-            await _dbContext.Decisions
-                .FirstOrDefaultAsync(
-                    d => d.Id == id
-                );
+        var decision = await _dbContext.Decisions
+            .FirstOrDefaultAsync(
+                d => d.Id == id &&
+                     d.UserId == userId
+            );
 
         if (decision == null)
         {
             return false;
         }
 
-        _dbContext.Decisions.Remove(
-            decision
-        );
+        _dbContext.Decisions.Remove(decision);
 
         await _dbContext.SaveChangesAsync();
 

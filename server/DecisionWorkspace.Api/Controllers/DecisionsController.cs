@@ -1,23 +1,43 @@
 using Microsoft.AspNetCore.Mvc;
 using DecisionWorkspace.Api.Contracts;
 using DecisionWorkspace.Api.Services;
+using Microsoft.AspNetCore.Authorization;
 
 namespace DecisionWorkspace.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class DecisionsController : ControllerBase
     {
         private readonly DecisionService _decisionService;
+
         public DecisionsController(DecisionService decisionService)
         {
             _decisionService = decisionService;
         }
 
+        private Guid GetUserId()
+        {
+            var userId = User.FindFirst("sub")?.Value;
+
+            if (!Guid.TryParse(userId, out var parsedUserId))
+            {
+                throw new UnauthorizedAccessException(
+                    "Invalid user ID."
+                );
+            }
+
+            return parsedUserId;
+        }
+
         [HttpPost]
         public async Task<IActionResult> Create(CreateDecisionRequest request)
         {
-            var decision = await _decisionService.CreateAsync(request);
+            var decision = await _decisionService.CreateAsync(
+                GetUserId(),
+                request
+            );
 
             return Ok(decision);
         }
@@ -25,7 +45,9 @@ namespace DecisionWorkspace.Api.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            var decisions = await _decisionService.GetAllAsync();
+            var decisions = await _decisionService.GetAllAsync(
+                GetUserId()
+            );
 
             return Ok(decisions);
         }
@@ -33,7 +55,10 @@ namespace DecisionWorkspace.Api.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
-            var decision = await _decisionService.GetByIdAsync(id);
+            var decision = await _decisionService.GetByIdAsync(
+                GetUserId(),
+                id
+            );
 
             if (decision == null)
             {
@@ -44,13 +69,16 @@ namespace DecisionWorkspace.Api.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(Guid id, CreateDecisionRequest request)
+        public async Task<IActionResult> Update(
+            Guid id,
+            CreateDecisionRequest request
+        )
         {
-            var decision =
-                await _decisionService.UpdateAsync(
-                    id,
-                    request
-                );
+            var decision = await _decisionService.UpdateAsync(
+                GetUserId(),
+                id,
+                request
+            );
 
             if (decision == null)
             {
@@ -63,10 +91,10 @@ namespace DecisionWorkspace.Api.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
-            var deleted =
-                await _decisionService.DeleteAsync(
-                    id
-                );
+            var deleted = await _decisionService.DeleteAsync(
+                GetUserId(),
+                id
+            );
 
             if (!deleted)
             {

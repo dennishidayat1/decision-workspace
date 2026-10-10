@@ -14,14 +14,19 @@ public class CriterionService
         _dbContext = dbContext;
     }
 
-    public async Task<Criterion?> CreateCriterionAsync(Guid decisionId, CreateCriterionRequest request)
+    public async Task<Criterion?> CreateCriterionAsync(
+        Guid userId,
+        Guid decisionId,
+        CreateCriterionRequest request
+    )
     {
-        if (!await DecisionExistsAsync(decisionId))
+        if (!await DecisionExistsAsync(userId, decisionId))
         {
             return null;
         }
 
         var now = DateTimeOffset.UtcNow;
+
         var criterion = new Criterion
         {
             Id = Guid.NewGuid(),
@@ -39,30 +44,48 @@ public class CriterionService
         return criterion;
     }
 
-    private async Task<bool> DecisionExistsAsync(Guid decisionId)
+    private async Task<bool> DecisionExistsAsync(
+        Guid userId,
+        Guid decisionId
+    )
     {
-        return await _dbContext.Decisions.AnyAsync(decision => decision.Id == decisionId);
+        return await _dbContext.Decisions
+            .AnyAsync(decision =>
+                decision.Id == decisionId &&
+                decision.UserId == userId
+            );
     }
 
-    public async Task<List<Criterion>?> GetByDecisionIdAsync(Guid decisionId)
+    public async Task<List<Criterion>?> GetByDecisionIdAsync(
+        Guid userId,
+        Guid decisionId
+    )
     {
-        if (!await DecisionExistsAsync(decisionId))
+        if (!await DecisionExistsAsync(userId, decisionId))
         {
             return null;
         }
 
         return await _dbContext.Criteria
-            .Where(criterion => criterion.DecisionId == decisionId)
+            .Where(criterion =>
+                criterion.DecisionId == decisionId &&
+                criterion.Decision.UserId == userId
+            )
             .ToListAsync();
     }
 
-    public async Task<Criterion?> UpdateCriterionAsync(Guid decisionId, Guid criterionId, CreateCriterionRequest request)
+    public async Task<Criterion?> UpdateCriterionAsync(
+        Guid userId,
+        Guid decisionId,
+        Guid criterionId,
+        CreateCriterionRequest request
+    )
     {
         var criterion = await _dbContext.Criteria
-            .FirstOrDefaultAsync(
-                criterion =>
-                    criterion.Id == criterionId &&
-                    criterion.DecisionId == decisionId
+            .FirstOrDefaultAsync(criterion =>
+                criterion.Id == criterionId &&
+                criterion.DecisionId == decisionId &&
+                criterion.Decision.UserId == userId
             );
 
         if (criterion == null)
@@ -80,17 +103,17 @@ public class CriterionService
         return criterion;
     }
 
-
     public async Task<bool> DeleteCriterionAsync(
+        Guid userId,
         Guid decisionId,
         Guid criterionId
     )
     {
         var criterion = await _dbContext.Criteria
-            .FirstOrDefaultAsync(
-                criterion =>
-                    criterion.Id == criterionId &&
-                    criterion.DecisionId == decisionId
+            .FirstOrDefaultAsync(criterion =>
+                criterion.Id == criterionId &&
+                criterion.DecisionId == decisionId &&
+                criterion.Decision.UserId == userId
             );
 
         if (criterion == null)
@@ -99,7 +122,6 @@ public class CriterionService
         }
 
         _dbContext.Criteria.Remove(criterion);
-
         await _dbContext.SaveChangesAsync();
 
         return true;

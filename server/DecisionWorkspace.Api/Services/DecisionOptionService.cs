@@ -14,9 +14,13 @@ public class DecisionOptionService
         _dbContext = dbContext;
     }
 
-    public async Task<CreateDecisionOptionResult> CreateAsync(Guid decisionId, CreateDecisionOptionRequest request)
+    public async Task<CreateDecisionOptionResult> CreateAsync(
+        Guid userId,
+        Guid decisionId,
+        CreateDecisionOptionRequest request
+    )
     {
-        if (!await DecisionExistsAsync(decisionId))
+        if (!await DecisionExistsAsync(userId, decisionId))
         {
             return new CreateDecisionOptionResult
             {
@@ -32,6 +36,7 @@ public class DecisionOptionService
         var validCriterionIds = await _dbContext.Criteria
             .Where(criterion =>
                 criterion.DecisionId == decisionId &&
+                criterion.Decision.UserId == userId &&
                 requestedCriterionIds.Contains(criterion.Id))
             .Select(criterion => criterion.Id)
             .ToListAsync();
@@ -45,6 +50,7 @@ public class DecisionOptionService
         }
 
         var now = DateTimeOffset.UtcNow;
+
         var decisionOption = new DecisionOption
         {
             Id = Guid.NewGuid(),
@@ -70,8 +76,7 @@ public class DecisionOptionService
                 Value = attribute.Value,
                 CreatedAt = now,
                 UpdatedAt = now,
-            }
-            );
+            });
 
         _dbContext.DecisionOptionAttributes.AddRange(attributes);
 
@@ -84,8 +89,7 @@ public class DecisionOptionService
                 Comment = score.Comment,
                 CreatedAt = now,
                 UpdatedAt = now,
-            }
-            );
+            });
 
         _dbContext.OptionScores.AddRange(scores);
 
@@ -98,37 +102,49 @@ public class DecisionOptionService
         };
     }
 
-    private async Task<bool> DecisionExistsAsync(Guid decisionId)
+    private async Task<bool> DecisionExistsAsync(
+        Guid userId,
+        Guid decisionId
+    )
     {
         return await _dbContext.Decisions
-            .AnyAsync(d => d.Id == decisionId);
+            .AnyAsync(d =>
+                d.Id == decisionId &&
+                d.UserId == userId
+            );
     }
 
-    public async Task<List<DecisionOption>?> GetByDecisionIdAsync(Guid decisionId)
+    public async Task<List<DecisionOption>?> GetByDecisionIdAsync(
+        Guid userId,
+        Guid decisionId
+    )
     {
-        if (!await DecisionExistsAsync(decisionId))
+        if (!await DecisionExistsAsync(userId, decisionId))
         {
             return null;
         }
 
         return await _dbContext.DecisionOptions
-            .Where(d => d.DecisionId == decisionId)
+            .Where(option =>
+                option.DecisionId == decisionId &&
+                option.Decision.UserId == userId
+            )
             .ToListAsync();
     }
 
     public async Task<DecisionOption?> UpdateAsync(
+        Guid userId,
         Guid decisionId,
         Guid decisionOptionId,
         CreateDecisionOptionRequest request
     )
     {
-        var decisionOption =
-            await _dbContext.DecisionOptions
-                .FirstOrDefaultAsync(
-                    option =>
-                        option.Id == decisionOptionId &&
-                        option.DecisionId == decisionId
-                );
+        var decisionOption = await _dbContext.DecisionOptions
+            .FirstOrDefaultAsync(option =>
+                option.Id == decisionOptionId &&
+                option.DecisionId == decisionId &&
+                option.Decision.UserId == userId
+            );
 
         if (decisionOption == null)
         {
@@ -149,26 +165,24 @@ public class DecisionOptionService
     }
 
     public async Task<bool> DeleteAsync(
+        Guid userId,
         Guid decisionId,
         Guid decisionOptionId
     )
     {
-        var decisionOption =
-            await _dbContext.DecisionOptions
-                .FirstOrDefaultAsync(
-                    option =>
-                        option.Id == decisionOptionId &&
-                        option.DecisionId == decisionId
-                );
+        var decisionOption = await _dbContext.DecisionOptions
+            .FirstOrDefaultAsync(option =>
+                option.Id == decisionOptionId &&
+                option.DecisionId == decisionId &&
+                option.Decision.UserId == userId
+            );
 
         if (decisionOption == null)
         {
             return false;
         }
 
-        _dbContext.DecisionOptions.Remove(
-            decisionOption
-        );
+        _dbContext.DecisionOptions.Remove(decisionOption);
 
         await _dbContext.SaveChangesAsync();
 

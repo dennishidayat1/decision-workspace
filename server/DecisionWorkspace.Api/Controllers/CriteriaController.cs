@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using DecisionWorkspace.Api.Contracts;
 using DecisionWorkspace.Api.Services;
 
@@ -6,6 +7,7 @@ namespace DecisionWorkspace.Api.Controllers;
 
 [Route("api/decisions/{decisionId:guid}/criteria")]
 [ApiController]
+[Authorize]
 public class CriteriaController : ControllerBase
 {
     private readonly CriterionService _criterionService;
@@ -15,10 +17,29 @@ public class CriteriaController : ControllerBase
         _criterionService = criterionService;
     }
 
-    [HttpPost]
-    public async Task<IActionResult> CreateCriterion(Guid decisionId, [FromBody] CreateCriterionRequest request)
+    private Guid GetUserId()
     {
-        var criterion = await _criterionService.CreateCriterionAsync(decisionId, request);
+        var userId = User.FindFirst("sub")?.Value;
+
+        if (!Guid.TryParse(userId, out var parsedUserId))
+        {
+            throw new UnauthorizedAccessException("Invalid user ID.");
+        }
+
+        return parsedUserId;
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> CreateCriterion(
+        Guid decisionId,
+        [FromBody] CreateCriterionRequest request
+    )
+    {
+        var criterion = await _criterionService.CreateCriterionAsync(
+            GetUserId(),
+            decisionId,
+            request
+        );
 
         if (criterion == null)
         {
@@ -31,7 +52,10 @@ public class CriteriaController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetCriteriaByDecisionId(Guid decisionId)
     {
-        var criteria = await _criterionService.GetByDecisionIdAsync(decisionId);
+        var criteria = await _criterionService.GetByDecisionIdAsync(
+            GetUserId(),
+            decisionId
+        );
 
         if (criteria == null)
         {
@@ -42,14 +66,18 @@ public class CriteriaController : ControllerBase
     }
 
     [HttpPut("{criterionId:guid}")]
-    public async Task<IActionResult> UpdateCriterion(Guid decisionId, Guid criterionId, [FromBody] CreateCriterionRequest request)
+    public async Task<IActionResult> UpdateCriterion(
+        Guid decisionId,
+        Guid criterionId,
+        [FromBody] CreateCriterionRequest request
+    )
     {
-        var criterion =
-            await _criterionService.UpdateCriterionAsync(
-                decisionId,
-                criterionId,
-                request
-            );
+        var criterion = await _criterionService.UpdateCriterionAsync(
+            GetUserId(),
+            decisionId,
+            criterionId,
+            request
+        );
 
         if (criterion == null)
         {
@@ -59,18 +87,17 @@ public class CriteriaController : ControllerBase
         return Ok(criterion);
     }
 
-
     [HttpDelete("{criterionId:guid}")]
     public async Task<IActionResult> DeleteCriterion(
         Guid decisionId,
         Guid criterionId
     )
     {
-        var deleted =
-            await _criterionService.DeleteCriterionAsync(
-                decisionId,
-                criterionId
-            );
+        var deleted = await _criterionService.DeleteCriterionAsync(
+            GetUserId(),
+            decisionId,
+            criterionId
+        );
 
         if (!deleted)
         {

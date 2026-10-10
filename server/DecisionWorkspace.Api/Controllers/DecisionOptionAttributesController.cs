@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using DecisionWorkspace.Api.Contracts;
 using DecisionWorkspace.Api.Services;
 
@@ -6,19 +7,44 @@ namespace DecisionWorkspace.Api.Controllers;
 
 [Route("api/decisions/{decisionId:guid}/options/{decisionOptionId:guid}/attributes")]
 [ApiController]
+[Authorize]
 public class DecisionOptionAttributesController : ControllerBase
 {
     private readonly DecisionOptionAttributeService _decisionOptionAttributeService;
 
-    public DecisionOptionAttributesController(DecisionOptionAttributeService decisionOptionAttributeService)
+    public DecisionOptionAttributesController(
+        DecisionOptionAttributeService decisionOptionAttributeService
+    )
     {
         _decisionOptionAttributeService = decisionOptionAttributeService;
     }
 
-    [HttpPost]
-    public async Task<IActionResult> CreateAsync(Guid decisionId, Guid decisionOptionId, [FromBody] CreateDecisionOptionAttributeRequest request)
+    private Guid GetUserId()
     {
-        var decisionOptionAttribute = await _decisionOptionAttributeService.CreateAsync(decisionId, decisionOptionId, request);
+        var userId = User.FindFirst("sub")?.Value;
+
+        if (!Guid.TryParse(userId, out var parsedUserId))
+        {
+            throw new UnauthorizedAccessException("Invalid user ID.");
+        }
+
+        return parsedUserId;
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> CreateAsync(
+        Guid decisionId,
+        Guid decisionOptionId,
+        [FromBody] CreateDecisionOptionAttributeRequest request
+    )
+    {
+        var decisionOptionAttribute =
+            await _decisionOptionAttributeService.CreateAsync(
+                GetUserId(),
+                decisionId,
+                decisionOptionId,
+                request
+            );
 
         if (decisionOptionAttribute == null)
         {
@@ -29,9 +55,17 @@ public class DecisionOptionAttributesController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetByDecisionOptionIdAsync(Guid decisionId, Guid decisionOptionId)
+    public async Task<IActionResult> GetByDecisionOptionIdAsync(
+        Guid decisionId,
+        Guid decisionOptionId
+    )
     {
-        var decisionOptionAttributes = await _decisionOptionAttributeService.GetByDecisionOptionIdAsync(decisionId, decisionOptionId);
+        var decisionOptionAttributes =
+            await _decisionOptionAttributeService.GetByDecisionOptionIdAsync(
+                GetUserId(),
+                decisionId,
+                decisionOptionId
+            );
 
         if (decisionOptionAttributes == null)
         {
@@ -49,12 +83,12 @@ public class DecisionOptionAttributesController : ControllerBase
     )
     {
         var attributes =
-            await _decisionOptionAttributeService
-                .UpdateAsync(
-                    decisionId,
-                    decisionOptionId,
-                    requests
-                );
+            await _decisionOptionAttributeService.UpdateAsync(
+                GetUserId(),
+                decisionId,
+                decisionOptionId,
+                requests
+            );
 
         if (attributes == null)
         {
