@@ -26,14 +26,11 @@ export class AuthService {
     );
 
 
-  readonly session =
-    signal<Session | null>(null);
+  readonly session = signal<Session | null>(null);
 
-  readonly user =
-    signal<User | null>(null);
+  readonly user = signal<User | null>(null);
 
-  readonly initialized =
-    signal(false);
+  readonly initialized = signal(false);
 
 
   constructor() {

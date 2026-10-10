@@ -16,11 +16,12 @@ import {
   IonContent,
   IonInput,
   IonText,
+  IonItem,
+  IonLabel,
   NavController,
 } from '@ionic/angular';
 
 import { AuthService } from '../../../core/auth/auth.service';
-
 
 @Component({
   selector: 'app-auth-page',
@@ -32,19 +33,19 @@ import { AuthService } from '../../../core/auth/auth.service';
     IonInput,
     IonButton,
     IonText,
+    IonItem,
+    IonLabel,
   ],
 
   templateUrl: './auth-page.html',
   styleUrl: './auth-page.scss',
 })
 export class AuthPage {
-
   private readonly authService =
     inject(AuthService);
 
   private readonly navController =
     inject(NavController);
-
 
   readonly mode =
     signal<'login' | 'register'>('login');
@@ -57,7 +58,6 @@ export class AuthPage {
 
   readonly successMessage =
     signal<string | null>(null);
-
 
   readonly form = new FormGroup({
     email: new FormControl('', {
@@ -77,7 +77,6 @@ export class AuthPage {
     }),
   });
 
-
   switchMode(): void {
     this.mode.update(mode =>
       mode === 'login'
@@ -89,9 +88,7 @@ export class AuthPage {
     this.successMessage.set(null);
   }
 
-
   async submit(): Promise<void> {
-
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
@@ -106,9 +103,7 @@ export class AuthPage {
       password,
     } = this.form.getRawValue();
 
-
     if (this.mode() === 'login') {
-
       const { error } =
         await this.authService.signIn(
           email.trim(),
@@ -132,7 +127,6 @@ export class AuthPage {
       return;
     }
 
-
     const {
       data,
       error,
@@ -153,6 +147,8 @@ export class AuthPage {
     }
 
     if (data.session) {
+      this.form.reset();
+
       this.navController.navigateRoot(
         '/decisions',
       );
@@ -160,8 +156,10 @@ export class AuthPage {
       return;
     }
 
+    this.form.reset();
+
     this.successMessage.set(
-      'Account created. Check your email to confirm your account.',
+      'Sign up submitted. Check your email if confirmation is required.',
     );
   }
 }

@@ -19,7 +19,6 @@ import {
 } from '@ionic/angular';
 
 import {
-  layersOutline,
   logOutOutline,
 } from 'ionicons/icons';
 
@@ -56,9 +55,6 @@ export class AppLayout {
 
   private readonly popoverController =
     inject(PopoverController);
-
-  readonly layersOutline =
-    layersOutline;
 
   readonly logOutOutline =
     logOutOutline;

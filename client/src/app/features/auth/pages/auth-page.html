@@ -1,14 +1,17 @@
 <ion-content class="auth-content">
-
   <main class="auth-page">
-
     <section class="auth-card">
 
       <div class="auth-heading">
+        <div class="auth-brand">
+          <img
+            src="/images/logo.png"
+            alt="Decision Workspace"
+            class="auth-brand-logo"
+          />
 
-        <span class="auth-brand">
-          Decision Workspace
-        </span>
+          <span>Decision Workspace</span>
+        </div>
 
         <h1>
           {{
@@ -25,69 +28,60 @@
               : 'Save your decisions and continue from any device.'
           }}
         </p>
-
       </div>
-
 
       <form
         class="auth-form"
         [formGroup]="form"
         (ngSubmit)="submit()"
       >
+        <div class="auth-field">
+          <ion-label>Email</ion-label>
 
-        <label>
+          <ion-item lines="none" class="auth-input">
+            <ion-input
+              type="email"
+              autocomplete="email"
+              placeholder="you@example.com"
+              formControlName="email"
+            />
+          </ion-item>
+        </div>
 
-          <span>Email</span>
+        <div class="auth-field">
+          <ion-label>Password</ion-label>
 
-          <ion-input
-            type="email"
-            fill="outline"
-            autocomplete="email"
-            placeholder="you@example.com"
-            formControlName="email"
-          />
-
-        </label>
-
-
-        <label>
-
-          <span>Password</span>
-
-          <ion-input
-            type="password"
-            fill="outline"
-            autocomplete="current-password"
-            placeholder="At least 6 characters"
-            formControlName="password"
-          />
-
-        </label>
-
+          <ion-item lines="none" class="auth-input">
+            <ion-input
+              type="password"
+              [autocomplete]="
+                mode() === 'login'
+                  ? 'current-password'
+                  : 'new-password'
+              "
+              placeholder="At least 6 characters"
+              formControlName="password"
+            />
+          </ion-item>
+        </div>
 
         @if (errorMessage()) {
-
           <ion-text
             color="danger"
             class="auth-message"
           >
             {{ errorMessage() }}
           </ion-text>
-
         }
 
-
         @if (successMessage()) {
-
           <ion-text
             color="success"
             class="auth-message"
           >
             {{ successMessage() }}
           </ion-text>
-
         }
-
 
         <ion-button
           type="submit"
@@ -95,7 +89,6 @@
           class="auth-submit"
           [disabled]="submitting()"
         >
-
           @if (submitting()) {
             Please wait...
           } @else {
@@ -105,28 +98,23 @@
                 : 'Create account'
             }}
           }
-
         </ion-button>
-
       </form>
 
-
-      <button
+      <ion-button
         type="button"
+        fill="clear"
+        size="small"
         class="switch-mode"
         (click)="switchMode()"
       >
-
         {{
           mode() === 'login'
             ? 'New here? Create an account'
             : 'Already have an account? Sign in'
         }}
-
-      </button>
+      </ion-button>
 
     </section>
-
   </main>
-
 </ion-content>

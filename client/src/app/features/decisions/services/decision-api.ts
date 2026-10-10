@@ -30,6 +30,7 @@ export class DecisionApi {
       `${this.apiUrl}/decisions`,
     );
   }
+  
   getDecisionById(id: string) {
     return this.http.get<Decision>(
       `${this.apiUrl}/decisions/${id}`,
