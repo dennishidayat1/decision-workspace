@@ -14,6 +14,136 @@ public class DecisionService
         _dbContext = dbContext;
     }
 
+    public async Task<DecisionWorkspaceResponse?> GetWorkspaceAsync(
+        Guid userId,
+        Guid decisionId
+    )
+    {
+        var decision = await _dbContext.Decisions
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                d =>
+                    d.Id == decisionId &&
+                    d.UserId == userId
+            );
+
+        if (decision == null)
+        {
+            return null;
+        }
+
+        var criteria = await _dbContext.Criteria
+            .AsNoTracking()
+            .Where(
+                criterion =>
+                    criterion.DecisionId == decisionId
+            )
+            .ToListAsync();
+
+        var options = await _dbContext.DecisionOptions
+            .AsNoTracking()
+            .Where(
+                option =>
+                    option.DecisionId == decisionId
+            )
+            .ToListAsync();
+
+        var optionIds = options
+            .Select(option => option.Id)
+            .ToList();
+
+        var attributes =
+            optionIds.Count == 0
+                ? []
+                : await _dbContext.DecisionOptionAttributes
+                    .AsNoTracking()
+                    .Where(
+                        attribute =>
+                            optionIds.Contains(
+                                attribute.DecisionOptionId
+                            )
+                    )
+                    .ToListAsync();
+
+        var scores =
+            optionIds.Count == 0
+                ? []
+                : await _dbContext.OptionScores
+                    .AsNoTracking()
+                    .Where(
+                        score =>
+                            optionIds.Contains(
+                                score.DecisionOptionId
+                            )
+                    )
+                    .ToListAsync();
+
+        return new DecisionWorkspaceResponse
+        {
+            Decision = decision,
+            Criteria = criteria,
+            Options = options,
+            Attributes = attributes,
+            Scores = scores,
+        };
+    }
+
+    public async Task<Decision> CreateWorkspaceAsync(
+        Guid userId,
+        CreateDecisionWorkspaceRequest request
+    )
+    {
+        await using var transaction = await _dbContext.Database.BeginTransactionAsync();
+
+        try
+        {
+            var now = DateTimeOffset.UtcNow;
+
+            var decision = new Decision
+            {
+                Id = Guid.NewGuid(),
+                UserId = userId,
+                Title = request.Title,
+                Question = request.Question,
+                Context = request.Context,
+                Category = request.Category,
+                Status = "draft",
+                CreatedAt = now,
+                UpdatedAt = now,
+            };
+
+            _dbContext.Decisions.Add(decision);
+
+            var criteria = request.Criteria
+                .Where(c => !string.IsNullOrWhiteSpace(c.Name))
+                .Select(c => new Criterion
+                {
+                    Id = Guid.NewGuid(),
+                    DecisionId = decision.Id,
+                    Name = c.Name,
+                    Importance = c.Importance,
+                    Context = c.Context,
+                })
+                .ToList();
+
+            if (criteria.Count > 0)
+            {
+                _dbContext.Criteria.AddRange(criteria);
+            }
+
+            await _dbContext.SaveChangesAsync();
+
+            await transaction.CommitAsync();
+
+            return decision;
+        }
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
+    }
+
     public async Task<Decision> CreateAsync(
         Guid userId,
         CreateDecisionRequest request

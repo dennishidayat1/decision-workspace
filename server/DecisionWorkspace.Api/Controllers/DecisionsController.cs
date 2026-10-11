@@ -31,6 +31,37 @@ namespace DecisionWorkspace.Api.Controllers
             return parsedUserId;
         }
 
+        [HttpGet("{id}/workspace")]
+        public async Task<IActionResult> GetWorkspace(Guid id)
+        {
+            var workspace =
+                await _decisionService.GetWorkspaceAsync(
+                    GetUserId(),
+                    id
+                );
+
+            if (workspace == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(workspace);
+        }
+
+        [HttpPost("workspace")]
+        public async Task<IActionResult> CreateWorkspace(
+            CreateDecisionWorkspaceRequest request
+        )
+        {
+            var decision =
+                await _decisionService.CreateWorkspaceAsync(
+                    GetUserId(),
+                    request
+                );
+
+            return Ok(decision);
+        }
+
         [HttpPost]
         public async Task<IActionResult> Create(CreateDecisionRequest request)
         {

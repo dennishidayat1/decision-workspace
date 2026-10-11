@@ -7,10 +7,10 @@
       </ion-text>
     </main>
 
-  } @else if (loadError()) {
+  } @else if (hasLoadError()) {
     <main class="decision-page decision-page--state">
       <ion-text>
-        <p>{{ loadError() }}</p>
+        <p>Failed to load decision. Please try again later.</p>
       </ion-text>
     </main>
 

@@ -126,4 +126,98 @@ public class CriterionService
 
         return true;
     }
+
+    public async Task<List<Criterion>?> SaveCriteriaAsync(
+        Guid userId,
+        Guid decisionId,
+        List<SaveCriterionRequest> requests
+    )
+    {
+        if (!await DecisionExistsAsync(userId, decisionId))
+        {
+            return null;
+        }
+
+        var existingCriteria = await _dbContext.Criteria
+            .Where(criterion =>
+                criterion.DecisionId == decisionId &&
+                criterion.Decision.UserId == userId
+            )
+            .ToListAsync();
+
+        var incomingIds = requests
+            .Where(request => request.Id.HasValue)
+            .Select(request => request.Id!.Value)
+            .ToHashSet();
+
+        var now = DateTimeOffset.UtcNow;
+
+        foreach (var request in requests)
+        {
+            if (request.Id.HasValue)
+            {
+                var existingCriterion =
+                    existingCriteria.FirstOrDefault(
+                        criterion =>
+                            criterion.Id == request.Id.Value
+                    );
+
+                if (existingCriterion == null)
+                {
+                    continue;
+                }
+
+                existingCriterion.Name =
+                    request.Name.Trim();
+
+                existingCriterion.Importance =
+                    request.Importance;
+
+                existingCriterion.Context =
+                    string.IsNullOrWhiteSpace(request.Context)
+                        ? null
+                        : request.Context.Trim();
+
+                existingCriterion.UpdatedAt = now;
+
+                continue;
+            }
+
+            var newCriterion = new Criterion
+            {
+                Id = Guid.NewGuid(),
+                DecisionId = decisionId,
+                Name = request.Name.Trim(),
+                Importance = request.Importance,
+                Context =
+                    string.IsNullOrWhiteSpace(request.Context)
+                        ? null
+                        : request.Context.Trim(),
+                CreatedAt = now,
+                UpdatedAt = now
+            };
+
+            _dbContext.Criteria.Add(newCriterion);
+        }
+
+        var criteriaToDelete =
+            existingCriteria.Where(
+                criterion =>
+                    !incomingIds.Contains(criterion.Id)
+            );
+
+        _dbContext.Criteria.RemoveRange(
+            criteriaToDelete
+        );
+
+        await _dbContext.SaveChangesAsync();
+
+        return await _dbContext.Criteria
+            .AsNoTracking()
+            .Where(criterion =>
+                criterion.DecisionId == decisionId &&
+                criterion.Decision.UserId == userId
+            )
+            .ToListAsync();
+    }
 }

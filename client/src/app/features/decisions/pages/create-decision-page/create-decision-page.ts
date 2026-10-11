@@ -1,27 +1,7 @@
-import {
-  Component,
-  computed,
-  inject,
-  signal,
-} from '@angular/core';
-
-import {
-  ReactiveFormsModule,
-} from '@angular/forms';
-
-import {
-  toSignal,
-} from '@angular/core/rxjs-interop';
-
-import {
-  catchError,
-  finalize,
-  forkJoin,
-  map,
-  of,
-  switchMap,
-} from 'rxjs';
-
+import { Component, computed, inject, signal } from '@angular/core';
+import { ReactiveFormsModule } from '@angular/forms';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { finalize } from 'rxjs';
 import {
   IonButton,
   IonCard,
@@ -48,16 +28,10 @@ import {
   arrowBackOutline,
 } from 'ionicons/icons';
 
-import { CreateDecisionRequest } from '../../models/create-decision-request';
-
-import { CreateCriterionRequest } from '../../models/create-criterion-request';
-
+import { CreateDecisionWorkspaceRequest } from '../../models/create-decision-workspace-request';
 import { DecisionApi } from '../../services/decision-api';
-
-import { createCriterionDraftForm , createDecisionForm } from '../../forms/decision-form';
-
+import { createCriterionDraftForm, createDecisionForm } from '../../forms/decision-form';
 import { DecisionForm } from '../../components/decision-form/decision-form';
-
 import { CriteriaForm } from '../../components/criteria-form/criteria-form';
 
 
@@ -152,104 +126,34 @@ export class CreateDecisionPage {
     const formValue = this.decisionForm.getRawValue();
     const question = formValue.question.trim();
 
-    const request: CreateDecisionRequest = {
+    const request: CreateDecisionWorkspaceRequest = {
       title: question,
       question,
-
-      category:
-        formValue.category.trim(),
-
-      context:
-        formValue.context.trim(),
+      category: formValue.category.trim() || undefined,
+      context: formValue.context.trim() || undefined,
+      criteria:
+        formValue.criteria
+          .filter(
+            criterion => criterion.name.trim(),
+          )
+          .map(criterion => ({
+            name: criterion.name.trim(),
+            importance: criterion.importance,
+            context: criterion.context.trim() || undefined,
+          })),
     };
 
-    const criteriaRequests:
-      CreateCriterionRequest[] =
-      formValue.criteria
-        .filter(
-          (criterion) =>
-            criterion.name.trim(),
-        )
-        .map((criterion) => ({
-          name:
-            criterion.name.trim(),
-
-          importance:
-            criterion.importance,
-
-          context:
-            criterion.context.trim() ||
-            undefined,
-        }));
-
     this.decisionApi
-      .createDecision(request)
+      .createDecisionWorkspace(request)
       .pipe(
-
-        switchMap((decision) => {
-
-          if (!criteriaRequests.length) {
-            return of({
-              decision,
-              criteriaFailed: false,
-            });
-          }
-
-
-          return forkJoin(
-            criteriaRequests.map(
-              (criterion) =>
-                this.decisionApi
-                  .createCriterion(
-                    decision.id,
-                    criterion,
-                  ),
-            ),
-          ).pipe(
-
-            map(() => ({
-              decision,
-              criteriaFailed: false,
-            })),
-
-            catchError((error) => {
-              console.error(
-                'Decision created, but criteria failed:',
-                error,
-              );
-
-              return of({
-                decision,
-                criteriaFailed: true,
-              });
-            }),
-          );
-        }),
-
         finalize(() =>
           this.isSubmitting.set(false),
         ),
       )
       .subscribe({
-
-        next: ({
-          decision,
-          criteriaFailed,
-        }) => {
-
-          void this.navController
-            .navigateForward([
-              '/decisions',
-              decision.id,
-            ])
-            .then(() => {
-
-              void this.presentToast(
-                criteriaFailed
-                  ? 'Decision created, but some criteria could not be saved.'
-                  : 'Decision created',
-              );
-            });
+        next: async (decision) => {
+          await this.navController.navigateForward(['/decisions', decision.id])
+          await this.presentToast('Decision created');
         },
 
         error: (error) => {
@@ -258,22 +162,16 @@ export class CreateDecisionPage {
             error,
           );
 
-          this.submitError.set(
-            'Failed to create decision. Please try again.',
-          );
+          this.submitError.set('Failed to create decision. Please try again.');
         },
       });
   }
 
   goBack(): void {
-    this.navController.navigateBack(
-      '/decisions',
-    );
+    this.navController.navigateBack('/decisions');
   }
 
-  private async presentToast(
-    message: string,
-  ): Promise<void> {
+  private async presentToast(message: string): Promise<void> {
     const toast =
       await this.toastController.create({
         message,

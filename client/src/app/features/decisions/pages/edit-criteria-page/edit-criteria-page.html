@@ -90,7 +90,7 @@
       !loadError()
     ) {
 
-      <form (ngSubmit)="save()">
+      <form (submit)="$event.preventDefault()">
 
         <ion-row>
           <ion-col size="12">
@@ -183,6 +183,7 @@
                 <ion-button
                   type="submit"
                   class="save-button"
+                  (click)="save()"
                   [disabled]="
                     hasIncompleteCriterion() ||
                     isSubmitting()

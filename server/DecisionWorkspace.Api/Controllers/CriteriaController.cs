@@ -106,4 +106,25 @@ public class CriteriaController : ControllerBase
 
         return NoContent();
     }
+
+    [HttpPut]
+    public async Task<IActionResult> SaveAll(
+        Guid decisionId,
+        List<SaveCriterionRequest> requests
+    )
+    {
+        var criteria =
+            await _criterionService.SaveCriteriaAsync(
+                GetUserId(),
+                decisionId,
+                requests
+            );
+
+        if (criteria == null)
+        {
+            return NotFound();
+        }
+
+        return Ok(criteria);
+    }
 }

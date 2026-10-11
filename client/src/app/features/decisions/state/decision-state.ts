@@ -4,13 +4,14 @@ import { DecisionOptionAttribute } from '../models/decision-option-attribute';
 import { Criterion } from '../models/criterion';
 import { OptionScore } from '../models/option-score';
 import { DecisionApi } from '../services/decision-api';
-import { forkJoin } from 'rxjs';
+import { Decision } from '../models/decision';
 
 @Injectable({
     providedIn: 'root',
 })
 export class DecisionState {
     private readonly decisionApi = inject(DecisionApi);
+    readonly decision = signal<Decision | null>(null);
     readonly options = signal<DecisionOption[]>([]);
     readonly criteria = signal<Criterion[]>([]);
     readonly optionScores = signal<Record<string, OptionScore[]>>({});
@@ -30,8 +31,7 @@ export class DecisionState {
 
 
     ensureDecisionLoaded(decisionId: string): void {
-        const isSameDecision =
-            this.decisionId() === decisionId;
+        const isSameDecision = this.decisionId() === decisionId;
 
         if (
             isSameDecision &&
@@ -44,6 +44,7 @@ export class DecisionState {
         }
 
         if (!isSameDecision) {
+            this.decision.set(null);
             this.options.set([]);
             this.optionAttributes.set({});
             this.criteria.set([]);
@@ -53,107 +54,58 @@ export class DecisionState {
         this.decisionId.set(decisionId);
         this.loadStatus.set('loading');
 
-        forkJoin({
-            options:
-                this.decisionApi.getDecisionOptions(
-                    decisionId,
-                ),
-            criteria:
-                this.decisionApi.getCriteria(
-                    decisionId,
-                ),
-        }).subscribe({
-            next: ({ options, criteria }) => {
-
-                if (options.length === 0) {
-                    this.options.set(options);
-                    this.criteria.set(criteria);
-                    this.optionAttributes.set({});
-                    this.optionScores.set({});
-                    this.loadStatus.set('loaded');
-
-                    return;
-                }
-
-                const attributeRequests =
-                    options.map(option =>
-                        this.decisionApi
-                            .getDecisionOptionAttributes(
-                                decisionId,
+        this.decisionApi
+            .getDecisionWorkspace(decisionId)
+            .subscribe({
+                next: (workspace) => {
+                    const attributesByOption =
+                        Object.fromEntries(
+                            workspace.options.map(option => [
                                 option.id,
-                            ),
+                                workspace.attributes.filter(
+                                    attribute =>
+                                        attribute.decisionOptionId ===
+                                        option.id,
+                                ),
+                            ]),
+                        );
+
+                    const scoresByOption =
+                        Object.fromEntries(
+                            workspace.options.map(option => [
+                                option.id,
+                                workspace.scores.filter(
+                                    score =>
+                                        score.decisionOptionId ===
+                                        option.id,
+                                ),
+                            ]),
+                        );
+
+                    this.decision.set(workspace.decision);
+                    this.options.set(workspace.options);
+                    this.criteria.set(workspace.criteria);
+
+                    this.optionAttributes.set(
+                        attributesByOption,
                     );
 
-                const scoreRequests =
-                    options.map(option =>
-                        this.decisionApi
-                            .getOptionScores(option.id),
+                    this.optionScores.set(
+                        scoresByOption,
                     );
 
-                forkJoin({
-                    attributeResults:
-                        forkJoin(attributeRequests),
+                    this.loadStatus.set('loaded');
+                },
 
-                    scoreResults:
-                        forkJoin(scoreRequests),
-                }).subscribe({
-                    next: ({
-                        attributeResults,
-                        scoreResults,
-                    }) => {
+                error: (error) => {
+                    console.error(
+                        'Failed to load decision workspace:',
+                        error,
+                    );
 
-                        const attributesByOption =
-                            Object.fromEntries(
-                                options.map(
-                                    (option, index) => [
-                                        option.id,
-                                        attributeResults[index],
-                                    ],
-                                ),
-                            );
-
-                        const scoresByOption =
-                            Object.fromEntries(
-                                options.map(
-                                    (option, index) => [
-                                        option.id,
-                                        scoreResults[index],
-                                    ],
-                                ),
-                            );
-
-                        this.options.set(options);
-                        this.criteria.set(criteria);
-                        this.optionAttributes.set(
-                            attributesByOption,
-                        );
-                        this.optionScores.set(
-                            scoresByOption,
-                        );
-
-                        this.loadStatus.set('loaded');
-                    },
-
-                    error: (error) => {
-                        console.error(
-                            'Failed to load option details:',
-                            error,
-                        );
-
-                        this.loadStatus.set('error');
-                    },
-                });
-            },
-
-            error: (error) => {
-                console.error(
-                    'Failed to load decision:',
-                    error,
-                );
-
-                this.loadStatus.set('error');
-            },
-        });
+                    this.loadStatus.set('error');
+                },
+            });
     }
 
     invalidateDecision(decisionId: string): void {

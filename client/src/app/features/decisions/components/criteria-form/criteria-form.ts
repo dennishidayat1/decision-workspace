@@ -119,16 +119,20 @@ export class CriteriaForm {
 
 
   onAccordionChange(
-    value: unknown,
+    event: CustomEvent,
   ): void {
+    if (event.target !== event.currentTarget) {
+      return;
+    }
+
+    const value = event.detail.value;
+
     const next =
       Array.isArray(value)
         ? value[0]
         : value;
 
-    if (
-      typeof next === 'string'
-    ) {
+    if (typeof next === 'string') {
       this.expandedAccordionValue.set(next);
       return;
     }

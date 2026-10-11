@@ -135,32 +135,36 @@ export class DecisionDetailPage {
       return;
     }
 
-    this.loadDecision();
-
     this.decisionState.ensureDecisionLoaded(
       this.decisionId,
     );
   }
 
   readonly decisionId = this.route.snapshot.paramMap.get('id');
-  readonly decision = signal<Decision | null>(null);
+  readonly decision = this.decisionState.decision;
   readonly decisionOptions = this.decisionState.options;
   readonly optionAttributes = this.decisionState.optionAttributes;
+  readonly optionScores = this.decisionState.optionScores;
   readonly criteria = this.decisionState.criteria;
+  readonly availableAttributeNames = this.decisionState.availableAttributeNames;
+
   readonly selectedOptionId = signal<string | null>(null);
   readonly selectedOptionIdForAttribute = signal<string | null>(null);
-  readonly optionScores = this.decisionState.optionScores;
+  readonly selectedOptionIdForScoring = signal<string | null>(null);
+
   readonly optionScoreForms = new Map<string, FormGroup>();
   readonly isCriterionFormOpen = signal(false);
-  readonly selectedOptionIdForScoring = signal<string | null>(null);
   readonly isDecisionActionsOpen = signal(false);
   readonly isDeleteDecisionOpen = signal(false);
   readonly decisionActionsEvent = signal<Event | undefined>(undefined);
-  readonly isLoading = signal(true);
+
+  readonly isLoading = computed(() => this.decisionState.loadStatus() === 'loading');
+  readonly hasLoadError = computed(() => this.decisionState.loadStatus() === 'error');
   readonly loadError = signal<string | null>(null);
   readonly attributeSubmitError = signal<string | null>(null);
   readonly criterionSubmitError = signal<string | null>(null);
   readonly optionScoreSubmitError = signal<string | null>(null);
+
   readonly optionSort = signal<OptionSort>({ type: 'best' });
   readonly optionView = signal<OptionView>('grid');
   readonly optionSortValue = computed(() => {
@@ -228,34 +232,6 @@ export class DecisionDetailPage {
 
     return result;
   });
-  // readonly optionForm = new FormGroup({
-  //   title: new FormControl('', {
-  //     nonNullable: true,
-  //     validators: [Validators.required],
-  //   }),
-  //   url: new FormControl('', {
-  //     nonNullable: true,
-  //   }),
-  //   thumbnailUrl: new FormControl('', {
-  //     nonNullable: true,
-  //   }),
-  //   description: new FormControl('', {
-  //     nonNullable: true,
-  //   }),
-  //   price: new FormControl<number | null>(null),
-  //   currency: new FormControl('', {
-  //     nonNullable: true,
-  //   }),
-
-  //   attributes: new FormArray<
-  //     FormGroup<{
-  //       name: FormControl<string>;
-  //       value: FormControl<string>;
-  //     }>
-  //   >([]),
-  // });
-
-  readonly availableAttributeNames = this.decisionState.availableAttributeNames;
 
   readonly optionAttributesForm = new FormGroup({
     name: new FormControl('', {
@@ -383,35 +359,6 @@ export class DecisionDetailPage {
       return scoreB - scoreA;
     });
   });
-
-  private loadDecision(): void {
-    this.loadError.set(null);
-
-    if (!this.decisionId) {
-      console.error('Decision ID is not available in the route parameters.');
-      this.loadError.set('Decision ID is missing.');
-      this.isLoading.set(false);
-      return;
-    }
-
-    this.decisionApi
-      .getDecisionById(this.decisionId).pipe(
-        finalize(() => this.isLoading.set(false))
-      ).subscribe({
-        next: (decision) => {
-          this.decision.set(decision);
-        },
-        error: (error) => {
-          console.error('Failed to load decision:', error);
-
-          if (error.status === 404) {
-            this.loadError.set('Decision not found.');
-          } else {
-            this.loadError.set('Failed to load decision. Please try again later.');
-          }
-        },
-      });
-  }
 
   readonly bestOptionId = computed(() => {
     let bestId: string | null = null;

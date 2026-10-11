@@ -15,11 +15,6 @@ import {
 } from '@angular/router';
 
 import {
-  forkJoin,
-  Observable,
-} from 'rxjs';
-
-import {
   DecisionApi,
 } from '../../services/decision-api';
 
@@ -125,10 +120,6 @@ export class EditCriteriaPage {
     >();
 
 
-  private readonly originalCriterionIds =
-    new Set<string>();
-
-
   constructor() {
     effect(() => {
       const loadStatus =
@@ -182,8 +173,6 @@ export class EditCriteriaPage {
   ): void {
     this.criteria.clear();
 
-    this.originalCriterionIds.clear();
-
     for (
       const persistedCriterion
       of persistedCriteria
@@ -204,10 +193,6 @@ export class EditCriteriaPage {
 
       this.persistedCriterionIds.set(
         form,
-        persistedCriterion.id,
-      );
-
-      this.originalCriterionIds.add(
         persistedCriterion.id,
       );
 
@@ -236,61 +221,6 @@ export class EditCriteriaPage {
       return;
     }
 
-    const existing = [];
-    const created = [];
-
-    const currentPersistedIds =
-      new Set<string>();
-
-
-    for (
-      const criterion
-      of this.criteria.controls
-    ) {
-      const value =
-        criterion.getRawValue();
-
-      const persistedId =
-        this.persistedCriterionIds.get(
-          criterion,
-        );
-
-      const draft = {
-        name:
-          value.name.trim(),
-
-        importance:
-          value.importance,
-
-        context:
-          value.context.trim() ||
-          undefined,
-      };
-
-
-      if (persistedId) {
-        currentPersistedIds.add(
-          persistedId,
-        );
-
-        existing.push({
-          id: persistedId,
-          ...draft,
-        });
-      } else {
-        created.push(draft);
-      }
-    }
-
-
-    const deleted =
-      [...this.originalCriterionIds]
-        .filter(
-          (id) =>
-            !currentPersistedIds.has(id),
-        );
-
-
     if (!this.decisionId) {
       this.submitError.set(
         'Decision ID is missing.',
@@ -298,59 +228,40 @@ export class EditCriteriaPage {
       return;
     }
 
-    const requests: Observable<unknown>[] = [];
+    const requests =
+      this.criteria.controls.map(
+        criterion => {
+          const value =
+            criterion.getRawValue();
 
+          const persistedId =
+            this.persistedCriterionIds.get(
+              criterion,
+            );
 
-    for (const criterion of existing) {
-      requests.push(
-        this.decisionApi.updateCriterion(
-          this.decisionId,
-          criterion.id,
-          {
-            name: criterion.name,
-            importance: criterion.importance,
-            context: criterion.context,
-          },
-        ),
+          return {
+            id: persistedId,
+            name: value.name.trim(),
+            importance: value.importance,
+            context:
+              value.context.trim() ||
+              undefined,
+          };
+        },
       );
-    }
-
-
-    for (const criterion of created) {
-      requests.push(
-        this.decisionApi.createCriterion(
-          this.decisionId,
-          criterion,
-        ),
-      );
-    }
-
-
-    for (const criterionId of deleted) {
-      requests.push(
-        this.decisionApi.deleteCriterion(
-          this.decisionId,
-          criterionId,
-        ),
-      );
-    }
-
-
-    if (requests.length === 0) {
-      this.cancel();
-      return;
-    }
-
 
     this.isSubmitting.set(true);
     this.submitError.set(null);
 
-
-    forkJoin(requests)
+    this.decisionApi
+      .saveCriteria(
+        this.decisionId,
+        requests,
+      )
       .subscribe({
-        next: () => {
-          this.decisionState.invalidateDecision(
-            this.decisionId!,
+        next: savedCriteria => {
+          this.decisionState.criteria.set(
+            savedCriteria,
           );
 
           this.navController.navigateBack(
@@ -358,7 +269,7 @@ export class EditCriteriaPage {
           );
         },
 
-        error: (error) => {
+        error: error => {
           console.error(
             'Failed to save criteria:',
             error,

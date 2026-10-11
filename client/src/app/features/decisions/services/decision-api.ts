@@ -11,6 +11,9 @@ import { CreateCriterionRequest } from '../models/create-criterion-request';
 import { Criterion } from '../models/criterion';
 import { CreateOptionScoreRequest } from '../models/create-option-score-request';
 import { OptionScore } from '../models/option-score';
+import { DecisionWorkspaceResponse } from '../models/decision-workspace-response';
+import { CreateDecisionWorkspaceRequest } from '../models/create-decision-workspace-request';
+import { SaveCriterionRequest } from '../models/save-criterion-request';
 
 @Service()
 export class DecisionApi {
@@ -30,10 +33,23 @@ export class DecisionApi {
       `${this.apiUrl}/decisions`,
     );
   }
-  
+
   getDecisionById(id: string) {
     return this.http.get<Decision>(
       `${this.apiUrl}/decisions/${id}`,
+    );
+  }
+
+  getDecisionWorkspace(id: string) {
+    return this.http.get<DecisionWorkspaceResponse>(
+      `${this.apiUrl}/decisions/${id}/workspace`,
+    );
+  }
+
+  createDecisionWorkspace(request: CreateDecisionWorkspaceRequest) {
+    return this.http.post<Decision>(
+      `${this.apiUrl}/decisions/workspace`,
+      request,
     );
   }
 
@@ -142,6 +158,16 @@ export class DecisionApi {
   ) {
     return this.http.delete<void>(
       `${this.apiUrl}/decisions/${decisionId}/criteria/${criterionId}`,
+    );
+  }
+
+  saveCriteria(
+    decisionId: string,
+    requests: SaveCriterionRequest[],
+  ) {
+    return this.http.put<Criterion[]>(
+      `${this.apiUrl}/decisions/${decisionId}/criteria`,
+      requests,
     );
   }
 
