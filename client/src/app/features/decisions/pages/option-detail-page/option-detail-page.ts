@@ -519,4 +519,17 @@ export class OptionDetailPage {
         },
       });
   }
+
+  openProductWebsite(
+    url: string,
+    event: Event,
+  ): void {
+    event.stopPropagation();
+
+    window.open(
+      url,
+      '_blank',
+      'noopener,noreferrer',
+    );
+  }
 }

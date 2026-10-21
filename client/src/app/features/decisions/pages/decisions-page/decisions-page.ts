@@ -75,5 +75,16 @@ export class DecisionsPage {
         console.error('Failed to load decisions:', error);
       },
     });
+
+    this.decisionApi.previewMarketplaceLink({
+      url: 'https://tk.tokopedia.com/ZSgAp53PL/',
+    }).subscribe({
+      next: result => {
+        console.log('Marketplace preview', result);
+      },
+      error: error => {
+        console.error('Marketplace preview failed', error);
+      },
+    });
   }
 }

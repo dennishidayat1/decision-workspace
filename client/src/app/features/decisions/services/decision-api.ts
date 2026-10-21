@@ -14,6 +14,8 @@ import { OptionScore } from '../models/option-score';
 import { DecisionWorkspaceResponse } from '../models/decision-workspace-response';
 import { CreateDecisionWorkspaceRequest } from '../models/create-decision-workspace-request';
 import { SaveCriterionRequest } from '../models/save-criterion-request';
+import { PreviewMarketplaceLinkRequest } from '../models/preview-marketplace-link-request';
+import { MarketplaceLinkPreviewResponse } from '../models/marketplace-link-preview-response';
 
 @Service()
 export class DecisionApi {
@@ -182,5 +184,12 @@ export class DecisionApi {
       `${this.apiUrl}/decision-options/${decisionOptionId}/scores`,
       request
     )
+  }
+
+  previewMarketplaceLink(request: PreviewMarketplaceLinkRequest) {
+    return this.http.post<MarketplaceLinkPreviewResponse>(
+      `${this.apiUrl}/marketplace-links/preview`,
+      request,
+    );
   }
 }

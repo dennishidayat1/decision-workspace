@@ -13,4 +13,9 @@ public class DecisionOption
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
     public Decision Decision { get; set; } = null!;
+    public string? SourceUrl { get; set; }
+
+    public string? SourceName { get; set; }
+
+    public string? ImageUrl { get; set; }
 }

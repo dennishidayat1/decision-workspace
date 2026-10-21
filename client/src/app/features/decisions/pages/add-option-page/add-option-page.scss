@@ -390,3 +390,78 @@ form {
     --box-shadow: none;
   }
 }
+
+/* --------------------------------------------------
+   MARKETPLACE
+-------------------------------------------------- */
+
+.marketplace-import-trigger {
+  margin-bottom: 16px;
+  padding: 14px;
+
+  background: #ffffff;
+
+  border: 1px solid #e1e7e3;
+  border-radius: 14px;
+
+  cursor: pointer;
+}
+
+.marketplace-import-trigger:hover {
+  border-color: rgba(36, 118, 87, 0.35);
+  background: #f7f9f8;
+}
+
+.marketplace-import-trigger__row {
+  min-height: 40px;
+}
+
+.marketplace-import-trigger__icon-col {
+  padding: 0 12px 0 0;
+}
+
+.marketplace-import-trigger__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 36px;
+  height: 36px;
+
+  color: #247657;
+  background: #e8f4ed;
+
+  border-radius: 9px;
+}
+
+.marketplace-import-trigger__copy {
+  min-width: 0;
+  padding: 0;
+}
+
+.marketplace-import-trigger__copy strong {
+  display: block;
+
+  color: #24352e;
+
+  font-family: "Inter", sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.marketplace-import-trigger__copy ion-note {
+  display: block;
+  margin-top: 2px;
+
+  color: #6b7770;
+
+  font-size: 11px;
+}
+
+.marketplace-import-trigger__action {
+  padding: 0 0 0 12px;
+
+  color: #6b7770;
+
+  font-size: 16px;
+}

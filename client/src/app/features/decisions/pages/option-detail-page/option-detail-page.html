@@ -467,17 +467,16 @@
 
 
               @if (option.url) {
-                <a
-                  [href]="option.url"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  View product website
-
-                  <ion-icon
-                    name="open-outline"
-                  />
-                </a>
+              <a
+                [href]="option.url"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="product-website-link"
+                (click)="$event.stopPropagation()"
+              >
+                View product website
+                <ion-icon name="open-outline" />
+              </a>
               }
 
 

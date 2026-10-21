@@ -63,6 +63,18 @@ public class DecisionOptionService
             Currency = request.Currency,
             CreatedAt = now,
             UpdatedAt = now,
+
+            SourceUrl = string.IsNullOrWhiteSpace(request.SourceUrl)
+            ? null
+            : request.SourceUrl.Trim(),
+
+            SourceName = string.IsNullOrWhiteSpace(request.SourceName)
+            ? null
+            : request.SourceName.Trim(),
+
+            ImageUrl = string.IsNullOrWhiteSpace(request.ImageUrl)
+            ? null
+            : request.ImageUrl.Trim(),
         };
 
         _dbContext.DecisionOptions.Add(decisionOption);

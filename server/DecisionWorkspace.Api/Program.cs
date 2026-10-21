@@ -60,6 +60,24 @@ builder.Services.AddScoped<DecisionOptionService>();
 builder.Services.AddScoped<DecisionOptionAttributeService>();
 builder.Services.AddScoped<CriterionService>();
 builder.Services.AddScoped<OptionScoreService>();
+builder.Services.AddScoped<MarketplaceLinkService>();
+
+builder.Services.AddHttpClient(
+    "Marketplace",
+    client =>
+    {
+        client.Timeout = TimeSpan.FromSeconds(10);
+
+        client.DefaultRequestHeaders.UserAgent.ParseAdd(
+            "DecisionWorkspace/1.0"
+        );
+    }
+)
+.ConfigurePrimaryHttpMessageHandler(() =>
+    new HttpClientHandler
+    {
+        AllowAutoRedirect = false
+    });
 
 builder.Services.AddDbContext<AppDbContext>(options =>
 {

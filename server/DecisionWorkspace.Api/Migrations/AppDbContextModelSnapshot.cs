@@ -112,8 +112,17 @@ namespace DecisionWorkspace.Api.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("text");
 
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("text");
+
                     b.Property<decimal?>("Price")
                         .HasColumnType("numeric");
+
+                    b.Property<string>("SourceName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("SourceUrl")
+                        .HasColumnType("text");
 
                     b.Property<string>("ThumbnailUrl")
                         .HasColumnType("text");

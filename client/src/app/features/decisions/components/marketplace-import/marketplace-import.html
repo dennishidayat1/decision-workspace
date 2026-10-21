@@ -1,0 +1,229 @@
+<ion-modal
+  [isOpen]="isOpen()"
+  cssClass="marketplace-import-modal"
+  (didDismiss)="close()"
+>
+  <ng-template>
+
+    <div class="marketplace-import">
+
+      <!-- HEADER -->
+      <div class="marketplace-import__header">
+        <ion-text>
+          <h2>Import from marketplace</h2>
+        </ion-text>
+
+        <ion-button
+          type="button"
+          fill="clear"
+          class="close-button"
+          aria-label="Close marketplace import"
+          [disabled]="isLoading()"
+          (click)="close()"
+        >
+          <ion-icon name="close-outline" />
+        </ion-button>
+      </div>
+
+
+      <!-- BODY -->
+      <div class="marketplace-import__body">
+
+        @if (isLoading()) {
+
+          <div class="loading-state">
+            <ion-spinner name="crescent" />
+
+            <ion-text>
+              <p class="loading-title">
+                Finding product details…
+              </p>
+            </ion-text>
+
+            <ion-note>
+              This usually takes a moment.
+            </ion-note>
+          </div>
+
+        } @else if (error()) {
+
+          <div class="error-state">
+
+            <div class="state-icon">
+              <ion-icon name="bag-handle-outline" />
+            </div>
+
+            <ion-text>
+              <h3>We couldn’t import this product</h3>
+            </ion-text>
+
+            <ion-note>
+              {{ error() }}
+            </ion-note>
+
+          </div>
+
+        } @else if (preview(); as product) {
+
+          @if (!product.title) {
+            <div class="partial-message">
+              <ion-text>
+                <strong>
+                  We found the link, but not all product details.
+                </strong>
+              </ion-text>
+
+              <ion-note>
+                You can still use the source information and complete the
+                option manually.
+              </ion-note>
+            </div>
+          }
+
+          <div class="product-preview">
+
+            <div class="product-preview__image">
+              @if (product.imageUrl) {
+                <img
+                  [src]="product.imageUrl"
+                  alt=""
+                />
+              } @else {
+                <ion-icon name="image-outline" />
+              }
+            </div>
+
+            <div class="product-preview__content">
+
+              @if (product.sourceName) {
+                <ion-note class="product-source">
+                  {{ product.sourceName }}
+                </ion-note>
+              }
+
+              <ion-text>
+                <h3>
+                  {{
+                    product.title ||
+                    'Product details unavailable'
+                  }}
+                </h3>
+              </ion-text>
+
+              <a
+                class="source-link"
+                [href]="product.canonicalUrl || product.sourceUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Open source
+                <ion-icon name="open-outline" />
+              </a>
+
+            </div>
+
+          </div>
+
+        } @else {
+
+          <form
+            id="marketplace-import-form"
+            (submit)="$event.preventDefault(); previewLink()"
+          >
+
+            <ion-note class="entry-description">
+              Paste a Shopee or Tokopedia product link.
+            </ion-note>
+
+            <div class="url-field">
+            <ion-input
+                id="marketplace-url"
+                type="url"
+                label="Product link"
+                labelPlacement="stacked"
+                fill="outline"
+                placeholder="https://"
+                [formControl]="urlControl"
+            />
+            </div>
+
+          </form>
+
+        }
+
+      </div>
+
+
+      <!-- FOOTER -->
+      <div class="marketplace-import__actions">
+
+        @if (isLoading()) {
+
+          <ion-button
+            type="button"
+            fill="clear"
+            disabled
+          >
+            Cancel
+          </ion-button>
+
+        } @else if (error()) {
+
+          <ion-button
+            type="button"
+            fill="clear"
+            (click)="close()"
+          >
+            Continue manually
+          </ion-button>
+
+          <ion-button
+            type="button"
+            fill="outline"
+            (click)="retry()"
+          >
+            Try another link
+          </ion-button>
+
+        } @else if (preview()) {
+
+          <ion-button
+            type="button"
+            fill="clear"
+            (click)="retry()"
+          >
+            Try another link
+          </ion-button>
+
+          <ion-button
+            type="button"
+            (click)="useProduct()"
+          >
+            Use this product
+          </ion-button>
+
+        } @else {
+
+          <ion-button
+            type="button"
+            fill="clear"
+            (click)="close()"
+          >
+            Cancel
+          </ion-button>
+
+          <ion-button
+            type="submit"
+            form="marketplace-import-form"
+          >
+            Import
+          </ion-button>
+
+        }
+
+      </div>
+
+    </div>
+
+  </ng-template>
+</ion-modal>

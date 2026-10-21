@@ -8,6 +8,9 @@ export interface CreateDecisionOptionRequest {
   description?: string;
   price?: number;
   currency?: string;
+  sourceUrl?: string;
+  sourceName?: string;
+  imageUrl?: string;
 
   attributes: CreateDecisionOptionAttributeRequest[];
   scores: CreateOptionScoreRequest[];

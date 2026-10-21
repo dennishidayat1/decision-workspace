@@ -7,6 +7,9 @@ export interface DecisionOption {
   thumbnailUrl?: string;
   price?: number;
   currency?: string;
+  sourceUrl?: string;
+  sourceName?: string;
+  imageUrl?: string;
   createdAt: string;
   updatedAt: string;
 }

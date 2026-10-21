@@ -1,4 +1,4 @@
-import { Component, signal, inject, effect } from '@angular/core';
+import { Component, signal, inject, effect, viewChild } from '@angular/core';
 import { ReactiveFormsModule, FormGroup, FormControl } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DecisionApi } from '../../services/decision-api';
@@ -6,8 +6,10 @@ import { CreateDecisionOptionRequest } from '../../models/create-decision-option
 import { OptionInfoForm } from '../../components/option-info-form/option-info-form';
 import { AttributeForm } from '../../components/attribute-form/attribute-form';
 import { ScoreForm } from '../../components/score-form/score-form';
+import { MarketplaceImportForm } from '../../components/marketplace-import/marketplace-import';
 import { DecisionState } from '../../state/decision-state';
 import { ScoreFormGroup, createOptionForm } from '../../forms/option-form';
+import { MarketplaceLinkPreviewResponse } from '../../models/marketplace-link-preview-response';
 import {
   NavController,
   IonContent,
@@ -20,11 +22,13 @@ import {
   IonNote,
   IonIcon
 } from '@ionic/angular';
-import { arrowBackOutline } from 'ionicons/icons';
+import { arrowBackOutline, bagHandleOutline, chevronForwardOutline } from 'ionicons/icons';
 import { addIcons } from 'ionicons';
 
 addIcons({
   arrowBackOutline,
+  bagHandleOutline,
+  chevronForwardOutline
 });
 
 @Component({
@@ -32,6 +36,7 @@ addIcons({
     OptionInfoForm,
     AttributeForm,
     ScoreForm,
+    MarketplaceImportForm,
     ReactiveFormsModule,
     IonContent,
     IonGrid,
@@ -55,6 +60,11 @@ export class AddOptionPage {
   private readonly navController = inject(NavController);
 
   readonly decisionId = this.route.snapshot.paramMap.get('id');
+
+  readonly marketplaceImport = viewChild(MarketplaceImportForm);
+  readonly importedSourceUrl = signal<string | null>(null);
+  readonly importedSourceName = signal<string | null>(null);
+  readonly importedImageUrl = signal<string | null>(null);
 
   readonly isOptionFormOpen = signal(false);
   readonly optionSubmitError = signal<string | null>(null);
@@ -162,6 +172,11 @@ export class AddOptionPage {
       thumbnailUrl: this.optionForm.value.thumbnailUrl || undefined,
       price: this.optionForm.value.price ?? undefined,
       currency: this.optionForm.value.currency || undefined,
+
+      sourceUrl: this.importedSourceUrl() || undefined,
+      sourceName: this.importedSourceName() || undefined,
+      imageUrl: this.importedImageUrl() || undefined,
+
       attributes: attributesToSave,
       scores: scoresToSave,
     };
@@ -188,5 +203,34 @@ export class AddOptionPage {
     }
 
     this.navController.navigateBack(['/decisions', this.decisionId]);
+  }
+
+  onImportMarketplace(): void {
+    this.marketplaceImport()?.open();
+  }
+
+  onMarketplaceProductSelected(
+    preview: MarketplaceLinkPreviewResponse,
+  ): void {
+    this.optionForm.patchValue({
+      title: preview.title ?? '',
+      description: preview.description ?? '',
+      url: preview.canonicalUrl ?? preview.sourceUrl,
+      thumbnailUrl: preview.imageUrl ?? '',
+      price: preview.price ?? null,
+      currency: preview.currency ?? '',
+    });
+
+    this.importedSourceUrl.set(
+      preview.canonicalUrl ?? preview.sourceUrl,
+    );
+
+    this.importedSourceName.set(
+      preview.sourceName ?? null,
+    );
+
+    this.importedImageUrl.set(
+      preview.imageUrl ?? null,
+    );
   }
 }
