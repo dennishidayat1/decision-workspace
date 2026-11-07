@@ -1,16 +1,19 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { MarketplaceImport } from './marketplace-import';
+import { MarketplaceImportForm } from './marketplace-import';
+import { provideHttpClient } from '@angular/common/http';
+import { DecisionApi } from '../../services/decision-api';
 
 describe('MarketplaceImport', () => {
-  let component: MarketplaceImport;
-  let fixture: ComponentFixture<MarketplaceImport>;
+  let component: MarketplaceImportForm;
+  let fixture: ComponentFixture<MarketplaceImportForm>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [MarketplaceImport],
+      imports: [MarketplaceImportForm],
+      providers: [provideHttpClient(), DecisionApi],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(MarketplaceImport);
+    fixture = TestBed.createComponent(MarketplaceImportForm);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });

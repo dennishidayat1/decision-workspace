@@ -83,9 +83,10 @@
           <div class="product-preview">
 
             <div class="product-preview__image">
-              @if (product.imageUrl) {
+              @if (decisionApi.getMarketplaceImageUrl(product.imageUrl); as imageUrl) {
                 <img
-                  [src]="product.imageUrl"
+                  [src]="imageUrl"
+                  (error)="decisionApi.markImageFailed(imageUrl)"
                   alt=""
                 />
               } @else {

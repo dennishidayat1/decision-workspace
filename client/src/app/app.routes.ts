@@ -75,6 +75,13 @@ export const routes: Routes = [
             './features/decisions/pages/edit-criteria-page/edit-criteria-page'
           ).then(m => m.EditCriteriaPage),
       },
+      {
+        path: 'decisions/:id/compare',
+        loadComponent: () =>
+          import(
+            './features/decisions/pages/compare-options/compare-options'
+          ).then(m => m.CompareOptions),
+      },
     ],
   },
 ];

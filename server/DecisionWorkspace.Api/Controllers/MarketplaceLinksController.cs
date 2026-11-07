@@ -11,14 +11,17 @@ namespace DecisionWorkspace.Api.Controllers;
 public class MarketplaceLinksController : ControllerBase
 {
     private readonly MarketplaceLinkService _marketplaceLinkService;
+    private readonly MarketplaceImageStorageService _marketplaceImageStorageService;
     private readonly ILogger<MarketplaceLinksController> _logger;
 
     public MarketplaceLinksController(
         MarketplaceLinkService marketplaceLinkService,
+        MarketplaceImageStorageService marketplaceImageStorageService,
         ILogger<MarketplaceLinksController> logger
     )
     {
         _marketplaceLinkService = marketplaceLinkService;
+        _marketplaceImageStorageService = marketplaceImageStorageService;
         _logger = logger;
     }
 
@@ -136,9 +139,17 @@ public class MarketplaceLinksController : ControllerBase
                 jsonLd?.Description
                 ?? metaDescription;
 
-            var imageUrl =
+            var marketplaceImageUrl =
                 jsonLd?.ImageUrl
                 ?? metaImageUrl;
+
+            var imageUrl =
+                await _marketplaceImageStorageService
+                    .ImportImageAsync(
+                        marketplaceImageUrl,
+                        cancellationToken
+                    )
+                ?? marketplaceImageUrl;
 
             var price =
                 jsonLd?.Price

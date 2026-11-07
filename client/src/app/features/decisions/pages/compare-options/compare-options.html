@@ -1,0 +1,224 @@
+<ion-content>
+  <main class="compare-page">
+
+    <!-- Back navigation -->
+    <ion-button
+      fill="clear"
+      size="small"
+      class="page-back-link"
+      (click)="goBack()"
+    >
+      ← Back to decision
+    </ion-button>
+
+    <!-- Page heading -->
+    <ion-grid class="compare-header ion-no-padding">
+      <ion-row>
+        <ion-col>
+          <h1>
+            Compare your options
+          </h1>
+
+          @if (selectedOptions().length >= 2) {
+            <div class="compare-meta">
+              <span>
+                Comparing {{ selectedOptions().length }} options
+              </span>
+
+              <span class="compare-meta__separator">
+                ·
+              </span>
+
+              <ion-button
+                fill="clear"
+                size="small"
+                class="compare-meta__edit"
+                (click)="openSelector()"
+              >
+                Edit selection
+              </ion-button>
+            </div>
+          }
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+
+    @if (selectedOptions().length >= 2) {
+
+      <!-- Comparison -->
+      <div class="compare-table-wrapper">
+        <table class="compare-table">
+          <thead>
+            <tr>
+              <th class="compare-table__label">
+                Your shortlist
+              </th>
+
+              @for (
+                option of selectedOptions();
+                track option.id
+              ) {
+                <th class="compare-table__option">
+                  <div class="compare-table__option-title">
+                    {{ option.title }}
+                  </div>
+
+                  @if (option.price) {
+                    <div class="compare-table__price">
+                      {{ option.price }}
+
+                      @if (option.currency) {
+                        {{ option.currency }}
+                      }
+                    </div>
+                  }
+                </th>
+              }
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr class="compare-table__overall-row">
+              <th>
+                Overall score
+              </th>
+
+              @for (
+                option of selectedOptions();
+                track option.id
+              ) {
+                <td>
+                  @if (
+                    weightedScore(option.id);
+                    as score
+                  ) {
+                    <strong>
+                      {{ score.toFixed(2) }}
+                    </strong>
+
+                    <span class="compare-table__score-max">
+                      /5
+                    </span>
+                  } @else {
+                    —
+                  }
+                </td>
+              }
+            </tr>
+
+            @for (
+              criterion of criteria();
+              track criterion.id
+            ) {
+              <tr class="compare-table__criterion-row">
+                <th>
+                  {{ criterion.name }}
+
+                  <span class="compare-table__weight">
+                    ×{{ criterion.importance }}
+                  </span>
+                </th>
+
+                @for (
+                  option of selectedOptions();
+                  track option.id
+                ) {
+                  <td>
+                    <span class="criterion-score">
+                      <ion-icon name="star" />
+
+                      {{
+                        scoreFor(
+                          option.id,
+                          criterion.id
+                        ) ?? '—'
+                      }}
+                    </span>
+                  </td>
+                }
+              </tr>
+            }
+
+            @for (
+              attributeName of attributeNames();
+              track attributeName
+            ) {
+              <tr class="compare-table__attribute-row">
+                <th>
+                  {{ attributeName }}
+                </th>
+
+                @for (
+                  option of selectedOptions();
+                  track option.id
+                ) {
+                  <td>
+                    {{
+                      attributeValue(
+                        option.id,
+                        attributeName
+                      )
+                    }}
+                  </td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <ion-note class="compare-footnote">
+        Scores are personal, not product reviews.
+        Open an option to update its ratings.
+      </ion-note>
+
+    } @else {
+
+      <!-- Proper empty state -->
+      <ion-grid class="compare-empty ion-no-padding">
+        <ion-row>
+          <ion-col size="12" size-md="8" size-lg="6">
+
+            <div class="compare-empty__content">
+              <div class="compare-empty__eyebrow">
+                Nothing to compare yet
+              </div>
+
+              <h2>
+                Choose at least two options
+              </h2>
+
+              <p>
+                Select up to four options from your shortlist
+                and compare them side by side.
+              </p>
+
+              <ion-button
+                class="compare-empty__action"
+                (click)="openSelector()"
+              >
+                Select options
+              </ion-button>
+            </div>
+
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+
+    }
+  </main>
+</ion-content>
+
+<ion-modal
+  [isOpen]="selectorOpen()"
+  (didDismiss)="closeSelector()"
+>
+  <ng-template>
+    <app-compare-option-selector
+      [options]="options()"
+      [initialSelectedIds]="selectedOptionIds()"
+      (confirmSelection)="updateComparison($event)"
+      (dismissRequested)="closeSelector()"
+    />
+  </ng-template>
+</ion-modal>

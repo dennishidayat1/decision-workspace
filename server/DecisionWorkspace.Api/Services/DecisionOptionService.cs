@@ -151,7 +151,7 @@ public class DecisionOptionService
         CreateDecisionOptionRequest request
     )
     {
-        var decisionOption = await _dbContext.DecisionOptions
+        var decisionOption = await _dbContext.DecisionOptions.AsNoTracking()
             .FirstOrDefaultAsync(option =>
                 option.Id == decisionOptionId &&
                 option.DecisionId == decisionId &&
@@ -163,15 +163,32 @@ public class DecisionOptionService
             return null;
         }
 
+        if (request.ExpectedUpdatedAt == null || decisionOption.UpdatedAt != request.ExpectedUpdatedAt)
+            throw new OptionConcurrencyException();
+
+        var updatedAt = DateTimeOffset.UtcNow;
+        updatedAt = new DateTimeOffset(updatedAt.Ticks - updatedAt.Ticks % 10, TimeSpan.Zero);
+        if (updatedAt <= decisionOption.UpdatedAt) updatedAt = decisionOption.UpdatedAt.AddTicks(10);
+        var affected = await _dbContext.DecisionOptions.Where(option =>
+                option.Id == decisionOptionId && option.DecisionId == decisionId &&
+                option.Decision.UserId == userId && option.UpdatedAt == request.ExpectedUpdatedAt.Value)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(option => option.Title, request.Title)
+                .SetProperty(option => option.Url, request.Url)
+                .SetProperty(option => option.ThumbnailUrl, request.ThumbnailUrl)
+                .SetProperty(option => option.Description, request.Description)
+                .SetProperty(option => option.Price, request.Price)
+                .SetProperty(option => option.Currency, request.Currency)
+                .SetProperty(option => option.UpdatedAt, updatedAt));
+        if (affected != 1) throw new OptionConcurrencyException();
+
         decisionOption.Title = request.Title;
         decisionOption.Url = request.Url;
         decisionOption.ThumbnailUrl = request.ThumbnailUrl;
         decisionOption.Description = request.Description;
         decisionOption.Price = request.Price;
         decisionOption.Currency = request.Currency;
-        decisionOption.UpdatedAt = DateTimeOffset.UtcNow;
-
-        await _dbContext.SaveChangesAsync();
+        decisionOption.UpdatedAt = updatedAt;
 
         return decisionOption;
     }

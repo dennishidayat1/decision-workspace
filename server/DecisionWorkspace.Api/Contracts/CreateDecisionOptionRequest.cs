@@ -2,6 +2,7 @@ namespace DecisionWorkspace.Api.Contracts;
 
 public class CreateDecisionOptionRequest
 {
+    public DateTimeOffset? ExpectedUpdatedAt { get; set; }
     public string Title { get; set; } = string.Empty;
     public string? Url { get; set; }
     public string? ThumbnailUrl { get; set; }

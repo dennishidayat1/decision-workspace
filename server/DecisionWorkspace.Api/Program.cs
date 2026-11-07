@@ -20,6 +20,12 @@ var supabaseUrl =
         "Supabase URL is not configured."
     );
 
+var supabaseServiceRoleKey =
+    builder.Configuration["Supabase:ServiceRoleKey"]
+    ?? throw new InvalidOperationException(
+        "Supabase service role key is not configured."
+    );
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("Frontend", policy =>
@@ -61,6 +67,9 @@ builder.Services.AddScoped<DecisionOptionAttributeService>();
 builder.Services.AddScoped<CriterionService>();
 builder.Services.AddScoped<OptionScoreService>();
 builder.Services.AddScoped<MarketplaceLinkService>();
+builder.Services.AddScoped<MarketplaceImageStorageService>();
+builder.Services.AddScoped<IOptionImageRepository, OptionImageRepository>();
+builder.Services.AddScoped<OptionImageRecoveryService>();
 
 builder.Services.AddHttpClient(
     "Marketplace",
@@ -77,7 +86,28 @@ builder.Services.AddHttpClient(
     new HttpClientHandler
     {
         AllowAutoRedirect = false
-    });
+    }
+);
+
+builder.Services.AddHttpClient(
+    "SupabaseStorage",
+    client =>
+    {
+        client.BaseAddress =
+            new Uri($"{supabaseUrl}/storage/v1/");
+
+        client.DefaultRequestHeaders.Add(
+            "apikey",
+            supabaseServiceRoleKey
+        );
+
+        client.DefaultRequestHeaders.Authorization =
+            new System.Net.Http.Headers.AuthenticationHeaderValue(
+                "Bearer",
+                supabaseServiceRoleKey
+            );
+    }
+);
 
 builder.Services.AddDbContext<AppDbContext>(options =>
 {

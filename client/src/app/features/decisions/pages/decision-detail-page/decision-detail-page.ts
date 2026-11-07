@@ -1,9 +1,7 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, signal, computed, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
 import { DecisionApi } from '../../services/decision-api';
-import { Decision } from '../../models/decision';
-import { finalize } from 'rxjs';
 import { DecisionOption } from '../../models/decision-option';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators, FormArray } from '@angular/forms';
 import { CreateDecisionOptionAttributeRequest } from '../../models/create-decision-option-attribute-request';
@@ -11,6 +9,9 @@ import { CreateCriterionRequest } from '../../models/create-criterion-request';
 import { CreateOptionScoreRequest } from '../../models/create-option-score-request';
 import { DecisionState } from '../../state/decision-state';
 import { OptionDetailPage } from '../option-detail-page/option-detail-page';
+import { CompareOptionSelector } from '../../components/compare-option-selector/compare-option-selector';
+import { OptionImageRecoveryControl } from '../../components/option-image-recovery/option-image-recovery';
+
 import {
   NavController,
   IonButton,
@@ -97,6 +98,9 @@ type OptionView = 'list' | 'grid';
 
     OptionDetailPage,
 
+    CompareOptionSelector,
+    OptionImageRecoveryControl,
+
     IonButton,
     IonCard,
     IonCardContent,
@@ -125,7 +129,7 @@ type OptionView = 'list' | 'grid';
 
 export class DecisionDetailPage {
   private readonly route = inject(ActivatedRoute);
-  private readonly decisionApi = inject(DecisionApi);
+  protected readonly decisionApi = inject(DecisionApi);
   private readonly decisionState = inject(DecisionState);
   private readonly navController = inject(NavController);
 
@@ -157,6 +161,8 @@ export class DecisionDetailPage {
   readonly isDecisionActionsOpen = signal(false);
   readonly isDeleteDecisionOpen = signal(false);
   readonly decisionActionsEvent = signal<Event | undefined>(undefined);
+  readonly compareSelectorOpen = signal(false);
+  readonly pendingCompareIds = signal<string[] | null>(null);
 
   readonly isLoading = computed(() => this.decisionState.loadStatus() === 'loading');
   readonly hasLoadError = computed(() => this.decisionState.loadStatus() === 'error');
@@ -771,5 +777,58 @@ export class DecisionDetailPage {
           );
         },
       });
+  }
+
+  openCompare(): void {
+    this.navController.navigateForward([
+      '/decisions',
+      this.decision()!.id,
+      'compare',
+    ]);
+  }
+
+  openCompareSelector(): void {
+    this.compareSelectorOpen.set(true);
+  }
+
+  closeCompareSelector(): void {
+    this.pendingCompareIds.set(null);
+    this.compareSelectorOpen.set(false);
+  }
+
+  compareOptions(optionIds: string[]): void {
+    this.pendingCompareIds.set(optionIds);
+    this.compareSelectorOpen.set(false);
+  }
+
+  onCompareSelectorDismissed(): void {
+    const optionIds = this.pendingCompareIds();
+
+    if (!optionIds) {
+      return;
+    }
+
+    this.pendingCompareIds.set(null);
+
+    const decision = this.decision();
+
+    if (!decision) {
+      return;
+    }
+
+    this.compareSelectorOpen.set(false);
+
+    this.navController.navigateForward(
+      ['/decisions', decision.id, 'compare'],
+      {
+        queryParams: {
+          options: optionIds.join(','),
+        },
+      },
+    );
+  }
+
+  goBackToDecisions(): void {
+    this.navController.navigateBack('/decisions');
   }
 }

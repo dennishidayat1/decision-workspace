@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/server/">
+    <Project Path="server/DecisionWorkspace.Api.ImageTests/DecisionWorkspace.Api.ImageTests.csproj" />
     <Project Path="server/DecisionWorkspace.Api/DecisionWorkspace.Api.csproj" />
   </Folder>
 </Solution>

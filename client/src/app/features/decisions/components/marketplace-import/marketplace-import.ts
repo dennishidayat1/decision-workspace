@@ -54,7 +54,7 @@ addIcons({
   styleUrl: './marketplace-import.scss',
 })
 export class MarketplaceImportForm {
-  private readonly decisionApi = inject(DecisionApi);
+  protected  readonly decisionApi = inject(DecisionApi);
 
   readonly productSelected = output<MarketplaceLinkPreviewResponse>();
 

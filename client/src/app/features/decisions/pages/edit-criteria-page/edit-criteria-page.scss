@@ -39,28 +39,6 @@ ion-content {
 }
 
 
-/* BACK */
-
-.back-button {
-  --padding-start: 0;
-  --padding-end: 0;
-
-  --color: var(--muted-foreground);
-  --color-hover: var(--primary);
-
-  margin: 0;
-
-  font-size: 12px;
-
-  text-transform: none;
-  letter-spacing: 0;
-
-  ion-icon {
-    font-size: 14px;
-  }
-}
-
-
 /* HEADER */
 
 .page-heading {

@@ -1,0 +1,88 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>
+      Select options
+    </ion-title>
+
+    <ion-buttons slot="end">
+      <ion-button
+        fill="clear"
+        (click)="close()"
+      >
+        Cancel
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-searchbar
+    placeholder="Search options"
+    [value]="searchTerm()"
+    (ionInput)="
+      searchTerm.set(
+        $any($event.target).value ?? ''
+      )
+    "
+  />
+
+  <ion-list lines="full">
+    @for (
+      option of filteredOptions();
+      track option.id
+    ) {
+      <ion-item
+        button
+        detail="false"
+        (click)="toggleOption(option.id)"
+      >
+        <ion-checkbox
+          slot="start"
+          [checked]="isSelected(option.id)"
+          [disabled]="
+            !isSelected(option.id) &&
+            selectionCount() >= 4
+          "
+          (click)="$event.stopPropagation()"
+          (ionChange)="toggleOption(option.id)"
+        />
+
+        <ion-label>
+          <h2>
+            {{ option.title }}
+          </h2>
+
+          @if (option.price) {
+            <p>
+              {{ option.price }}
+
+              @if (option.currency) {
+                {{ option.currency }}
+              }
+            </p>
+          }
+        </ion-label>
+      </ion-item>
+    }
+  </ion-list>
+
+  @if (filteredOptions().length === 0) {
+    <ion-note class="empty-message">
+      No options found.
+    </ion-note>
+  }
+</ion-content>
+
+<div class="selector-footer">
+  <ion-note>
+    {{ selectionCount() }} of 4 selected
+  </ion-note>
+
+  <ion-button
+    expand="block"
+    [disabled]="!canCompare()"
+    (click)="submit()"
+  >
+    Compare {{ selectionCount() }} options
+  </ion-button>
+</div>

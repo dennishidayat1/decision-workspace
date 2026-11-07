@@ -1,4 +1,4 @@
-import { inject, Service } from '@angular/core';
+import { inject, Service, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { CreateDecisionRequest } from '../models/create-decision-request';
 import { Decision } from '../models/decision';
@@ -22,6 +22,41 @@ export class DecisionApi {
   private readonly http = inject(HttpClient);
 
   private readonly apiUrl = `${environment.apiUrl}`;
+  private readonly failedImages = signal<ReadonlySet<string>>(new Set());
+
+  // The editable thumbnail takes precedence; ImageUrl is the import fallback.
+  getOptionImageUrl(option: DecisionOption): string | null {
+    return this.getMarketplaceImageUrl(option.thumbnailUrl?.trim())
+      ?? this.getMarketplaceImageUrl(option.imageUrl?.trim());
+  }
+
+  clearImageFailures(...imageUrls: (string | null | undefined)[]): void {
+    const cleared = new Set(imageUrls.filter((url): url is string => !!url));
+    for (const url of [...cleared]) {
+      cleared.add(`${this.apiUrl}/marketplace/image?url=${encodeURIComponent(url)}`);
+    }
+    this.failedImages.update(urls => new Set([...urls].filter(url => !cleared.has(url))));
+  }
+
+  supportsMarketplaceSource(sourceUrl: string | null | undefined): boolean {
+    try {
+      const url = new URL(sourceUrl ?? '');
+      return url.protocol === 'https:' && !url.username && !url.password &&
+        ['tokopedia.com', 'shopee.co.id', 'shp.ee'].some(domain =>
+          url.hostname === domain || url.hostname.endsWith(`.${domain}`));
+    } catch { return false; }
+  }
+
+  refreshOptionImage(decisionId: string, optionId: string, expectedUpdatedAt: string, replaceThumbnail = false) {
+    return this.http.post<DecisionOption>(
+      `${this.apiUrl}/decisions/${decisionId}/options/${optionId}/refresh-image`,
+      { expectedUpdatedAt, replaceThumbnail },
+    );
+  }
+
+  markImageFailed(imageUrl: string): void {
+    this.failedImages.update(urls => new Set([...urls, imageUrl]));
+  }
 
   createDecision(request: CreateDecisionRequest) {
     return this.http.post<Decision>(
@@ -191,5 +226,27 @@ export class DecisionApi {
       `${this.apiUrl}/marketplace-links/preview`,
       request,
     );
+  }
+
+  getMarketplaceImageUrl(imageUrl: string | null | undefined): string | null {
+    if (!imageUrl) {
+      return null;
+    }
+
+    try {
+      const url = new URL(imageUrl);
+
+      const isTokopediaImage =
+        url.hostname === 'tokopedia-static.net' ||
+        url.hostname.endsWith('.tokopedia-static.net');
+
+      const resolvedUrl = isTokopediaImage ? (
+        `${this.apiUrl}/marketplace/image` +
+        `?url=${encodeURIComponent(imageUrl)}`
+      ) : imageUrl;
+      return this.failedImages().has(resolvedUrl) ? null : resolvedUrl;
+    } catch {
+      return this.failedImages().has(imageUrl) ? null : imageUrl;
+    }
   }
 }

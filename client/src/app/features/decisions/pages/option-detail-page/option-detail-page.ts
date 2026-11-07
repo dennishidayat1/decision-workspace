@@ -1,7 +1,23 @@
-import { Component, computed, effect, inject, signal, input, output } from '@angular/core';
+import {
+  Component,
+  computed,
+  effect,
+  inject,
+  input,
+  output,
+  signal,
+  viewChild,
+} from '@angular/core';
+
 import { DecimalPipe } from '@angular/common';
-import { ActivatedRoute, Router } from '@angular/router';
-import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+
+import { ActivatedRoute } from '@angular/router';
+
+import {
+  FormControl,
+  FormGroup,
+  ReactiveFormsModule,
+} from '@angular/forms';
 
 import {
   IonButton,
@@ -11,40 +27,48 @@ import {
   IonSelect,
   IonSelectOption,
   IonTextarea,
-  NavController
+  NavController,
 } from '@ionic/angular';
 
 import { addIcons } from 'ionicons';
+
 import {
   arrowBackOutline,
   bagHandleOutline,
-  checkmarkOutline,
   closeOutline,
-  createOutline,
   openOutline,
-  star,
   trashOutline,
 } from 'ionicons/icons';
 
 import { DecisionState } from '../../state/decision-state';
-import { AttributeFormGroup, ScoreFormGroup, createOptionForm } from '../../forms/option-form';
+
+import {
+  AttributeFormGroup,
+  ScoreFormGroup,
+  createOptionForm,
+} from '../../forms/option-form';
+
 import { AttributeForm } from '../../components/attribute-form/attribute-form';
+
 import { ScoreForm } from '../../components/score-form/score-form';
+
 import { DecisionApi } from '../../services/decision-api';
+import { OptionImageRecovery } from '../../services/option-image-recovery';
+import { OptionImageRecoveryControl } from '../../components/option-image-recovery/option-image-recovery';
+
 
 addIcons({
   arrowBackOutline,
   bagHandleOutline,
-  checkmarkOutline,
   closeOutline,
-  createOutline,
   openOutline,
-  star,
   trashOutline,
 });
 
+
 @Component({
   selector: 'app-option-detail-page',
+
   imports: [
     DecimalPipe,
     ReactiveFormsModule,
@@ -59,24 +83,37 @@ addIcons({
 
     AttributeForm,
     ScoreForm,
+    OptionImageRecoveryControl,
   ],
+
   templateUrl: './option-detail-page.html',
+
   styleUrl: './option-detail-page.scss',
 })
 export class OptionDetailPage {
-  private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
-  private readonly decisionState = inject(DecisionState);
-  private readonly navController = inject(NavController);
-  private readonly decisionApi = inject(DecisionApi);
 
-  // readonly decisionId = this.route.snapshot.paramMap.get('id') ?? null;
-  // readonly optionId = this.route.snapshot.paramMap.get('optionId');
+  private readonly route =
+    inject(ActivatedRoute);
+
+  private readonly decisionState =
+    inject(DecisionState);
+
+  private readonly navController =
+    inject(NavController);
+
+  protected readonly decisionApi =
+    inject(DecisionApi);
+  protected readonly imageRecovery = inject(OptionImageRecovery);
+
+
   private readonly routeDecisionId =
-    this.route.snapshot.paramMap.get('id') ?? null;
+    this.route.snapshot.paramMap.get('id') ??
+    null;
 
   private readonly routeOptionId =
-    this.route.snapshot.paramMap.get('optionId');
+    this.route.snapshot.paramMap.get(
+      'optionId',
+    );
 
 
   readonly panelDecisionId =
@@ -92,12 +129,18 @@ export class OptionDetailPage {
     output<void>();
 
 
+  private readonly content =
+    viewChild(IonContent);
+
+
+
   get decisionId(): string | null {
     return (
       this.panelDecisionId() ??
       this.routeDecisionId
     );
   }
+
 
   get optionId(): string | null {
     return (
@@ -106,17 +149,74 @@ export class OptionDetailPage {
     );
   }
 
-  readonly optionForm = createOptionForm();
 
-  readonly editingAttributes = signal(false);
-  readonly editingBasic = signal(false);
+  readonly optionForm =
+    createOptionForm();
 
-  readonly showMoreScores = signal(false);
-  readonly showMoreAttributes = signal(false);
-  readonly formHydrated = signal(false);
-  readonly deleting = signal(false);
+
+  readonly editingAttributes =
+    signal(false);
+
+  readonly editingBasic =
+    signal(false);
+
+  readonly refreshingImage = computed(() => {
+    const option = this.option();
+    return !!option && this.imageRecovery.pending(option);
+  });
+  readonly imageRefreshError = signal<string | null>(null);
+  readonly confirmImageReplacement = signal(false);
+  readonly basicSaveError = signal<string | null>(null);
+  readonly savingBasic = signal(false);
+  private basicEditVersion: string | undefined;
+
+  readonly canRefreshImage = computed(() =>
+    this.decisionApi.supportsMarketplaceSource(this.option()?.sourceUrl));
+
+  private readonly scoreForm = viewChild(ScoreForm);
+  private readonly clearRetryError = effect(() => {
+    const option = this.option();
+    if (option && this.imageRecovery.pending(option)) this.imageRefreshError.set(null);
+  });
+  readonly imageRecoveryBlocked = computed(() => this.editingBasic() || this.editingAttributes() ||
+    this.refreshingImage() || this.savingBasic() || !!this.scoreForm()?.expandedCommentCriterionId());
+
+  refreshImage(replaceThumbnail = false): void {
+    const option = this.option();
+    const decisionId = this.decisionId;
+    if (!option || !decisionId || !this.canRefreshImage() || this.imageRecoveryBlocked()) return;
+    if (!replaceThumbnail && this.imageRecovery.needsConfirmation(option)) {
+      this.confirmImageReplacement.set(true);
+      return;
+    }
+    this.imageRefreshError.set(null);
+    this.confirmImageReplacement.set(false);
+    this.imageRecovery.refresh(option, replaceThumbnail)
+      .subscribe({
+        error: error => {
+          if (this.optionId !== option.id) return;
+          if (error.error?.code === 'thumbnail_confirmation_required')
+            this.confirmImageReplacement.set(true);
+          this.imageRefreshError.set(error.error?.message ?? 'Unable to refresh the image. Please try again.');
+        },
+      });
+  }
+
+  readonly showMoreScores =
+    signal(false);
+
+  readonly showMoreAttributes =
+    signal(false);
+
+  readonly formHydrated =
+    signal(false);
+
+  readonly deleting =
+    signal(false);
+
 
   readonly option = computed(() => {
+
     if (!this.optionId) {
       return null;
     }
@@ -124,218 +224,459 @@ export class OptionDetailPage {
     return (
       this.decisionState
         .options()
-        .find(option => option.id === this.optionId) ??
+        .find(
+          option =>
+            option.id ===
+            this.optionId,
+        ) ??
       null
     );
+
   });
+
 
   readonly attributes = computed(() => {
+
     if (!this.optionId) {
       return [];
     }
 
     return (
-      this.decisionState.optionAttributes()[
-      this.optionId
-      ] ?? []
+      this.decisionState
+        .optionAttributes()[
+          this.optionId
+        ] ?? []
     );
+
   });
+
 
   readonly scores = computed(() => {
+
     if (!this.optionId) {
       return [];
     }
 
     return (
-      this.decisionState.optionScores()[
-      this.optionId
-      ] ?? []
+      this.decisionState
+        .optionScores()[
+          this.optionId
+        ] ?? []
     );
+
   });
+
 
   readonly criteria =
     this.decisionState.criteria;
 
-  readonly visibleAttributes = computed(() => {
-    const attributes = this.attributes();
 
-    return this.showMoreAttributes()
-      ? attributes
-      : attributes.slice(0, 5);
-  });
+  readonly visibleAttributes =
+    computed(() => {
 
-  readonly weightedScore = computed(() => {
-    const scores = this.scores();
+      const attributes =
+        this.attributes();
 
-    if (scores.length === 0) {
-      return null;
-    }
+      return this.showMoreAttributes()
+        ? attributes
+        : attributes.slice(0, 5);
 
-    let weightedTotal = 0;
-    let totalImportance = 0;
-
-    for (const optionScore of scores) {
-      const criterion = this.criteria().find(
-        criterion =>
-          criterion.id === optionScore.criterionId,
-      );
-
-      if (!criterion) {
-        continue;
-      }
-
-      weightedTotal +=
-        optionScore.score * criterion.importance;
-
-      totalImportance += criterion.importance;
-    }
-
-    if (totalImportance === 0) {
-      return null;
-    }
-
-    return weightedTotal / totalImportance;
-  });
-
-  private hydratedOptionId: string | null = null;
-
-  private readonly hydrateForm = effect(() => {
-
-    const option = this.option();
-    const loadStatus =
-      this.decisionState.loadStatus();
-
-    if (
-      !option ||
-      loadStatus !== 'loaded' ||
-      this.hydratedOptionId === option.id
-    ) {
-      return;
-    }
-
-    this.optionForm.patchValue({
-      title: option.title,
-      url: option.url ?? '',
-      thumbnailUrl: option.thumbnailUrl ?? '',
-      description: option.description ?? '',
-      price: option.price ?? null,
-      currency: option.currency ?? 'IDR',
     });
 
-    const attributeArray =
-      this.optionForm.controls.attributes;
 
-    attributeArray.clear();
+  readonly weightedScore =
+    computed(() => {
 
-    for (const attribute of this.attributes()) {
-      attributeArray.push(
-        new FormGroup({
-          name: new FormControl(attribute.name, {
-            nonNullable: true,
-          }),
-          value: new FormControl(attribute.value, {
-            nonNullable: true,
-          }),
-        }) as AttributeFormGroup,
-      );
-    }
+      const scores =
+        this.scores();
 
-    const scoreArray = this.optionForm.controls.scores;
-
-    for (const criterion of this.criteria()) {
-      const persistedScore = this.scores().find(
-        score =>
-          score.criterionId === criterion.id,
-      );
-
-      const existingForm =
-        scoreArray.controls.find(
-          scoreGroup =>
-            scoreGroup.controls.criterionId.value ===
-            criterion.id,
-        );
-
-      if (existingForm) {
-        existingForm.patchValue({
-          score:
-            persistedScore?.score ?? null,
-
-          comment:
-            persistedScore?.comment ?? '',
-        });
-
-        continue;
+      if (
+        scores.length === 0
+      ) {
+        return null;
       }
 
-      scoreArray.push(
-        new FormGroup({
-          criterionId: new FormControl(
-            criterion.id,
-            {
-              nonNullable: true,
-            },
-          ),
+      let weightedTotal = 0;
+      let totalImportance = 0;
 
-          score: new FormControl<number | null>(
-            persistedScore?.score ?? null,
-          ),
+      for (
+        const optionScore
+        of scores
+      ) {
 
-          comment: new FormControl(
-            persistedScore?.comment ?? '',
-            {
-              nonNullable: true,
-            },
-          ),
-        }) as ScoreFormGroup,
+        const criterion =
+          this.criteria().find(
+            criterion =>
+              criterion.id ===
+              optionScore.criterionId,
+          );
+
+        if (!criterion) {
+          continue;
+        }
+
+        weightedTotal +=
+          optionScore.score *
+          criterion.importance;
+
+        totalImportance +=
+          criterion.importance;
+      }
+
+      if (
+        totalImportance === 0
+      ) {
+        return null;
+      }
+
+      return (
+        weightedTotal /
+        totalImportance
       );
-    }
 
-    this.hydratedOptionId = option.id;
+    });
 
 
-    this.hydratedOptionId = option.id;
-    this.formHydrated.set(true);
-  });
+  private hydratedOptionId:
+    string | null = null;
+
+  private resetOptionId:
+    string | null = null;
+
+  private scrolledOptionId:
+    string | null = null;
+
+
+  private readonly resetTransientUi =
+    effect(() => {
+
+      const optionId =
+        this.optionId;
+
+      if (
+        !optionId ||
+        this.resetOptionId ===
+          optionId
+      ) {
+        return;
+      }
+
+      this.resetOptionId =
+        optionId;
+
+      this.imageRefreshError.set(null);
+      this.confirmImageReplacement.set(false);
+      this.basicSaveError.set(null);
+
+      this.editingAttributes
+        .set(false);
+
+      this.editingBasic
+        .set(false);
+
+      this.showMoreScores
+        .set(false);
+
+      this.showMoreAttributes
+        .set(false);
+
+      this.deleting
+        .set(false);
+
+    });
+
+
+  private readonly resetScrollPosition =
+    effect(() => {
+
+      const optionId =
+        this.optionId;
+
+      const content =
+        this.content();
+
+      if (
+        !optionId ||
+        !content ||
+        this.scrolledOptionId ===
+          optionId
+      ) {
+        return;
+      }
+
+      this.scrolledOptionId =
+        optionId;
+
+      void content.scrollToTop(0);
+
+    });
+
+
+  private readonly hydrateForm =
+    effect(() => {
+
+      const option =
+        this.option();
+
+      const loadStatus =
+        this.decisionState
+          .loadStatus();
+
+      if (
+        !option ||
+        loadStatus !==
+          'loaded' ||
+        this.hydratedOptionId ===
+          option.id
+      ) {
+        return;
+      }
+
+
+      this.optionForm.patchValue({
+        title:
+          option.title,
+
+        url:
+          option.url ??
+          '',
+
+        thumbnailUrl:
+          option.thumbnailUrl ??
+          '',
+
+        description:
+          option.description ??
+          '',
+
+        price:
+          option.price ??
+          null,
+
+        currency:
+          option.currency ??
+          'IDR',
+      });
+
+
+      const attributeArray =
+        this.optionForm.controls
+          .attributes;
+
+      attributeArray.clear();
+
+
+      for (
+        const attribute
+        of this.attributes()
+      ) {
+
+        attributeArray.push(
+
+          new FormGroup({
+
+            name:
+              new FormControl(
+                attribute.name,
+                {
+                  nonNullable:
+                    true,
+                },
+              ),
+
+            value:
+              new FormControl(
+                attribute.value,
+                {
+                  nonNullable:
+                    true,
+                },
+              ),
+
+          }) as AttributeFormGroup,
+
+        );
+
+      }
+
+
+      const scoreArray =
+        this.optionForm.controls
+          .scores;
+
+
+      for (
+        const criterion
+        of this.criteria()
+      ) {
+
+        const persistedScore =
+          this.scores().find(
+            score =>
+              score.criterionId ===
+              criterion.id,
+          );
+
+
+        const existingForm =
+          scoreArray.controls.find(
+            scoreGroup =>
+              scoreGroup.controls
+                .criterionId
+                .value ===
+              criterion.id,
+          );
+
+
+        if (existingForm) {
+
+          existingForm.patchValue({
+
+            score:
+              persistedScore
+                ?.score ??
+              null,
+
+            comment:
+              persistedScore
+                ?.comment ??
+              '',
+
+          });
+
+          continue;
+
+        }
+
+
+        scoreArray.push(
+
+          new FormGroup({
+
+            criterionId:
+              new FormControl(
+                criterion.id,
+                {
+                  nonNullable:
+                    true,
+                },
+              ),
+
+            score:
+              new FormControl<
+                number | null
+              >(
+                persistedScore
+                  ?.score ??
+                null,
+              ),
+
+            comment:
+              new FormControl(
+                persistedScore
+                  ?.comment ??
+                '',
+                {
+                  nonNullable:
+                    true,
+                },
+              ),
+
+          }) as ScoreFormGroup,
+
+        );
+
+      }
+
+
+      this.hydratedOptionId =
+        option.id;
+
+      this.formHydrated.set(
+        true,
+      );
+
+    });
+
 
   ionViewWillEnter(): void {
+
     if (!this.decisionId) {
       return;
     }
 
-    this.decisionState.ensureDecisionLoaded(
-      this.decisionId,
-    );
+    this.decisionState
+      .ensureDecisionLoaded(
+        this.decisionId,
+      );
+
   }
+
 
   backToDecision(): void {
-    if (this.presentation() === 'panel') {
-      this.closeRequested.emit();
+
+    if (
+      this.presentation() ===
+      'panel'
+    ) {
+
+      this.closeRequested
+        .emit();
+
       return;
+
     }
 
     if (!this.decisionId) {
       return;
     }
 
-    this.navController.navigateBack([
-      '/decisions',
-      this.decisionId,
-    ]);
+    this.navController
+      .navigateBack([
+        '/decisions',
+        this.decisionId,
+      ]);
+
   }
+
 
   toggleAttributesEdit(): void {
-    this.editingAttributes.update(value => !value);
+
+    if (this.refreshingImage() || this.savingBasic()) return;
+
+    this.editingAttributes
+      .update(
+        value => !value,
+      );
+
   }
+
 
   toggleBasicEdit(): void {
-    this.editingBasic.update(value => !value);
+
+    if (this.refreshingImage() || this.savingBasic()) return;
+    if (!this.editingBasic()) {
+      const option = this.option();
+      if (!option) return;
+      this.basicEditVersion = option.updatedAt;
+      // Recovery may have changed the image since the initial form hydration.
+      this.optionForm.patchValue({
+        title: option.title, url: option.url ?? '', thumbnailUrl: option.thumbnailUrl ?? '',
+        description: option.description ?? '', price: option.price ?? null, currency: option.currency ?? 'IDR',
+      });
+    }
+    this.basicSaveError.set(null);
+
+    this.editingBasic
+      .update(
+        value => !value,
+      );
+
   }
 
-  // toggleChoice(): void {
-  //   this.isChosen.update(value => !value);
-  // }
 
   saveAttributes(): void {
+
     if (
       !this.decisionId ||
       !this.optionId
@@ -343,21 +684,37 @@ export class OptionDetailPage {
       return;
     }
 
+
     const requests =
-      this.optionForm.controls.attributes.controls
+      this.optionForm
+        .controls
+        .attributes
+        .controls
         .map(attribute => {
+
           const value =
-            attribute.getRawValue();
+            attribute
+              .getRawValue();
 
           return {
-            name: value.name.trim(),
-            value: value.value.trim(),
+
+            name:
+              value.name
+                .trim(),
+
+            value:
+              value.value
+                .trim(),
+
           };
+
         })
-        .filter(attribute =>
-          attribute.name &&
-          attribute.value
+        .filter(
+          attribute =>
+            attribute.name &&
+            attribute.value,
         );
+
 
     this.decisionApi
       .updateDecisionOptionAttributes(
@@ -366,26 +723,38 @@ export class OptionDetailPage {
         requests,
       )
       .subscribe({
-        next: updatedAttributes => {
-          this.decisionState
-            .updateOptionAttributes(
-              this.optionId!,
-              updatedAttributes,
+
+        next:
+          updatedAttributes => {
+
+            this.decisionState
+              .updateOptionAttributes(
+                this.optionId!,
+                updatedAttributes,
+              );
+
+            this.editingAttributes
+              .set(false);
+
+          },
+
+        error:
+          error => {
+
+            console.error(
+              'Failed to save attributes:',
+              error,
             );
 
-          this.editingAttributes.set(false);
-        },
+          },
 
-        error: error => {
-          console.error(
-            'Failed to save attributes:',
-            error,
-          );
-        },
       });
+
   }
 
+
   saveBasicDetails(): void {
+
     if (
       !this.decisionId ||
       !this.optionId
@@ -393,91 +762,170 @@ export class OptionDetailPage {
       return;
     }
 
+
     if (
-      this.optionForm.controls.title.invalid
+      this.optionForm
+        .controls
+        .title
+        .invalid
     ) {
-      this.optionForm.controls.title.markAsTouched();
+
+      this.optionForm
+        .controls
+        .title
+        .markAsTouched();
+
       return;
+
     }
 
-    const value =
-      this.optionForm.getRawValue();
 
+    const value =
+      this.optionForm
+        .getRawValue();
+
+
+    if (this.savingBasic() || this.refreshingImage()) return;
+    this.savingBasic.set(true);
     this.decisionApi
       .updateDecisionOption(
         this.decisionId,
         this.optionId,
         {
-          title: value.title.trim(),
+
+          expectedUpdatedAt: this.basicEditVersion,
+
+          title:
+            value.title
+              .trim(),
+
           url:
-            value.url.trim() || undefined,
+            value.url
+              .trim() ||
+            undefined,
+
           thumbnailUrl:
-            value.thumbnailUrl.trim() || undefined,
+            value.thumbnailUrl
+              .trim() ||
+            undefined,
+
           description:
-            value.description.trim() || undefined,
-          price: value.price ?? undefined,
+            value.description
+              .trim() ||
+            undefined,
+
+          price:
+            value.price ??
+            undefined,
+
           currency:
-            value.currency || undefined,
+            value.currency ||
+            undefined,
 
           attributes: [],
+
           scores: [],
+
         },
       )
       .subscribe({
-        next: updatedOption => {
-          this.decisionState.updateOption(
-            updatedOption,
-          );
 
-          this.editingBasic.set(false);
-        },
+        next:
+          updatedOption => {
 
-        error: (error) => {
-          console.error(
-            'Failed to update option:',
-            error,
-          );
-        },
+            this.savingBasic.set(false);
+
+            this.decisionState
+              .updateOption(
+                updatedOption,
+              );
+
+            this.editingBasic
+              .set(false);
+
+            this.basicSaveError.set(null);
+
+          },
+
+        error:
+          error => {
+
+            console.error(
+              'Failed to update option:',
+              error,
+            );
+
+            this.savingBasic.set(false);
+
+            this.basicSaveError.set(error.error?.message ?? 'Unable to save changes. Please try again.');
+
+          },
+
       });
+
   }
 
-  saveScore(event: {
-    criterionId: string;
-    score: number;
-    comment: string;
-  }): void {
+
+  saveScore(
+    event: {
+      criterionId: string;
+      score: number;
+      comment: string;
+    },
+  ): void {
+
     if (!this.optionId) {
       return;
     }
+
 
     this.decisionApi
       .createOptionScore(
         this.optionId,
         {
-          criterionId: event.criterionId,
-          score: event.score,
+
+          criterionId:
+            event.criterionId,
+
+          score:
+            event.score,
+
           comment:
-            event.comment || undefined,
+            event.comment ||
+            undefined,
+
         },
       )
       .subscribe({
-        next: updatedScore => {
-          this.decisionState.updateOptionScore(
-            this.optionId!,
-            updatedScore,
-          );
-        },
 
-        error: error => {
-          console.error(
-            'Failed to save score:',
-            error,
-          );
-        },
+        next:
+          updatedScore => {
+
+            this.decisionState
+              .updateOptionScore(
+                this.optionId!,
+                updatedScore,
+              );
+
+          },
+
+        error:
+          error => {
+
+            console.error(
+              'Failed to save score:',
+              error,
+            );
+
+          },
+
       });
+
   }
 
+
   removeOption(): void {
+
     if (
       !this.decisionId ||
       !this.optionId
@@ -485,7 +933,11 @@ export class OptionDetailPage {
       return;
     }
 
-    this.deleting.set(true);
+
+    this.deleting.set(
+      true,
+    );
+
 
     this.decisionApi
       .deleteDecisionOption(
@@ -493,43 +945,51 @@ export class OptionDetailPage {
         this.optionId,
       )
       .subscribe({
-        next: () => {
-          this.decisionState.removeOption(
-            this.optionId!,
-          );
 
-          if (this.presentation() === 'panel') {
-            this.closeRequested.emit();
+        next: () => {
+
+          this.decisionState
+            .removeOption(
+              this.optionId!,
+            );
+
+
+          if (
+            this.presentation() ===
+            'panel'
+          ) {
+
+            this.closeRequested
+              .emit();
+
             return;
+
           }
 
-          this.navController.navigateBack([
-            '/decisions',
-            this.decisionId,
-          ]);
+
+          this.navController
+            .navigateBack([
+              '/decisions',
+              this.decisionId,
+            ]);
+
         },
 
-        error: error => {
-          console.error(
-            'Failed to delete option:',
-            error,
-          );
+        error:
+          error => {
 
-          this.deleting.set(false);
-        },
+            console.error(
+              'Failed to delete option:',
+              error,
+            );
+
+            this.deleting
+              .set(false);
+
+          },
+
       });
+
   }
 
-  openProductWebsite(
-    url: string,
-    event: Event,
-  ): void {
-    event.stopPropagation();
-
-    window.open(
-      url,
-      '_blank',
-      'noopener,noreferrer',
-    );
-  }
 }

@@ -1,10 +1,5 @@
-<!-- Desktop: keep Decision Detail visible behind panel -->
-
 <div
   class="option-detail-overlay"
-  [class.option-detail-overlay--panel]="
-    presentation() === 'panel'
-  "
   (click)="
     $event.target === $event.currentTarget &&
     backToDecision()
@@ -15,78 +10,95 @@
 
       @if (option(); as option) {
 
-        <!-- TOP NAV -->
-        @if (presentation() === 'panel') {
+        <!-- RESPONSIVE NAVIGATION -->
+        <header class="detail-navigation">
 
-          <header class="detail-navigation detail-navigation--panel">
+          <!-- MOBILE -->
+          <div class="detail-navigation-mobile">
+
+            <ion-button
+              type="button"
+              fill="clear"
+              size="small"
+              class="option-back-button"
+              (click)="backToDecision()"
+            >
+              <ion-icon
+                slot="start"
+                name="arrow-back-outline"
+              />
+
+              Back to decision
+            </ion-button>
+
+            <ion-button
+              type="button"
+              fill="clear"
+              size="small"
+              class="option-close-button"
+              aria-label="Close option detail"
+              (click)="backToDecision()"
+            >
+              <ion-icon
+                slot="icon-only"
+                name="close-outline"
+              />
+            </ion-button>
+
+          </div>
+
+          <!-- DESKTOP / TABLET -->
+          <div class="detail-navigation-desktop">
 
             <strong class="detail-navigation-title">
               Option detail
             </strong>
 
-            <button
+            <ion-button
               type="button"
-              class="close-detail-button"
+              fill="clear"
+              size="small"
+              class="option-close-button"
               aria-label="Close option detail"
               (click)="backToDecision()"
             >
-              <ion-icon name="close-outline" />
-            </button>
-
-          </header>
-
-        } @else {
-
-          <!-- Keep the original mobile/page navigation -->
-          <div class="detail-navigation detail-navigation--page">
-
-            <button
-              type="button"
-              class="back-button"
-              (click)="backToDecision()"
-            >
-              <span>
-                <ion-icon name="arrow-back-outline" />
-                Back to decision
-              </span>
-
               <ion-icon
-                class="close-icon"
+                slot="icon-only"
                 name="close-outline"
               />
-            </button>
+            </ion-button>
 
           </div>
 
-        }
-
+        </header>
 
         <!-- SUMMARY -->
         <section class="option-summary">
 
           <div class="option-thumbnail">
 
-            @if (option.thumbnailUrl) {
+            <ion-icon
+              class="option-thumbnail-placeholder"
+              name="bag-handle-outline"
+            />
+
+            @if (decisionApi.getOptionImageUrl(option); as imageUrl) {
               <img
-                [src]="option.thumbnailUrl"
-                [alt]="option.title"
+                [src]="imageUrl"
+                alt=""
+                (error)="decisionApi.markImageFailed(imageUrl)"
               />
-            } @else {
-              <ion-icon name="bag-handle-outline" />
             }
 
-          </div>
+            <app-option-image-recovery [option]="option" [blocked]="imageRecoveryBlocked()"
+              (confirmationRequested)="refreshImage()" />
 
+          </div>
 
           <div class="option-summary-copy">
 
             <p class="option-status">
-                On your shortlist
-              <!-- {{
-                isChosen()
-                  ? 'Your choice'
-                  : 'On your shortlist'
-              }} -->
+              On your shortlist
             </p>
 
             <h1>
@@ -105,68 +117,104 @@
 
           </div>
 
-
-          <div
-            class="score-badge"
-            [class.score-badge--good]="
-              (weightedScore() ?? 0) >= 4
-            "
-          >
-            <strong>
-              {{
-                weightedScore() !== null
-                  ? (weightedScore() | number:'1.2-2')
-                  : '—'
-              }}
-
-              <small>/5</small>
-            </strong>
-
-            <span>
-              Overall score
-            </span>
-          </div>
-
         </section>
 
-
-        @if (option.description) {
-          <p class="option-description">
-            {{ option.description }}
-          </p>
+        @if (canRefreshImage()) {
+          <div class="image-recovery">
+            <ion-button type="button" fill="clear" size="small"
+              [disabled]="imageRecoveryBlocked()"
+              (click)="refreshImage()">
+              {{ refreshingImage() ? 'Refreshing image…' : 'Refresh image from marketplace' }}
+            </ion-button>
+            @if (confirmImageReplacement()) {
+              <div class="delete-confirmation" role="group" aria-label="Confirm image replacement">
+                <p>Your thumbnail may have been customized. Replace it with the marketplace image?</p>
+                <ion-button type="button" size="small" [disabled]="imageRecoveryBlocked()"
+                  (click)="refreshImage(true)">Replace thumbnail</ion-button>
+                <ion-button type="button" fill="clear" size="small"
+                  (click)="confirmImageReplacement.set(false)">Cancel</ion-button>
+              </div>
+            }
+            @if (imageRefreshError(); as message) {
+              <p role="alert">{{ message }}</p>
+            }
+          </div>
+        }
+        @if (basicSaveError(); as message) {
+          <p role="alert">{{ message }}</p>
         }
 
+        <!-- WEIGHTED SCORE -->
+        <div class="option-score-row">
 
-        <!-- CHOOSE -->
-        <!-- <ion-button
-          expand="block"
-          class="choose-button"
-          (click)="toggleChoice()"
-        >
-          <ion-icon
-            slot="start"
-            name="checkmark-outline"
-          />
+          <div class="option-score-copy">
 
-          {{
-            isChosen()
-              ? 'Undo this choice'
-              : 'Choose this option'
-          }}
-        </ion-button> -->
+            @if (weightedScore() !== null) {
 
+              <div
+                class="score-badge"
+                [class.score-badge--good]="
+                  (weightedScore() ?? 0) >= 4
+                "
+              >
+                <strong>
+                  {{ weightedScore() | number:'1.2-2' }}
 
-        <!-- SCORES -->
-        <section class="detail-section scores-section">
+                  <small>/5</small>
+                </strong>
+              </div>
 
-          <div class="section-header">
+              <span class="weighted-score-label">
+                Weighted score
+              </span>
 
-            <h2>Scores</h2>
+            } @else {
 
-            <span>Tap to update</span>
+              <span class="weighted-score-empty">
+                {{
+                  criteria().length
+                    ? 'Rate criteria to see a weighted score'
+                    : 'No criteria yet'
+                }}
+              </span>
+
+            }
 
           </div>
 
+          @if (option.url) {
+
+            <a
+              class="option-open-link"
+              [href]="option.url"
+              target="_blank"
+              rel="noopener noreferrer"
+              (click)="$event.stopPropagation()"
+            >
+              Open link
+
+              <ion-icon name="open-outline" />
+            </a>
+
+          }
+
+        </div>
+
+        <!-- RATINGS -->
+        <section class="detail-section ratings-section">
+
+          <div class="ratings-heading">
+
+            <h2>
+              Your ratings
+            </h2>
+
+            <p>
+              Your perspective, not a product review.
+              Try a rating — it saves as you go.
+            </p>
+
+          </div>
 
           <div
             class="scores-wrapper"
@@ -176,16 +224,18 @@
             "
           >
             @if (formHydrated()) {
+
               <app-score-form
                 [criteria]="criteria()"
                 [scores]="optionForm.controls.scores"
                 (scoreChanged)="saveScore($event)"
               />
+
             }
           </div>
 
-
           @if (criteria().length > 5) {
+
             <button
               type="button"
               class="section-more-button"
@@ -203,17 +253,246 @@
                     ' more'
               }}
             </button>
+
           }
 
         </section>
 
+        <!-- DETAILS -->
+        <section class="detail-section">
+
+          <div class="section-header">
+
+            <h2>
+              Details
+            </h2>
+
+            <button
+              type="button"
+              class="section-edit-button"
+              (click)="toggleBasicEdit()"
+            >
+              {{
+                editingBasic()
+                  ? 'Cancel'
+                  : 'Edit'
+              }}
+            </button>
+
+          </div>
+
+          @if (editingBasic()) {
+
+            <div
+              class="basic-edit-form"
+              [formGroup]="optionForm"
+            >
+
+              <label>
+
+                <span>
+                  Title
+                </span>
+
+                <ion-input
+                  fill="outline"
+                  formControlName="title"
+                />
+
+              </label>
+
+              <div class="price-row">
+
+                <label>
+
+                  <span>
+                    Price
+                  </span>
+
+                  <ion-input
+                    fill="outline"
+                    type="number"
+                    formControlName="price"
+                  />
+
+                </label>
+
+                <label>
+
+                  <span>
+                    Currency
+                  </span>
+
+                  <ion-select
+                    fill="outline"
+                    formControlName="currency"
+                  >
+                    <ion-select-option value="USD">
+                      USD
+                    </ion-select-option>
+
+                    <ion-select-option value="EUR">
+                      EUR
+                    </ion-select-option>
+
+                    <ion-select-option value="GBP">
+                      GBP
+                    </ion-select-option>
+
+                    <ion-select-option value="IDR">
+                      IDR
+                    </ion-select-option>
+
+                    <ion-select-option value="CAD">
+                      CAD
+                    </ion-select-option>
+
+                    <ion-select-option value="AUD">
+                      AUD
+                    </ion-select-option>
+                  </ion-select>
+
+                </label>
+
+              </div>
+
+              <label>
+
+                <span>
+                  Product URL
+                </span>
+
+                <ion-input
+                  fill="outline"
+                  type="url"
+                  formControlName="url"
+                />
+
+              </label>
+
+              <label>
+
+                <span>
+                  Image URL
+                </span>
+
+                <ion-input
+                  fill="outline"
+                  type="url"
+                  formControlName="thumbnailUrl"
+                />
+
+              </label>
+
+              <label>
+
+                <span>
+                  Description
+                </span>
+
+                <ion-textarea
+                  fill="outline"
+                  rows="4"
+                  formControlName="description"
+                />
+
+              </label>
+
+              <ion-button
+                expand="block"
+                class="section-save-button"
+                (click)="saveBasicDetails()"
+              >
+                Save details
+              </ion-button>
+
+            </div>
+
+          } @else {
+
+            <div class="basic-details-read">
+
+              <dl class="basic-details-list">
+
+                <div>
+
+                  <dt>
+                    Title
+                  </dt>
+
+                  <dd>
+                    {{ option.title }}
+                  </dd>
+
+                </div>
+
+                <div>
+
+                  <dt>
+                    Price
+                  </dt>
+
+                  <dd>
+                    @if (
+                      option.price !== undefined &&
+                      option.currency
+                    ) {
+                      {{ option.price }}
+                      {{ option.currency }}
+                    } @else {
+                      —
+                    }
+                  </dd>
+
+                </div>
+
+              </dl>
+
+              @if (option.url) {
+
+                <a
+                  class="product-website-link"
+                  [href]="option.url"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  (click)="$event.stopPropagation()"
+                >
+                  View product website
+
+                  <ion-icon name="open-outline" />
+                </a>
+
+              }
+
+              <div class="detail-description">
+
+                <span>
+                  Description
+                </span>
+
+                <p>
+                  {{
+                    option.description ||
+                    'No description added yet.'
+                  }}
+                </p>
+
+              </div>
+
+            </div>
+
+          }
+
+        </section>
 
         <!-- ATTRIBUTES -->
         <section class="detail-section">
 
           <div class="section-header">
 
-            <h2>Attributes</h2>
+            <h2>
+              Attributes
+            </h2>
 
             <button
               type="button"
@@ -228,7 +507,6 @@
             </button>
 
           </div>
-
 
           @if (editingAttributes()) {
 
@@ -259,6 +537,7 @@
                 ) {
 
                   <div>
+
                     <dt>
                       {{ attribute.name }}
                     </dt>
@@ -266,14 +545,15 @@
                     <dd>
                       {{ attribute.value }}
                     </dd>
+
                   </div>
 
                 }
 
               </dl>
 
-
               @if (attributes().length > 5) {
+
                 <button
                   type="button"
                   class="section-more-button"
@@ -291,6 +571,7 @@
                         ' more'
                   }}
                 </button>
+
               }
 
             } @else {
@@ -305,195 +586,7 @@
 
         </section>
 
-
-        <!-- BASIC DETAILS -->
-        <section class="detail-section">
-
-          <div class="section-header">
-
-            <h2>
-              {{
-                presentation() === 'panel'
-                  ? 'Details'
-                  : 'Basic details'
-              }}
-            </h2>
-
-            <button
-              type="button"
-              class="section-edit-button"
-              (click)="toggleBasicEdit()"
-            >
-              {{
-                editingBasic()
-                  ? 'Cancel'
-                  : 'Edit'
-              }}
-            </button>
-
-          </div>
-
-
-          @if (editingBasic()) {
-
-            <div
-              class="basic-edit-form"
-              [formGroup]="optionForm"
-            >
-
-              <label>
-                <span>Title</span>
-
-                <ion-input
-                  fill="outline"
-                  formControlName="title"
-                />
-              </label>
-
-
-              <div class="price-row">
-
-                <label>
-                  <span>Price</span>
-
-                  <ion-input
-                    fill="outline"
-                    type="number"
-                    formControlName="price"
-                  />
-                </label>
-
-
-                <label>
-                  <span>Currency</span>
-
-                  <ion-select
-                    fill="outline"
-                    formControlName="currency"
-                  >
-                    <ion-select-option value="USD">
-                      USD
-                    </ion-select-option>
-
-                    <ion-select-option value="EUR">
-                      EUR
-                    </ion-select-option>
-
-                    <ion-select-option value="GBP">
-                      GBP
-                    </ion-select-option>
-
-                    <ion-select-option value="IDR">
-                      IDR
-                    </ion-select-option>
-
-                    <ion-select-option value="CAD">
-                      CAD
-                    </ion-select-option>
-
-                    <ion-select-option value="AUD">
-                      AUD
-                    </ion-select-option>
-                  </ion-select>
-                </label>
-
-              </div>
-
-
-              <label>
-                <span>Product URL</span>
-
-                <ion-input
-                  fill="outline"
-                  type="url"
-                  formControlName="url"
-                />
-              </label>
-
-
-              <label>
-                <span>Image URL</span>
-
-                <ion-input
-                  fill="outline"
-                  type="url"
-                  formControlName="thumbnailUrl"
-                />
-              </label>
-
-
-              <label>
-                <span>Note</span>
-
-                <ion-textarea
-                  fill="outline"
-                  rows="2"
-                  formControlName="description"
-                />
-              </label>
-
-
-              <ion-button
-                expand="block"
-                class="section-save-button"
-                (click)="saveBasicDetails()"
-              >
-                Save details
-              </ion-button>
-
-            </div>
-
-          } @else {
-
-            <div class="basic-details-read">
-
-              <div>
-                <span>
-                  Price
-                </span>
-
-                <strong>
-                  @if (
-                    option.price !== undefined &&
-                    option.currency
-                  ) {
-                    {{ option.price }}
-                    {{ option.currency }}
-                  } @else {
-                    —
-                  }
-                </strong>
-              </div>
-
-
-              @if (option.url) {
-              <a
-                [href]="option.url"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="product-website-link"
-                (click)="$event.stopPropagation()"
-              >
-                View product website
-                <ion-icon name="open-outline" />
-              </a>
-              }
-
-
-              @if (option.description) {
-                <p>
-                  {{ option.description }}
-                </p>
-              }
-
-            </div>
-
-          }
-
-        </section>
-
-
-        <!-- REMOVE -->
+        <!-- DELETE -->
         <div class="remove-section">
 
           @if (deleting()) {
@@ -501,17 +594,17 @@
             <div class="delete-confirmation">
 
               <span>
-                Remove this option?
+                Delete this option?
               </span>
 
-
               <div>
+
                 <button
                   type="button"
                   class="confirm-remove"
                   (click)="removeOption()"
                 >
-                  Remove
+                  Delete
                 </button>
 
                 <button
@@ -520,6 +613,7 @@
                 >
                   Cancel
                 </button>
+
               </div>
 
             </div>
@@ -533,7 +627,7 @@
             >
               <ion-icon name="trash-outline" />
 
-              Remove option
+              Delete option
             </button>
 
           }

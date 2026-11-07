@@ -2,6 +2,7 @@ import { CreateDecisionOptionAttributeRequest } from './create-decision-option-a
 import { CreateOptionScoreRequest } from './create-option-score-request';
 
 export interface CreateDecisionOptionRequest {
+  expectedUpdatedAt?: string;
   title: string;
   url?: string;
   thumbnailUrl?: string;

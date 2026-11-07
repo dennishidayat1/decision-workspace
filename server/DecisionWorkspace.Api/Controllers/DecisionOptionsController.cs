@@ -2,6 +2,7 @@ using DecisionOptionWorkspace.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using DecisionWorkspace.Api.Contracts;
+using DecisionWorkspace.Api.Services;
 
 namespace DecisionWorkspace.Api.Controllers;
 
@@ -93,20 +94,40 @@ public class DecisionOptionsController : ControllerBase
         [FromBody] CreateDecisionOptionRequest request
     )
     {
-        var decisionOption =
-            await _decisionOptionService.UpdateAsync(
-                GetUserId(),
-                decisionId,
-                decisionOptionId,
-                request
-            );
-
-        if (decisionOption == null)
+        if (request.ExpectedUpdatedAt == null)
+            return StatusCode(428, new { code = "option_version_required", message = "Reload this option before saving changes." });
+        try
         {
-            return NotFound();
-        }
+            var decisionOption =
+                await _decisionOptionService.UpdateAsync(
+                    GetUserId(),
+                    decisionId,
+                    decisionOptionId,
+                    request
+                );
 
-        return Ok(decisionOption);
+            if (decisionOption == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(decisionOption);
+        }
+        catch (OptionConcurrencyException)
+        {
+            return Conflict(new { code = "option_conflict", message = "This option changed. Reload it before saving changes." });
+        }
+    }
+
+    [HttpPost("{decisionOptionId:guid}/refresh-image")]
+    public async Task<IActionResult> RefreshImageAsync(Guid decisionId, Guid decisionOptionId,
+        [FromBody] RefreshOptionImageRequest request,
+        [FromServices] OptionImageRecoveryService recovery,
+        CancellationToken cancellationToken)
+    {
+        var result = await recovery.RefreshAsync(GetUserId(), decisionId, decisionOptionId, request, cancellationToken);
+        return result.Status == 200 ? Ok(result.Option) :
+            StatusCode(result.Status, new { code = result.Code, message = result.Message });
     }
 
     [HttpDelete("{decisionOptionId:guid}")]

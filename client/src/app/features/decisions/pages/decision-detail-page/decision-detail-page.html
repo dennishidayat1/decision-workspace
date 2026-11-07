@@ -18,17 +18,17 @@
 
     <main class="decision-page">
 
-      <!-- BACK -->
       <ion-button
-        type="button"
         fill="clear"
+        size="small"
         class="back-link"
-        [routerLink]="['/decisions']"
+        (click)="goBackToDecisions()"
       >
         <ion-icon
           slot="start"
           name="arrow-back-outline"
         />
+
         All decisions
       </ion-button>
 
@@ -217,23 +217,9 @@
 
           <div class="options-actions">
 
-
             <ion-button
               type="button"
-              class="compare-options-button"
-              [disabled]="decisionOptions().length < 2"
-            >
-              <ion-icon
-                slot="start"
-                name="git-compare-outline"
-              />
-
-              Compare options
-            </ion-button>
-
-            <ion-button
-              type="button"
-              class="add-option-desktop"
+              class="add-option-header-button"
               (click)="openAddOption()"
             >
               <ion-icon
@@ -244,7 +230,22 @@
               Add option
             </ion-button>
 
-          </div>
+            <ion-button
+              type="button"
+              fill="clear"
+              class="compare-options-button"
+              [disabled]="decisionOptions().length < 2"
+              (click)="openCompareSelector()"
+            >
+              <ion-icon
+                slot="start"
+                name="git-compare-outline"
+              />
+
+              Compare options
+            </ion-button>
+
+</div>
 
         </div>
 
@@ -420,9 +421,10 @@
 
                       <div class="compact-image">
 
-                        @if (option.thumbnailUrl) {
+                        @if (decisionApi.getOptionImageUrl(option); as imageUrl) {
                           <img
-                            [src]="option.thumbnailUrl"
+                            [src]="imageUrl"
+                            (error)="decisionApi.markImageFailed(imageUrl)"
                             [alt]="option.title"
                             loading="lazy"
                           />
@@ -435,6 +437,9 @@
                             />
                           </div>
                         }
+
+                        <app-option-image-recovery [option]="option"
+                          (confirmationRequested)="openOption(option.id)" />
 
                       </div>
 
@@ -621,9 +626,10 @@
 
                         <div class="detailed-thumbnail">
 
-                          @if (option.thumbnailUrl) {
+                          @if (decisionApi.getOptionImageUrl(option); as imageUrl) {
                             <img
-                              [src]="option.thumbnailUrl"
+                              [src]="imageUrl"
+                              (error)="decisionApi.markImageFailed(imageUrl)"
                               [alt]="option.title"
                               loading="lazy"
                             />
@@ -638,6 +644,9 @@
                               />
                             </div>
                           }
+
+                          <app-option-image-recovery [option]="option"
+                            (confirmationRequested)="openOption(option.id)" />
 
                         </div>
 
@@ -972,5 +981,19 @@
 
     </div>
 
+  </ng-template>
+</ion-modal>
+
+<ion-modal
+  [isOpen]="compareSelectorOpen()"
+  (didDismiss)="onCompareSelectorDismissed()"
+>
+  <ng-template>
+    <app-compare-option-selector
+      [options]="decisionOptions()"
+      [initialSelectedIds]="[]"
+      (confirmSelection)="compareOptions($event)"
+      (dismissRequested)="closeCompareSelector()"
+    />
   </ng-template>
 </ion-modal>

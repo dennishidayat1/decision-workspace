@@ -18,6 +18,8 @@ export class DecisionState {
     readonly optionAttributes = signal<Record<string, DecisionOptionAttribute[]>>({});
     readonly decisionId = signal<string | null>(null);
     readonly loadStatus = signal<'idle' | 'loading' | 'loaded' | 'error'>('idle');
+    // Shared image-recovery lifecycle across cards, list rows, and detail panels.
+    readonly workspaceLoadVersion = signal(0);
 
     readonly availableAttributeNames = computed(() => {
         const attributesByOption = this.optionAttributes();
@@ -52,6 +54,7 @@ export class DecisionState {
         }
 
         this.decisionId.set(decisionId);
+        this.workspaceLoadVersion.update(version => version + 1);
         this.loadStatus.set('loading');
 
         this.decisionApi

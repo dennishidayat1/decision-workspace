@@ -36,7 +36,7 @@ public class MarketplaceLinkService
             return false;
         }
 
-        if (uri.Scheme != Uri.UriSchemeHttps)
+        if (uri.Scheme != Uri.UriSchemeHttps || !string.IsNullOrEmpty(uri.UserInfo))
         {
             return false;
         }
@@ -88,7 +88,7 @@ public class MarketplaceLinkService
 
         for (var i = 0; i <= maxRedirects; i++)
         {
-            if (DetectMarketplace(currentUri.Host) == null)
+            if (!TryDetectMarketplace(currentUri.ToString(), out _, out _))
             {
                 return null;
             }
@@ -599,107 +599,6 @@ public class MarketplaceLinkService
             : null;
     }
 
-    public bool TryExtractShopeeProductIds(
-    Uri uri,
-    out long shopId,
-    out long itemId
-)
-    {
-        shopId = 0;
-        itemId = 0;
-
-        if (!string.Equals(
-            DetectMarketplace(uri.Host),
-            "Shopee",
-            StringComparison.OrdinalIgnoreCase
-        ))
-        {
-            return false;
-        }
-
-        var segments = uri.AbsolutePath
-            .Split(
-                '/',
-                StringSplitOptions.RemoveEmptyEntries
-            );
-
-        if (
-            segments.Length >= 3 &&
-            string.Equals(
-                segments[0],
-                "product",
-                StringComparison.OrdinalIgnoreCase
-            ) &&
-            long.TryParse(
-                segments[1],
-                out shopId
-            ) &&
-            long.TryParse(
-                segments[2],
-                out itemId
-            )
-        )
-        {
-            return true;
-        }
-
-        return false;
-    }
-
-    public async Task<string?> GetShopeeProductJsonAsync(
-        long shopId,
-        long itemId,
-        CancellationToken cancellationToken = default
-    )
-    {
-        try
-        {
-            var client =
-                _httpClientFactory.CreateClient("Marketplace");
-
-            var uri = new Uri(
-                $"https://shopee.co.id/api/v4/item/get?itemid={itemId}&shopid={shopId}"
-            );
-
-            using var request =
-                new HttpRequestMessage(
-                    HttpMethod.Get,
-                    uri
-                );
-
-            using var response =
-                await client.SendAsync(
-                    request,
-                    HttpCompletionOption.ResponseContentRead,
-                    cancellationToken
-                );
-
-            var body =
-                await response.Content.ReadAsStringAsync(
-                    cancellationToken
-                );
-
-            Console.WriteLine(
-                $"Shopee API status: {(int)response.StatusCode}"
-            );
-
-            Console.WriteLine(
-                $"Shopee API body: {body[..Math.Min(body.Length, 1000)]}"
-            );
-
-            return response.IsSuccessStatusCode
-                ? body
-                : null;
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine(
-                $"Shopee API request failed: {ex}"
-            );
-
-            return null;
-        }
-    }
 }
 
 public sealed class MarketplaceProductMetadata
