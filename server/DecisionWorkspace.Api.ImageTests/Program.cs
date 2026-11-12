@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 // Dependency-free regression runner. All HTTP is mocked; no server, CDN or storage is contacted.
 const string ImageUrl = "https://p16-images-sign-sg.tokopedia-static.net/image.jpg";
 var tests = new List<(string Name, Func<Task> Run)>();
+tests.Add(("Marketplace preview timeout paths", PreviewTests.RunAsync));
 tests.Add(("Explicit image recovery scenarios", RecoveryTests.RunAsync));
 tests.Add(("Production atomic database commands without network", DatabaseCommandTests.RunAsync));
 void Check(bool condition, string message) { if (!condition) throw new Exception(message); }
@@ -31,7 +32,7 @@ MarketplaceImageController Proxy(FakeFactory factory) => new(factory,
 
 tests.Add(("Supported marketplace URLs and JSON-LD product images remain available", () =>
 {
-    var service = new MarketplaceLinkService(new FakeFactory((_, _, _) => throw new Exception("No HTTP expected")));
+    var service = new MarketplaceLinkService(new FakeFactory((_, _, _) => throw new Exception("No HTTP expected")), NullLogger<MarketplaceLinkService>.Instance);
     foreach (var source in new[] { "https://shopee.co.id/product/123/456", "https://shp.ee/example", "https://www.tokopedia.com/shop/product" })
         Check(service.TryDetectMarketplace(source, out _, out _), "Supported marketplace detection changed");
     var metadata = service.ExtractProductJsonLd("<script type='application/ld+json'>{\"@type\":\"Product\",\"image\":\"https://example.test/product.jpg\"}</script>");
@@ -159,8 +160,9 @@ Console.WriteLine($"{tests.Count} image regression checks passed.");
 sealed class FakeFactory(Func<string, HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> send) : IHttpClientFactory
 {
     public Func<string, HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> Send = send;
+    public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(100);
     public HttpClient CreateClient(string name) => new(new Handler((request, token) => Send(name, request, token)))
-        { BaseAddress = new Uri("https://example.supabase.co/storage/v1/") };
+        { BaseAddress = new Uri("https://example.supabase.co/storage/v1/"), Timeout = Timeout };
     private sealed class Handler(Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> send) : HttpMessageHandler
     {
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken token) => send(request, token);

@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { DecisionApi } from '../../../decisions/services/decision-api';
 import { Decision } from '../../../decisions/models/decision';
 import { finalize } from 'rxjs';
@@ -73,17 +73,6 @@ export class DecisionsPage {
       error: (error) => {
         this.loadError.set('Failed to load decisions. Please try again later.');
         console.error('Failed to load decisions:', error);
-      },
-    });
-
-    this.decisionApi.previewMarketplaceLink({
-      url: 'https://tk.tokopedia.com/ZSgAp53PL/',
-    }).subscribe({
-      next: result => {
-        console.log('Marketplace preview', result);
-      },
-      error: error => {
-        console.error('Marketplace preview failed', error);
       },
     });
   }

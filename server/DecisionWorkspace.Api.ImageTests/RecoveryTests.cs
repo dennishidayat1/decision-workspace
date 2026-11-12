@@ -165,7 +165,7 @@ internal static class RecoveryTests
                 new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
                     { ["Supabase:Url"] = "https://example.supabase.co" }).Build(),
                 NullLogger<MarketplaceImageStorageService>.Instance);
-            recovery = new OptionImageRecoveryService(Repository, new MarketplaceLinkService(factory), Storage,
+            recovery = new OptionImageRecoveryService(Repository, new MarketplaceLinkService(factory, NullLogger<MarketplaceLinkService>.Instance), Storage,
                 NullLogger<OptionImageRecoveryService>.Instance);
         }
 
