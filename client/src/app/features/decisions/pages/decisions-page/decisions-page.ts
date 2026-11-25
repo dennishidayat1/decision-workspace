@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { DecisionApi } from '../../../decisions/services/decision-api';
 import { Decision } from '../../../decisions/models/decision';
 import { finalize } from 'rxjs';
@@ -22,6 +22,7 @@ import {
   arrowForwardOutline,
   layersOutline,
   bagHandleOutline,
+  refreshOutline,
 } from 'ionicons/icons';
 
 addIcons({
@@ -29,6 +30,7 @@ addIcons({
   arrowForwardOutline,
   layersOutline,
   bagHandleOutline,
+  refreshOutline,
 });
 
 @Component({
@@ -57,10 +59,11 @@ export class DecisionsPage {
   private readonly decisionApi = inject(DecisionApi);
 
   readonly decisions = signal<Decision[]>([]);
-  readonly isLoading = signal(true);
+  readonly isLoading = signal(false);
   readonly loadError = signal<string | null>(null);
 
-  private loadDecisions(): void {
+  protected loadDecisions(): void {
+    if (this.isLoading()) return;
     this.isLoading.set(true);
     this.loadError.set(null);
 
@@ -75,16 +78,10 @@ export class DecisionsPage {
         console.error('Failed to load decisions:', error);
       },
     });
-
-    this.decisionApi.previewMarketplaceLink({
-      url: 'https://tk.tokopedia.com/ZSgAp53PL/',
-    }).subscribe({
-      next: result => {
-        console.log('Marketplace preview', result);
-      },
-      error: error => {
-        console.error('Marketplace preview failed', error);
-      },
-    });
   }
 }
+
+
+
+
+

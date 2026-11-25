@@ -3,24 +3,29 @@ import {
   CanActivateFn,
   Router,
 } from '@angular/router';
+import { toObservable } from '@angular/core/rxjs-interop';
+import { filter, take, map } from 'rxjs';
 
 import { AuthService } from './auth.service';
 
-export const authGuard: CanActivateFn = async () => {
+export const authGuard: CanActivateFn = () => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  while (!authService.initialized()) {
-    await new Promise(resolve =>
-      setTimeout(resolve, 20),
-    );
-  }
+  const initialized$ = toObservable(authService.initialized);
 
-  if (authService.user()) {
-    return true;
-  }
+  return initialized$.pipe(
+    filter(value => value === true),
+    take(1),
+    map(() => {
+      if (authService.isRecoverySession()) {
+        return router.createUrlTree(['/reset-password']);
+      }
+      if (authService.user()) {
+        return true;
+      }
 
-  return router.createUrlTree([
-    '/auth',
-  ]);
+      return router.createUrlTree(['/auth']);
+    })
+  );
 };

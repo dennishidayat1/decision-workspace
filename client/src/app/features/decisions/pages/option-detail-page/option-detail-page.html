@@ -636,9 +636,17 @@
 
       } @else {
 
-        <div class="loading-state">
-          Loading option...
-        </div>
+        @if (loadMessage(); as message) {
+          <div class="loading-state" role="alert">
+            <p>{{ message }}</p>
+            @if (decisionId && optionId) {
+              <ion-button (click)="retryLoad()">Try again</ion-button>
+            }
+            <ion-button fill="clear" (click)="backToDecision()">Back to decision</ion-button>
+          </div>
+        } @else {
+          <div class="loading-state" role="status">Loading option...</div>
+        }
 
       }
 

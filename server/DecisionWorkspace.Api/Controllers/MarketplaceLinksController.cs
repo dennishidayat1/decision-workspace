@@ -54,27 +54,16 @@ public class MarketplaceLinksController : ControllerBase
                 });
             }
 
-            var resolvedUri =
-                await _marketplaceLinkService.ResolveUrlAsync(
+            var requestId = HttpContext?.Request.Headers["Rndr-Id"].ToString();
+            if (string.IsNullOrWhiteSpace(requestId)) requestId = HttpContext?.TraceIdentifier;
+            var page =
+                await _marketplaceLinkService.GetPageAsync(
                     parsedUri!,
-                    cancellationToken
+                    cancellationToken,
+                    requestId
                 );
 
-            if (resolvedUri == null)
-            {
-                return BadRequest(new
-                {
-                    message = "Unable to resolve marketplace link."
-                });
-            }
-
-            var html =
-                await _marketplaceLinkService.GetPageHtmlAsync(
-                    resolvedUri,
-                    cancellationToken
-                );
-
-            if (html == null)
+            if (page == null)
             {
                 return BadRequest(new
                 {
@@ -82,6 +71,7 @@ public class MarketplaceLinksController : ControllerBase
                 });
             }
 
+            var (resolvedUri, html) = page.Value;
             var jsonLd =
                 _marketplaceLinkService.ExtractProductJsonLd(
                     html
@@ -168,6 +158,10 @@ public class MarketplaceLinksController : ControllerBase
                     Currency = currency
                 }
             );
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
         }
         catch (OperationCanceledException)
             when (!cancellationToken.IsCancellationRequested)

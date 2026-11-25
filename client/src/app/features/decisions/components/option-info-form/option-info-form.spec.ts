@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { OptionInfoForm } from './option-info-form';
+import { createOptionForm } from '../../forms/option-form';
 
 describe('OptionInfoForm', () => {
   let component: OptionInfoForm;
@@ -11,6 +12,7 @@ describe('OptionInfoForm', () => {
     }).compileComponents();
 
     fixture = TestBed.createComponent(OptionInfoForm);
+    fixture.componentRef.setInput('controls', createOptionForm().controls);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });

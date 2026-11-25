@@ -1,59 +1,56 @@
-# DecisionWorkspaceWeb
+# Decision Workspace client
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.1.8.
+The Angular/Ionic client serves the web application and the local Capacitor Android/iOS projects.
 
-## Development server
+## Web
 
-To start a local development server, run:
+Run commands from this directory:
 
-```bash
-ng serve
+```powershell
+npm ci
+npm start
+npm test -- --watch=false
+npm run build
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+Production browser assets are written to `dist/decision-workspace-web/browser`.
 
-## Code scaffolding
+## Native development
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+The local application ID is `id.my.dennishidayat.decisionworkspace` on both platforms. Creating these project files does not register an identifier with Apple or Google.
 
-```bash
-ng generate component component-name
+```powershell
+npm run native:sync:android
+npm run native:open:android
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+Android requires Android Studio, a Gradle-compatible JDK (the Capacitor Android sources target Java 21), Android SDK Platform 36, build tools, and an emulator or USB-debugging-enabled device. Android Studio maintains the ignored `android/local.properties` SDK path. To build a debug APK after configuring the toolchain:
 
-```bash
-ng generate --help
+```powershell
+cd android
+.\gradlew.bat assembleDebug
 ```
 
-## Building
+On a Mac with Xcode 26 or newer:
 
-To build the project run:
-
-```bash
-ng build
+```sh
+npm ci
+npm run native:sync:ios
+npm run native:open:ios
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+The iOS project uses Swift Package Manager and targets iOS 15 or newer. Device signing, provisioning, and store accounts must be configured separately. Windows can generate/sync project files but cannot compile or run the iOS app.
 
-## Running unit tests
+## API access
 
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+Native sync scripts build the production client, using the existing HTTPS API. Assets are packaged locally; `server.url` and cleartext transport exceptions are not configured.
 
-```bash
-ng test
-```
+The backend supports `FrontendUrl` (legacy scalar), `FrontendUrls` (web allowlist), and `NativeFrontendUrls` (additional native allowlist). Native origins match the explicit Capacitor configuration: Android `https://localhost`, iOS `capacitor://localhost`. Backend source/config changes must be deployed separately before installed apps can use the hosted API; no deployment is performed by native sync.
 
-## Running end-to-end tests
+A development API at `localhost:5207` is not reachable from a physical device as the host PC. Use a reachable HTTPS development API when device-specific development configuration is needed.
 
-For end-to-end (e2e) testing, run:
+For Android emulator live reload at `http://10.0.2.2:4200`, the development build uses `http://10.0.2.2:5207/api` (the emulator's host bridge). Desktop development continues to use `http://localhost:5207/api`. Run the API with the Development environment to allow both exact live-reload origins; restart the API after changing its CORS configuration. The emulator needs its own Supabase sign-in because browser storage is scoped to each origin. Production builds and packaged native API access are unchanged.
 
-```bash
-ng e2e
-```
+## Release status
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+Generated icons/splash screens are development placeholders. Release signing, final branding, privacy disclosures, account/data deletion, real-device validation, and store submission remain separate milestones. Keep keystores, provisioning profiles, and credentials out of Git.

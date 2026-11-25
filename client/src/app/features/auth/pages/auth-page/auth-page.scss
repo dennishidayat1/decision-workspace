@@ -113,11 +113,8 @@
   font-size: 12px;
 }
 
-.switch-mode {
-  align-self: center;
-
-  margin-top: 16px;
-
+.switch-mode,
+.auth-action {
   --color: #247657;
   --padding-start: 8px;
   --padding-end: 8px;
@@ -127,6 +124,16 @@
   font-family: "Inter", sans-serif;
   font-size: 12px;
   font-weight: 500;
+}
+
+.switch-mode {
+  align-self: center;
+  margin-top: 16px;
+}
+
+.auth-action {
+  align-self: flex-start;
+  margin: 0;
 }
 
 @media (min-width: 640px) {

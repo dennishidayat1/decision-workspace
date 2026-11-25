@@ -29,8 +29,8 @@ public sealed class OptionImageRecoveryService(
         string? imageUrl;
         try
         {
-            var resolved = await marketplace.ResolveUrlAsync(sourceUri!, token);
-            var html = resolved == null ? null : await marketplace.GetPageHtmlAsync(resolved, token);
+            var page = await marketplace.GetPageAsync(sourceUri!, token);
+            var html = page?.Html;
             imageUrl = html == null ? null : marketplace.ExtractProductJsonLd(html)?.ImageUrl;
             if (string.IsNullOrWhiteSpace(imageUrl) && html != null)
                 imageUrl = marketplace.ExtractMetaContent(html, "og:image");

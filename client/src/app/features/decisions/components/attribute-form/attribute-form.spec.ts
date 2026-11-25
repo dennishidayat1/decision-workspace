@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { AttributeForm } from './attribute-form';
+import { FormArray } from '@angular/forms';
 
 describe('AttributeForm', () => {
   let component: AttributeForm;
@@ -11,6 +12,7 @@ describe('AttributeForm', () => {
     }).compileComponents();
 
     fixture = TestBed.createComponent(AttributeForm);
+    fixture.componentRef.setInput('attributes', new FormArray([]));
     component = fixture.componentInstance;
     await fixture.whenStable();
   });

@@ -111,6 +111,20 @@ ion-content {
   font-weight: 500;
 }
 
+.compare-table tbody th,
+.compare-table__label {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: #ffffff;
+}
+
+.compare-table__option-title,
+.compare-table td,
+.compare-table tbody th {
+  overflow-wrap: anywhere;
+}
+
 .compare-table__option {
   min-width: 170px;
   max-width: 220px;

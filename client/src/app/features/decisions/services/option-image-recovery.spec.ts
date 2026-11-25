@@ -167,4 +167,53 @@ describe('OptionImageRecovery', () => {
     http.expectOne(req => endpoint(req.url)).flush({ code: 'thumbnail_confirmation_required', message: 'Confirm replacement.' }, { status: 409, statusText: 'Conflict' });
     expect(recovery.needsConfirmation(option)).toBe(true);
   });
+
+  it.each(['success', 'error'])('ignores old recovery %s without disturbing a new same-option request', outcome => {
+    const oldNext = vi.fn();
+    const oldError = vi.fn();
+    recovery.refresh(option).subscribe({ next: oldNext, error: oldError });
+    const old = http.expectOne(req => endpoint(req.url));
+    state.resetWorkspace();
+    state.options.set([{ ...option }]);
+    expect(recovery.pending(option)).toBe(false);
+    expect(recovery.failed(option)).toBe(false);
+    recovery.refresh(option).subscribe();
+    const current = http.expectOne(req => endpoint(req.url));
+    if (outcome === 'success') old.flush({ ...option, thumbnailUrl: stored, imageUrl: stored });
+    else old.flush({ message: 'Old error' }, { status: 502, statusText: 'Bad Gateway' });
+    expect(oldNext).not.toHaveBeenCalled();
+    expect(oldError).not.toHaveBeenCalled();
+    expect(state.options()[0]).toEqual(option);
+    expect(recovery.pending(option)).toBe(true);
+    // An old finalizer must not remove the new request's deduplication entry.
+    recovery.refresh(option).subscribe();
+    http.expectNone(req => endpoint(req.url));
+    current.flush({ ...option, thumbnailUrl: stored, imageUrl: stored });
+    expect(state.options()[0].imageUrl).toBe(stored);
+  });
+
+  it('does not start an old unstarted recovery or replay an old account result', () => {
+    const unstarted = recovery.refresh(option);
+    state.resetWorkspace();
+    const next = vi.fn();
+    unstarted.subscribe(next);
+    http.expectNone(req => endpoint(req.url));
+    state.options.set([option]);
+    const completed = recovery.refresh(option);
+    completed.subscribe();
+    http.expectOne(req => endpoint(req.url)).flush({ ...option, thumbnailUrl: stored, imageUrl: stored });
+    state.resetWorkspace();
+    completed.subscribe(next);
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it('hides old pending status safely when read inside a computed after reset', () => {
+    recovery.refresh(option).subscribe();
+    const old = http.expectOne(req => endpoint(req.url));
+    state.resetWorkspace();
+    expect(recovery.pending(option)).toBe(false);
+    expect(recovery.message(option)).toBeUndefined();
+    old.flush({ ...option, thumbnailUrl: stored, imageUrl: stored });
+    expect(state.options()).toEqual([]);
+  });
 });

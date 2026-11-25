@@ -37,6 +37,7 @@
         (click)="toggleOption(option.id)"
       >
         <ion-checkbox
+          [attr.aria-label]="'Select ' + option.title"
           slot="start"
           [checked]="isSelected(option.id)"
           [disabled]="

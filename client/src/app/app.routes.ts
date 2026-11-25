@@ -1,13 +1,20 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/auth/auth.guard';
+import { pendingChangesGuard } from './core/auth/pending-changes.guard';
 
 export const routes: Routes = [
   {
     path: 'auth',
     loadComponent: () =>
       import(
-        './features/auth/pages/auth-page'
+        './features/auth/pages/auth-page/auth-page'
       ).then(m => m.AuthPage),
+  },
+  {
+    path: 'reset-password',
+    loadComponent: () =>
+      import('./features/auth/pages/reset-password/reset-password')
+        .then(m => m.ResetPassword),
   },
   {
     path: '',
@@ -40,6 +47,7 @@ export const routes: Routes = [
       },
       {
         path: 'decisions/:id',
+        canDeactivate: [pendingChangesGuard],
         loadComponent: () =>
           import(
             './features/decisions/pages/decision-detail-page/decision-detail-page'
@@ -54,6 +62,7 @@ export const routes: Routes = [
       },
       {
         path: 'decisions/:id/options/:optionId',
+        canDeactivate: [pendingChangesGuard],
         loadComponent: () =>
           import(
             './features/decisions/pages/option-detail-page/option-detail-page'

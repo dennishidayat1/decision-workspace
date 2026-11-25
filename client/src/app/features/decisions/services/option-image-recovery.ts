@@ -1,5 +1,5 @@
 import { inject, Injectable, signal } from '@angular/core';
-import { Observable, finalize, shareReplay, tap, throwError } from 'rxjs';
+import { EMPTY, Observable, catchError, defer, filter, finalize, shareReplay, tap, throwError } from 'rxjs';
 import { DecisionApi } from './decision-api';
 import { DecisionState } from '../state/decision-state';
 import { DecisionOption } from '../models/decision-option';
@@ -17,22 +17,23 @@ export class OptionImageRecovery {
   private readonly state = inject(DecisionState);
   readonly lifecycle = this.state.workspaceLoadVersion;
   private epoch = -1;
+  private accountEpoch = this.state.accountVersion();
   private readonly attempted = new Set<string>();
   private readonly inFlight = new Map<string, Observable<DecisionOption>>();
   private readonly statuses = signal<ReadonlyMap<string, RecoveryStatus>>(new Map());
 
   private key(option: DecisionOption): string { return `${option.decisionId}/${option.id}`; }
 
-  pending(option: DecisionOption): boolean { return this.statuses().get(this.key(option))?.pending ?? false; }
-  failed(option: DecisionOption): boolean { return this.statuses().get(this.key(option))?.failed ?? false; }
-  message(option: DecisionOption): string | undefined { return this.statuses().get(this.key(option))?.message; }
+  pending(option: DecisionOption): boolean { return this.accountEpoch === this.state.accountVersion() && (this.statuses().get(this.key(option))?.pending ?? false); }
+  failed(option: DecisionOption): boolean { return this.accountEpoch === this.state.accountVersion() && (this.statuses().get(this.key(option))?.failed ?? false); }
+  message(option: DecisionOption): string | undefined { return this.accountEpoch === this.state.accountVersion() ? this.statuses().get(this.key(option))?.message : undefined; }
 
   customized(option: DecisionOption): boolean {
     return !!option.thumbnailUrl?.trim() && option.thumbnailUrl.trim() !== option.imageUrl?.trim();
   }
 
   needsConfirmation(option: DecisionOption): boolean {
-    return this.customized(option) || this.statuses().get(this.key(option))?.code === 'thumbnail_confirmation_required';
+    return this.customized(option) || (this.accountEpoch === this.state.accountVersion() && this.statuses().get(this.key(option))?.code === 'thumbnail_confirmation_required');
   }
 
   private isMarketplaceImage(value: string): boolean {
@@ -45,11 +46,21 @@ export class OptionImageRecovery {
   }
 
   private syncLifecycle(): void {
+    this.syncAccount();
     const epoch = this.lifecycle();
     if (epoch === this.epoch) return;
     this.epoch = epoch;
     this.attempted.clear();
     this.statuses.update(statuses => new Map([...statuses].filter(([, status]) => status.pending)));
+  }
+
+  private syncAccount(): void {
+    const version = this.state.accountVersion();
+    if (version === this.accountEpoch) return;
+    this.accountEpoch = version;
+    this.attempted.clear();
+    this.inFlight.clear();
+    this.statuses.set(new Map());
   }
 
   tryAutomatic(option: DecisionOption): void {
@@ -74,7 +85,10 @@ export class OptionImageRecovery {
       return throwError(() => ({ error: { code: 'source_url_unsupported', message: 'No supported marketplace source is saved for this option.' } }));
     // Manual requests also consume the automatic attempt for this lifecycle.
     this.attempted.add(key);
-    const request = this.api.refreshOptionImage(option.decisionId, option.id, option.updatedAt, replaceThumbnail).pipe(
+    const accountVersion = this.state.accountVersion();
+    const shared = this.api.refreshOptionImage(option.decisionId, option.id, option.updatedAt, replaceThumbnail).pipe(
+      filter(() => this.state.accountVersion() === accountVersion),
+      catchError(error => this.state.accountVersion() === accountVersion ? throwError(() => error) : EMPTY),
       tap({
         next: updated => {
           this.api.clearImageFailures(updated.thumbnailUrl, updated.imageUrl);
@@ -89,10 +103,14 @@ export class OptionImageRecovery {
         error: error => this.setStatus(key, { pending: false, failed: true, code: error.error?.code,
           message: error.error?.message ?? 'Unable to refresh the image. Try again manually.' }),
       }),
-      finalize(() => this.inFlight.delete(key)),
+      finalize(() => {
+        if (this.inFlight.get(key) === request) this.inFlight.delete(key);
+      }),
       // Keep one request alive across subscribing views; unmounting must not restart an upload.
       shareReplay({ bufferSize: 1, refCount: false }),
     );
+    // Also block old unstarted operations and replayed results after account changes.
+    const request = defer(() => this.state.accountVersion() === accountVersion ? shared : EMPTY);
     this.inFlight.set(key, request);
     this.setStatus(key, { pending: true, failed: false });
     return request;

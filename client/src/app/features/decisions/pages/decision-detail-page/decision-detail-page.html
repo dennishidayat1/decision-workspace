@@ -886,16 +886,19 @@
 </ion-content>
 
 <ion-modal
+  #optionDetailModal
   class="option-detail-drawer"
+  [canDismiss]="canDismissOption"
   [isOpen]="selectedOptionId() !== null"
   [backdropDismiss]="true"
-  (didDismiss)="closeOptionPanel()"
+  (didDismiss)="onOptionPanelDismissed()"
 >
   <ng-template>
 
     @if (selectedOptionId(); as optionId) {
 
       <app-option-detail-page
+        #optionDetail
         [panelDecisionId]="decisionId"
         [panelOptionId]="optionId"
         presentation="panel"

@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Decision Workspace</string>
+    <string name="title_activity_main">Decision Workspace</string>
+    <string name="package_name">id.my.dennishidayat.decisionworkspace</string>
+    <string name="custom_url_scheme">id.my.dennishidayat.decisionworkspace</string>
+</resources>

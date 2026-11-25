@@ -18,8 +18,12 @@ export class DecisionState {
     readonly optionAttributes = signal<Record<string, DecisionOptionAttribute[]>>({});
     readonly decisionId = signal<string | null>(null);
     readonly loadStatus = signal<'idle' | 'loading' | 'loaded' | 'error'>('idle');
+    readonly loadErrorStatus = signal<number | null>(null);
+    private loadRequestVersion = 0;
     // Shared image-recovery lifecycle across cards, list rows, and detail panels.
     readonly workspaceLoadVersion = signal(0);
+    // Changes only when the workspace is reset, not on ordinary reloads.
+    readonly accountVersion = signal(0);
 
     readonly availableAttributeNames = computed(() => {
         const attributesByOption = this.optionAttributes();
@@ -54,13 +58,16 @@ export class DecisionState {
         }
 
         this.decisionId.set(decisionId);
+        const requestVersion = ++this.loadRequestVersion;
         this.workspaceLoadVersion.update(version => version + 1);
+        this.loadErrorStatus.set(null);
         this.loadStatus.set('loading');
 
         this.decisionApi
             .getDecisionWorkspace(decisionId)
             .subscribe({
                 next: (workspace) => {
+                    if (requestVersion !== this.loadRequestVersion) return;
                     const attributesByOption =
                         Object.fromEntries(
                             workspace.options.map(option => [
@@ -101,6 +108,8 @@ export class DecisionState {
                 },
 
                 error: (error) => {
+                    if (requestVersion !== this.loadRequestVersion) return;
+                    this.loadErrorStatus.set(error.status ?? null);
                     console.error(
                         'Failed to load decision workspace:',
                         error,
@@ -113,6 +122,7 @@ export class DecisionState {
 
     invalidateDecision(decisionId: string): void {
         if (this.decisionId() === decisionId) {
+            this.loadRequestVersion++;
             this.loadStatus.set('idle');
         }
     }
@@ -207,5 +217,20 @@ export class DecisionState {
                 return updated;
             },
         );
+    }
+
+    resetWorkspace(): void {
+        this.accountVersion.update(version => version + 1);
+        this.decision.set(null);
+        this.options.set([]);
+        this.criteria.set([]);
+        this.optionScores.set({});
+        this.optionAttributes.set({});
+        this.decisionId.set(null);
+        this.loadStatus.set('idle');
+        this.loadErrorStatus.set(null);
+
+        this.loadRequestVersion++;
+        this.workspaceLoadVersion.update(version => version + 1);
     }
 }

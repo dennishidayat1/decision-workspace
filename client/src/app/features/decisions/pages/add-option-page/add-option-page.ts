@@ -1,5 +1,6 @@
 import { Component, signal, inject, effect, viewChild } from '@angular/core';
 import { ReactiveFormsModule, FormGroup, FormControl } from '@angular/forms';
+import { finalize } from 'rxjs'
 import { ActivatedRoute, Router } from '@angular/router';
 import { DecisionApi } from '../../services/decision-api';
 import { CreateDecisionOptionRequest } from '../../models/create-decision-option-request';
@@ -68,6 +69,7 @@ export class AddOptionPage {
 
   readonly isOptionFormOpen = signal(false);
   readonly optionSubmitError = signal<string | null>(null);
+  readonly isSubmitting = signal(false);
   readonly loadError = signal<string | null>(null);
   readonly availableAttributeNames = this.decisionState.availableAttributeNames;
   readonly criteria = this.decisionState.criteria;
@@ -130,6 +132,9 @@ export class AddOptionPage {
   });
 
   onAddOption(): void {
+
+    if (this.isSubmitting()) return;
+
     if (!this.decisionId) {
       console.error('Decision ID is not available in the route parameters.');
       this.loadError.set('Decision ID is missing.');
@@ -181,8 +186,13 @@ export class AddOptionPage {
       scores: scoresToSave,
     };
 
+    this.isSubmitting.set(true)
+
     this.decisionApi
       .createDecisionOption(this.decisionId, request)
+      .pipe(finalize(() => {
+        this.isSubmitting.set(false)
+      }))
       .subscribe({
         next: () => {
           this.decisionState.invalidateDecision(this.decisionId!);

@@ -3,7 +3,7 @@ import { OptionDetailPage } from './option-detail-page';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ActivatedRoute, convertToParamMap } from '@angular/router';
-import { NavController } from '@ionic/angular';
+import { AlertController, NavController } from '@ionic/angular';
 import { DecisionApi } from '../../services/decision-api';
 import { DecisionState } from '../../state/decision-state';
 import { DecisionOption } from '../../models/decision-option';
@@ -25,12 +25,14 @@ describe('OptionDetailPage', () => {
     await TestBed.configureTestingModule({
       imports: [OptionDetailPage],
       providers: [provideHttpClient(), provideHttpClientTesting(), DecisionApi,
+        { provide: AlertController, useValue: { create: vi.fn() } },
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: 'decision', optionId: 'option' }) } } },
         { provide: NavController, useValue: { navigateBack: () => {} } },
       ],
     }).overrideComponent(OptionDetailPage, { set: { template: '' } }).compileComponents();
 
     state = TestBed.inject(DecisionState);
+    state.decisionId.set('decision');
     state.options.set([{ ...original }]);
     state.loadStatus.set('loaded');
     http = TestBed.inject(HttpTestingController);
@@ -146,5 +148,69 @@ describe('OptionDetailPage', () => {
     await fixture.whenStable();
     component.refreshImage();
     http.expectOne(req => req.url.endsWith('/decisions/decision/options/option/refresh-image')).flush(original);
+  });
+
+  it.each(['basic', 'attributes', 'score'])('ignores an old account\'s completed %s save', kind => {
+    if (kind === 'basic') {
+      component.toggleBasicEdit();
+      component.optionForm.controls.title.setValue('Old edit');
+      component.saveBasicDetails();
+    } else if (kind === 'attributes') component.saveAttributes();
+    else component.saveScore({ criterionId: 'criterion', score: 4, comment: 'Old comment' });
+    const pending = http.expectOne(req => req.method === 'PUT' || req.method === 'POST');
+    state.resetWorkspace();
+    const current = { ...original, title: 'New account data' };
+    state.options.set([current]);
+    const attributes = { option: [] };
+    const scores = { option: [] };
+    state.optionAttributes.set(attributes);
+    state.optionScores.set(scores);
+    pending.flush(kind === 'basic' ? original : kind === 'attributes' ? [] : {
+      criterionId: 'criterion', decisionOptionId: 'option', score: 4,
+    });
+    expect(state.options()).toEqual([current]);
+    expect(state.optionAttributes()).toBe(attributes);
+    expect(state.optionScores()).toBe(scores);
+  });
+});
+
+describe('OptionDetailPage load states', () => {
+  let fixture: ComponentFixture<OptionDetailPage>;
+  let state: DecisionState;
+  let http: HttpTestingController;
+  beforeEach(() => {
+    TestBed.configureTestingModule({ imports: [OptionDetailPage], providers: [
+      provideHttpClient(), provideHttpClientTesting(),
+      { provide: AlertController, useValue: { create: vi.fn() } },
+      { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: 'decision', optionId: 'option' }) } } },
+      { provide: NavController, useValue: { navigateBack: vi.fn() } },
+    ] });
+    fixture = TestBed.createComponent(OptionDetailPage);
+    state = TestBed.inject(DecisionState);
+    http = TestBed.inject(HttpTestingController);
+  });
+  afterEach(() => { http.verify(); vi.restoreAllMocks(); });
+
+  it.each([404, 503])('renders HTTP %s as an error rather than an endless loading state, and retries', status => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    fixture.componentInstance.ionViewWillEnter();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[role="status"]').textContent).toContain('Loading option');
+    http.expectOne(req => req.url.endsWith('/workspace')).flush({}, { status, statusText: 'Failure' });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).toContain(status === 404 ? 'not found' : 'Unable to load');
+    fixture.componentInstance.retryLoad();
+    http.expectOne(req => req.url.endsWith('/workspace')).flush({ decision: { id: 'decision' }, options: [], criteria: [], scores: [], attributes: [] });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).toContain('This option was not found');
+  });
+
+  it('does not expose a same-ID option belonging to a different workspace', () => {
+    state.decisionId.set('other');
+    state.loadStatus.set('loaded');
+    state.options.set([{ id: 'option', decisionId: 'other', title: 'Private title', createdAt: '', updatedAt: '' }]);
+    fixture.detectChanges();
+    expect(fixture.componentInstance.option()).toBeNull();
+    expect(fixture.nativeElement.textContent).not.toContain('Private title');
   });
 });

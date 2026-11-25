@@ -1,4 +1,4 @@
-import { Component, signal, computed, inject } from '@angular/core';
+import { Component, signal, computed, inject, viewChild } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
 import { DecisionApi } from '../../services/decision-api';
@@ -128,6 +128,10 @@ type OptionView = 'list' | 'grid';
 })
 
 export class DecisionDetailPage {
+  private readonly optionDetail = viewChild<OptionDetailPage>('optionDetail');
+  private readonly optionDetailModal = viewChild<IonModal>('optionDetailModal');
+  readonly canDismissOption = () => this.optionDetail()?.canLeave() ?? Promise.resolve(true);
+  readonly canLeave = this.canDismissOption;
   private readonly route = inject(ActivatedRoute);
   protected readonly decisionApi = inject(DecisionApi);
   private readonly decisionState = inject(DecisionState);
@@ -692,7 +696,8 @@ export class DecisionDetailPage {
       .slice(0, 2);
   }
 
-  openOption(optionId: string): void {
+  async openOption(optionId: string): Promise<void> {
+    if (this.selectedOptionId() && !await this.canDismissOption()) return;
     if (!this.decisionId) {
       return;
     }
@@ -715,7 +720,11 @@ export class DecisionDetailPage {
     ]);
   }
 
-  closeOptionPanel(): void {
+  async closeOptionPanel(): Promise<void> {
+    await this.optionDetailModal()?.dismiss();
+  }
+
+  onOptionPanelDismissed(): void {
     this.selectedOptionId.set(null);
   }
 

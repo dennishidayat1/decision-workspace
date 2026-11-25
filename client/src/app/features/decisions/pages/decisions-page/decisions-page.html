@@ -36,7 +36,15 @@
         } @else if (loadError()) {
 
           <div class="page-state page-state--error">
-            {{ loadError() }}
+            <span class="error-message">{{ loadError() }}</span>
+
+            <ion-button
+              class="retry-button"
+              (click)="loadDecisions()"
+            >
+              <ion-icon name="refresh-outline" slot="start" />
+              Retry
+            </ion-button>
           </div>
 
         } @else if (decisions().length > 0) {

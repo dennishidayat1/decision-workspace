@@ -1,5 +1,7 @@
 import {
   Component,
+  HostListener,
+  DestroyRef,
   computed,
   effect,
   inject,
@@ -12,6 +14,7 @@ import {
 import { DecimalPipe } from '@angular/common';
 
 import { ActivatedRoute } from '@angular/router';
+import { filter, finalize } from 'rxjs';
 
 import {
   FormControl,
@@ -21,6 +24,7 @@ import {
 
 import {
   IonButton,
+  AlertController,
   IonContent,
   IonIcon,
   IonInput,
@@ -100,6 +104,115 @@ export class OptionDetailPage {
 
   private readonly navController =
     inject(NavController);
+  private readonly alertController = inject(AlertController);
+  private basicEditBaseline: ReturnType<OptionDetailPage['basicValues']> | null = null;
+  private attributeEditBaseline = '';
+  readonly savingAttributes = signal(false);
+  readonly pendingScoreSaves = signal(0);
+  private pendingExit: Promise<boolean> | null = null;
+  private exitAlert: HTMLIonAlertElement | null = null;
+  private exitContext: { account: number; decisionId: string | null; optionId: string | null } | null = null;
+
+  constructor() {
+    inject(DestroyRef).onDestroy(() => { void this.exitAlert?.dismiss(undefined, 'cancel'); });
+  }
+
+  private readonly dismissStaleConfirmation = effect(() => {
+    const account = this.decisionState.accountVersion();
+    const decisionId = this.decisionId;
+    const optionId = this.optionId;
+    if (this.exitContext && (this.exitContext.account !== account ||
+      this.exitContext.decisionId !== decisionId || this.exitContext.optionId !== optionId)) {
+      void this.exitAlert?.dismiss(undefined, 'cancel');
+    }
+  });
+
+  private basicValues() {
+    const { title, url, thumbnailUrl, description, price, currency } = this.optionForm.getRawValue();
+    return { title, url, thumbnailUrl, description, price, currency };
+  }
+
+  hasUnsavedBasicChanges(): boolean {
+    return this.editingBasic() && this.basicEditBaseline !== null &&
+      JSON.stringify(this.basicValues()) !== JSON.stringify(this.basicEditBaseline);
+  }
+
+  hasUnsavedChanges(): boolean {
+    const savedScores = this.decisionState.optionScores()[this.optionId ?? ''] ?? [];
+    return this.hasUnsavedBasicChanges() ||
+      (this.editingAttributes() && JSON.stringify(this.optionForm.controls.attributes.getRawValue()) !== this.attributeEditBaseline) ||
+      this.optionForm.controls.scores.getRawValue().some(value => {
+        const saved = savedScores.find(score => score.criterionId === value.criterionId);
+        return value.score !== (saved?.score ?? null) || value.comment.trim() !== (saved?.comment ?? '').trim();
+      });
+  }
+
+  private exitBlocked(): boolean {
+    return this.savingBasic() || this.refreshingImage() || this.savingAttributes() || this.pendingScoreSaves() > 0;
+  }
+
+  canLeave = (): Promise<boolean> => {
+    // Identity reset must never trap a user on the departing account's page.
+    if (!this.option()) return Promise.resolve(true);
+    if (this.pendingExit) return this.pendingExit;
+    if (this.exitBlocked()) return Promise.resolve(false);
+    if (!this.hasUnsavedChanges()) return Promise.resolve(true);
+    const account = this.decisionState.accountVersion();
+    const decisionId = this.decisionId;
+    const optionId = this.optionId;
+    this.exitContext = { account, decisionId, optionId };
+    const values = JSON.stringify(this.optionForm.getRawValue());
+    const pending = this.confirmDiscard().then(confirmed => {
+      if (!confirmed || account !== this.decisionState.accountVersion() ||
+        decisionId !== this.decisionId || optionId !== this.optionId ||
+        values !== JSON.stringify(this.optionForm.getRawValue()) || this.exitBlocked()) return false;
+      this.editingBasic.set(false);
+      this.editingAttributes.set(false);
+      const savedScores = this.decisionState.optionScores()[this.optionId ?? ''] ?? [];
+      for (const control of this.optionForm.controls.scores.controls) {
+        const saved = savedScores.find(score => score.criterionId === control.controls.criterionId.value);
+        control.patchValue({ score: saved?.score ?? null, comment: saved?.comment ?? '' });
+      }
+      return true;
+    }).catch(() => false).finally(() => {
+      if (this.pendingExit === pending) {
+        this.pendingExit = null;
+        this.exitContext = null;
+      }
+    });
+    this.pendingExit = pending;
+    return pending;
+  };
+
+  private async confirmDiscard(): Promise<boolean> {
+    const alert = await this.alertController.create({
+      header: 'Discard unsaved changes?',
+      message: 'Your changes to this option have not been saved.',
+      backdropDismiss: false,
+      buttons: [
+        { text: 'Keep editing', role: 'cancel' },
+        { text: 'Discard changes', role: 'discard' },
+      ],
+    });
+    this.exitAlert = alert;
+    try {
+      if (this.exitContext?.account !== this.decisionState.accountVersion() ||
+        this.exitContext?.optionId !== this.optionId || this.exitContext?.decisionId !== this.decisionId) return false;
+      await alert.present();
+      return (await alert.onDidDismiss()).role === 'discard';
+    } finally {
+      await alert.dismiss();
+      if (this.exitAlert === alert) this.exitAlert = null;
+    }
+  }
+
+  @HostListener('window:beforeunload', ['$event'])
+  protectBrowserExit(event: BeforeUnloadEvent): void {
+    if (this.hasUnsavedChanges() || this.exitBlocked()) {
+      event.preventDefault();
+      event.returnValue = '';
+    }
+  }
 
   protected readonly decisionApi =
     inject(DecisionApi);
@@ -217,7 +330,8 @@ export class OptionDetailPage {
 
   readonly option = computed(() => {
 
-    if (!this.optionId) {
+    if (!this.optionId || this.decisionState.decisionId() !== this.decisionId ||
+      this.decisionState.loadStatus() !== 'loaded') {
       return null;
     }
 
@@ -227,13 +341,32 @@ export class OptionDetailPage {
         .find(
           option =>
             option.id ===
-            this.optionId,
+            this.optionId && option.decisionId === this.decisionId,
         ) ??
       null
     );
 
   });
 
+
+  readonly loadMessage = computed(() => {
+    if (!this.decisionId || !this.optionId) return 'This option URL is incomplete.';
+    if (this.decisionState.decisionId() !== this.decisionId) return null;
+    if (this.decisionState.loadStatus() === 'error') {
+      return this.decisionState.loadErrorStatus() === 404
+        ? 'This decision was not found or is no longer available.'
+        : 'Unable to load this option. Please try again.';
+    }
+    if (this.decisionState.loadStatus() === 'loaded' && !this.option())
+      return 'This option was not found or is no longer available.';
+    return null;
+  });
+
+  retryLoad(): void {
+    if (!this.decisionId) return;
+    this.decisionState.invalidateDecision(this.decisionId);
+    this.decisionState.ensureDecisionLoaded(this.decisionId);
+  }
 
   readonly attributes = computed(() => {
 
@@ -613,7 +746,8 @@ export class OptionDetailPage {
   }
 
 
-  backToDecision(): void {
+  async backToDecision(): Promise<void> {
+    if (!await this.canLeave()) return;
 
     if (
       this.presentation() ===
@@ -643,6 +777,18 @@ export class OptionDetailPage {
   toggleAttributesEdit(): void {
 
     if (this.refreshingImage() || this.savingBasic()) return;
+    if (this.savingAttributes()) return;
+    if (!this.editingAttributes()) {
+      const controls = this.optionForm.controls.attributes;
+      controls.clear();
+      for (const attribute of this.attributes()) {
+        controls.push(new FormGroup({
+          name: new FormControl(attribute.name, { nonNullable: true }),
+          value: new FormControl(attribute.value, { nonNullable: true }),
+        }));
+      }
+      this.attributeEditBaseline = JSON.stringify(controls.getRawValue());
+    }
 
     this.editingAttributes
       .update(
@@ -664,6 +810,7 @@ export class OptionDetailPage {
         title: option.title, url: option.url ?? '', thumbnailUrl: option.thumbnailUrl ?? '',
         description: option.description ?? '', price: option.price ?? null, currency: option.currency ?? 'IDR',
       });
+      this.basicEditBaseline = this.basicValues();
     }
     this.basicSaveError.set(null);
 
@@ -676,6 +823,7 @@ export class OptionDetailPage {
 
 
   saveAttributes(): void {
+    if (this.savingAttributes()) return;
 
     if (
       !this.decisionId ||
@@ -716,11 +864,18 @@ export class OptionDetailPage {
         );
 
 
+    this.savingAttributes.set(true);
+    const accountVersion = this.decisionState.accountVersion();
+    const optionId = this.optionId;
     this.decisionApi
       .updateDecisionOptionAttributes(
         this.decisionId,
         this.optionId,
         requests,
+      )
+      .pipe(
+        filter(() => accountVersion === this.decisionState.accountVersion() && optionId === this.optionId),
+        finalize(() => this.savingAttributes.set(false)),
       )
       .subscribe({
 
@@ -787,6 +942,8 @@ export class OptionDetailPage {
 
     if (this.savingBasic() || this.refreshingImage()) return;
     this.savingBasic.set(true);
+    const accountVersion = this.decisionState.accountVersion();
+    const optionId = this.optionId;
     this.decisionApi
       .updateDecisionOption(
         this.decisionId,
@@ -827,6 +984,10 @@ export class OptionDetailPage {
           scores: [],
 
         },
+      )
+      .pipe(
+        filter(() => accountVersion === this.decisionState.accountVersion() && optionId === this.optionId),
+        finalize(() => this.savingBasic.set(false)),
       )
       .subscribe({
 
@@ -879,6 +1040,9 @@ export class OptionDetailPage {
     }
 
 
+    this.pendingScoreSaves.update(count => count + 1);
+    const accountVersion = this.decisionState.accountVersion();
+    const optionId = this.optionId;
     this.decisionApi
       .createOptionScore(
         this.optionId,
@@ -895,6 +1059,10 @@ export class OptionDetailPage {
             undefined,
 
         },
+      )
+      .pipe(
+        filter(() => accountVersion === this.decisionState.accountVersion() && optionId === this.optionId),
+        finalize(() => this.pendingScoreSaves.update(count => count - 1)),
       )
       .subscribe({
 

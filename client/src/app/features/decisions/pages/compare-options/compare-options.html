@@ -43,10 +43,23 @@
       </ion-row>
     </ion-grid>
 
+    @if (loading()) {
+      <p role="status">Loading decision...</p>
+    } @else if (loadMessage(); as message) {
+      <div role="alert">
+        <p>{{ message }}</p>
+        @if (decisionId()) {
+          <ion-button (click)="loadWorkspace()">Try again</ion-button>
+        }
+      </div>
+    } @else {
+    @if (selectionWarning()) {
+      <p role="status">Some selected options are unavailable or exceed the four-option limit. Choose up to four available options.</p>
+    }
     @if (selectedOptions().length >= 2) {
 
       <!-- Comparison -->
-      <div class="compare-table-wrapper">
+      <div class="compare-table-wrapper" tabindex="0" role="region" aria-label="Option comparison. Scroll horizontally to view all options.">
         <table class="compare-table">
           <thead>
             <tr>
@@ -206,11 +219,12 @@
       </ion-grid>
 
     }
+    }
   </main>
 </ion-content>
 
 <ion-modal
-  [isOpen]="selectorOpen()"
+  [isOpen]="selectorOpen() && workspaceReady()"
   (didDismiss)="closeSelector()"
 >
   <ng-template>

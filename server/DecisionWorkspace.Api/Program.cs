@@ -13,6 +13,12 @@ builder.Services.AddOpenApi();
 var frontendUrl =
     builder.Configuration["FrontendUrl"]
     ?? "http://localhost:4200";
+var frontendUrls = builder.Configuration
+    .GetSection("FrontendUrls")
+    .Get<string[]>() ?? [frontendUrl];
+var nativeFrontendUrls = builder.Configuration
+    .GetSection("NativeFrontendUrls")
+    .Get<string[]>() ?? [];
 
 var supabaseUrl =
     builder.Configuration["Supabase:Url"]
@@ -31,7 +37,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("Frontend", policy =>
     {
         policy
-            .WithOrigins(frontendUrl)
+            .WithOrigins(frontendUrls.Concat(nativeFrontendUrls).Distinct().ToArray())
             .AllowAnyHeader()
             .AllowAnyMethod();
     });

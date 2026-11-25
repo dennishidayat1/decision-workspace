@@ -1,12 +1,14 @@
 using System.Net;
 using System.Text.RegularExpressions;
 using System.Text.Json;
+using System.Diagnostics;
 
 namespace DecisionWorkspace.Api.Services;
 
 public class MarketplaceLinkService
 {
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly ILogger<MarketplaceLinkService> _logger;
     private static readonly Dictionary<string, string> SupportedDomains =
         new(StringComparer.OrdinalIgnoreCase)
         {
@@ -16,10 +18,12 @@ public class MarketplaceLinkService
         };
 
     public MarketplaceLinkService(
-        IHttpClientFactory httpClientFactory
+        IHttpClientFactory httpClientFactory,
+        ILogger<MarketplaceLinkService> logger
     )
     {
         _httpClientFactory = httpClientFactory;
+        _logger = logger;
     }
 
     public bool TryDetectMarketplace(
@@ -76,10 +80,10 @@ public class MarketplaceLinkService
         return null;
     }
 
-    public async Task<Uri?> ResolveUrlAsync(
-    Uri initialUri,
-    CancellationToken cancellationToken = default
-)
+    public async Task<(Uri Uri, string Html)?> GetPageAsync(
+        Uri initialUri,
+        CancellationToken cancellationToken = default,
+        string? requestId = null)
     {
         const int maxRedirects = 5;
 
@@ -98,29 +102,46 @@ public class MarketplaceLinkService
                 currentUri
             );
 
-            using var response = await client.SendAsync(
-                request,
-                HttpCompletionOption.ResponseHeadersRead,
-                cancellationToken
-            );
-
-            if (!IsRedirect(response.StatusCode))
+            // ResponseHeadersRead ends HttpClient's timeout at the headers. Keep the
+            // same per-request budget active while reading the final HTML body.
+            using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            if (client.Timeout != Timeout.InfiniteTimeSpan)
+                deadline.CancelAfter(client.Timeout);
+            var stage = "response_headers";
+            var elapsed = Stopwatch.StartNew();
+            try
             {
-                return response.IsSuccessStatusCode
-                    ? currentUri
-                    : null;
+                using var response = await client.SendAsync(
+                    request, HttpCompletionOption.ResponseHeadersRead, deadline.Token);
+                _logger.LogInformation(
+                    "Marketplace stage {Stage} completed for {Host} hop {Hop} with status {StatusCode} in {ElapsedMs} ms; RequestId {RequestId}",
+                    stage, currentUri.Host, i, (int)response.StatusCode, elapsed.ElapsedMilliseconds, requestId);
+
+                if (!IsRedirect(response.StatusCode))
+                {
+                    if (!response.IsSuccessStatusCode) return null;
+                    stage = "html_body";
+                    elapsed.Restart();
+                    var html = await response.Content.ReadAsStringAsync(deadline.Token);
+                    _logger.LogInformation(
+                        "Marketplace stage {Stage} completed for {Host} hop {Hop} in {ElapsedMs} ms; RequestId {RequestId}",
+                        stage, currentUri.Host, i, elapsed.ElapsedMilliseconds, requestId);
+                    return (currentUri, html);
+                }
+
+                var location = response.Headers.Location;
+                if (location == null) return null;
+                currentUri = location.IsAbsoluteUri
+                    ? location
+                    : new Uri(currentUri, location);
             }
-
-            var location = response.Headers.Location;
-
-            if (location == null)
+            catch (OperationCanceledException ex) when (!cancellationToken.IsCancellationRequested)
             {
-                return null;
+                _logger.LogWarning(ex,
+                    "Marketplace stage {Stage} timed out for {Host} hop {Hop} after {ElapsedMs} ms; RequestId {RequestId}",
+                    stage, currentUri.Host, i, elapsed.ElapsedMilliseconds, requestId);
+                throw;
             }
-
-            currentUri = location.IsAbsoluteUri
-                ? location
-                : new Uri(currentUri, location);
         }
 
         return null;
@@ -134,39 +155,6 @@ public class MarketplaceLinkService
             System.Net.HttpStatusCode.RedirectMethod or
             System.Net.HttpStatusCode.TemporaryRedirect or
             System.Net.HttpStatusCode.PermanentRedirect;
-    }
-
-    public async Task<string?> GetPageHtmlAsync(
-        Uri uri,
-        CancellationToken cancellationToken = default
-    )
-    {
-        if (DetectMarketplace(uri.Host) == null)
-        {
-            return null;
-        }
-
-        var client = _httpClientFactory.CreateClient("Marketplace");
-
-        using var request = new HttpRequestMessage(
-            HttpMethod.Get,
-            uri
-        );
-
-        using var response = await client.SendAsync(
-            request,
-            HttpCompletionOption.ResponseContentRead,
-            cancellationToken
-        );
-
-        if (!response.IsSuccessStatusCode)
-        {
-            return null;
-        }
-
-        return await response.Content.ReadAsStringAsync(
-            cancellationToken
-        );
     }
 
     public string? ExtractMetaContent(

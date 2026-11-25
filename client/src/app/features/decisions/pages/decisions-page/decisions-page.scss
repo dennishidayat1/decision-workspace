@@ -67,7 +67,8 @@ ion-content {
    CREATE BUTTON
 -------------------------------------------------- */
 
-.create-button {
+.create-button,
+.retry-button {
   min-height: 40px;
 
   margin: 0;
@@ -90,7 +91,8 @@ ion-content {
   text-transform: none;
 }
 
-.create-button ion-icon {
+.create-button ion-icon,
+.retry-button ion-icon {
   font-size: 16px;
 }
 
@@ -235,7 +237,25 @@ ion-content {
 }
 
 .page-state--error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
+
   color: #9a403d;
+  line-height: 1.5;
+}
+
+.error-message {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.retry-button {
+  flex: 0 0 auto;
+  min-height: 44px;
+  letter-spacing: normal;
 }
 
 .empty-state {

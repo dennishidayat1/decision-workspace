@@ -1,5 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { DashboardPage } from './dashboard-page';
+import { provideRouter } from '@angular/router';
+import { of } from 'rxjs';
+import { DecisionApi } from '../../../decisions/services/decision-api';
 
 describe('DashboardPage', () => {
   let component: DashboardPage;
@@ -8,6 +11,7 @@ describe('DashboardPage', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [DashboardPage],
+      providers: [provideRouter([]), { provide: DecisionApi, useValue: { getAllDecisions: () => of([]) } }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(DashboardPage);

@@ -10,12 +10,13 @@ import {
   IonHeader,
   IonIcon,
   IonMenu,
+  IonMenuButton,
   IonPopover,
   IonRouterOutlet,
   IonToolbar,
   MenuController,
-  NavController,
   PopoverController,
+  ToastController,
 } from '@ionic/angular';
 
 import {
@@ -36,6 +37,7 @@ import {
     IonHeader,
     IonIcon,
     IonMenu,
+    IonMenuButton,
     IonPopover,
     IonRouterOutlet,
     IonToolbar,
@@ -44,20 +46,12 @@ import {
   styleUrl: './app-layout.scss',
 })
 export class AppLayout {
-  private readonly authService =
-    inject(AuthService);
+  private readonly authService = inject(AuthService);
+  private readonly menuController = inject(MenuController);
+  private readonly popoverController = inject(PopoverController);
+  private readonly toastController = inject(ToastController);
 
-  private readonly navController =
-    inject(NavController);
-
-  private readonly menuController =
-    inject(MenuController);
-
-  private readonly popoverController =
-    inject(PopoverController);
-
-  readonly logOutOutline =
-    logOutOutline;
+  readonly logOutOutline = logOutOutline;
 
   get userEmail(): string {
     return (
@@ -87,10 +81,15 @@ export class AppLayout {
       await popover.dismiss();
     }
 
-    await this.authService.signOut();
-
-    this.navController.navigateRoot(
-      '/auth',
-    );
+    try {
+      await this.authService.signOut();
+    } catch {
+      const toast = await this.toastController.create({
+        message: 'Unable to sign out. Please try again.',
+        duration: 2500,
+        position: 'bottom',
+      });
+      await toast.present();
+    }
   }
 }
