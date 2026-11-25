@@ -20,6 +20,7 @@ import {
   IonItem,
   IonLabel,
   IonSpinner,
+  IonInputPasswordToggle,
   NavController,
 } from '@ionic/angular';
 
@@ -38,6 +39,7 @@ import { AuthService } from '../../../../core/auth/auth.service';
     IonItem,
     IonLabel,
     IonSpinner,
+    IonInputPasswordToggle
   ],
 
   templateUrl: './auth-page.html',
