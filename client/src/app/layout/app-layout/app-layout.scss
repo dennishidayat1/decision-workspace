@@ -195,11 +195,18 @@
 }
 
 .account-drawer {
-  padding-top:
-    calc(
-      16px +
-      env(safe-area-inset-top)
-    );
+  padding-top: calc(16px + var(--ion-safe-area-top, 0px));
+}
+
+.account-menu ion-content {
+  --padding-start: var(--ion-safe-area-left, 0px);
+  --padding-end: var(--ion-safe-area-right, 0px);
+  --padding-bottom: var(--ion-safe-area-bottom, 0px);
+}
+
+.sign-out-row,
+ion-menu-button {
+  min-height: 44px;
 }
 
 .brand-icon {

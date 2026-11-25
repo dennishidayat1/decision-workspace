@@ -1,8 +1,19 @@
 {
-  "rewrites": [
+  "framework": "angular",
+  "outputDirectory": "dist/decision-workspace-web/browser",
+  "headers": [
     {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "source": "/:file(ngsw-worker\\.js|ngsw\\.json|safety-worker\\.js|worker-basic\\.min\\.js|manifest\\.webmanifest)",
+      "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+    },
+    {
+      "source": "/manifest.webmanifest",
+      "headers": [{ "key": "Content-Type", "value": "application/manifest+json" }]
     }
+  ],
+  "rewrites": [
+    { "source": "/auth", "destination": "/index.html" },
+    { "source": "/reset-password", "destination": "/index.html" },
+    { "source": "/decisions/:path*", "destination": "/index.html" }
   ]
 }

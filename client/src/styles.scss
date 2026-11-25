@@ -22,6 +22,27 @@
 html,
 body {
   font-family: "Inter", sans-serif;
+  background: #f7f9f8;
+}
+
+.auth-content {
+  --padding-top: var(--ion-safe-area-top, 0px);
+}
+
+.auth-content,
+.workspace-router ion-content {
+  --padding-start: var(--ion-safe-area-left, 0px);
+  --padding-end: var(--ion-safe-area-right, 0px);
+  --padding-bottom: var(--ion-safe-area-bottom, 0px);
+}
+
+// Keep Safari from zooming on focus while preserving user-controlled zoom.
+.ios ion-input input.native-input,
+.ios ion-textarea textarea.native-textarea,
+.ios input,
+.ios textarea,
+.ios select {
+  font-size: max(16px, 1em);
 }
 
 :root {

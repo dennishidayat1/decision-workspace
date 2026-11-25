@@ -1,0 +1,23 @@
+{
+  "$schema": "./node_modules/@angular/service-worker/config/schema.json",
+  "index": "/index.html",
+  "assetGroups": [
+    {
+      "name": "app-shell",
+      "installMode": "prefetch",
+      "resources": {
+        "files": [
+          "/index.html",
+          "/*.js",
+          "/*.css",
+          "/manifest.webmanifest",
+          "/images/icon.png",
+          "/images/logo.png",
+          "/icons/*.png"
+        ]
+      }
+    }
+  ],
+  "dataGroups": [],
+  "navigationUrls": ["/", "/auth", "/reset-password", "/decisions", "/decisions/**", "!/**/*.*", "!/**/*__*"]
+}

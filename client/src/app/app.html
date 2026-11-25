@@ -1,3 +1,22 @@
 <ion-app>
-  <ion-router-outlet />
+  <div class="app-shell">
+    <ion-router-outlet />
+    @if (!online() || versionReady() || reloadRequired()) {
+      <div class="app-notice">
+        <div role="status">
+          @if (!online()) {
+            <div>You’re offline. Reconnect to access your workspace or save changes.</div>
+          }
+          @if (reloadRequired()) {
+            <div>This version can’t continue. Reload when you’re online.</div>
+          } @else if (versionReady()) {
+            <div>An update is ready. Finish any unsaved edits before reloading.</div>
+          }
+        </div>
+        @if (versionReady() || reloadRequired()) {
+          <ion-button size="small" [disabled]="!online()" (click)="reload()">Reload</ion-button>
+        }
+      </div>
+    }
+  </div>
 </ion-app>
