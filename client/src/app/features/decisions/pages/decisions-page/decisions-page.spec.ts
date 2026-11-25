@@ -108,4 +108,41 @@ describe('DecisionsPage', () => {
       log.mockRestore();
     }
   });
+
+  it('requests only the decision list on every page entry', () => {
+    const decisions: Decision[] = [{
+      id: 'decision', title: 'Choose a laptop', question: 'Which laptop?',
+      status: 'draft', createdAt: '', updatedAt: '',
+    }];
+    for (let entry = 0; entry < 2; entry++) {
+      component.ionViewWillEnter();
+      expect(component.isLoading()).toBe(true);
+      const requests = http.match(() => true);
+      expect(requests).toHaveLength(1);
+      expect(requests[0].request.method).toBe('GET');
+      expect(requests[0].request.url).toMatch(/\/api\/decisions$/);
+      requests[0].flush(decisions);
+      expect(component.decisions()).toEqual(decisions);
+      expect(component.isLoading()).toBe(false);
+      expect(component.loadError()).toBeNull();
+    }
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Choose a laptop');
+  });
+
+  it('preserves the list error state and clears loading when the API fails', () => {
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      component.ionViewWillEnter();
+      http.expectOne(req => req.url.endsWith('/decisions')).flush({}, {
+        status: 503, statusText: 'Service Unavailable',
+      });
+      expect(component.isLoading()).toBe(false);
+      expect(component.loadError()).toBe('Failed to load decisions. Please try again later.');
+      fixture.detectChanges();
+      expect(fixture.nativeElement.textContent).toContain(component.loadError());
+    } finally {
+      log.mockRestore();
+    }
+  });
 });
