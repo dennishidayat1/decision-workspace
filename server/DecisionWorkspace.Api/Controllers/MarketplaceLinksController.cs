@@ -2,6 +2,7 @@ using DecisionWorkspace.Api.Contracts;
 using DecisionWorkspace.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.RegularExpressions;
 
 namespace DecisionWorkspace.Api.Controllers;
 
@@ -71,7 +72,7 @@ public class MarketplaceLinksController : ControllerBase
                 });
             }
 
-            var (resolvedUri, html) = page.Value;
+            var (resolvedUri, html, renderingFallback) = page.Value;
             var jsonLd =
                 _marketplaceLinkService.ExtractProductJsonLd(
                     html
@@ -133,6 +134,25 @@ public class MarketplaceLinksController : ControllerBase
                 jsonLd?.ImageUrl
                 ?? metaImageUrl;
 
+            var price = jsonLd?.Price ?? metaPrice;
+            var hasTitle = !string.IsNullOrWhiteSpace(title);
+            var hasImage = !string.IsNullOrWhiteSpace(marketplaceImageUrl);
+            var hasPrice = price.HasValue;
+            var outcome = "metadata_missing";
+            if (hasTitle && hasImage && hasPrice)
+                outcome = "metadata_complete";
+            else if (hasTitle || hasImage || hasPrice || !string.IsNullOrWhiteSpace(description))
+                outcome = "metadata_partial";
+            else if (Regex.IsMatch(html, @"<title\b[^>]*>\s*(?:Access Denied|Request Blocked|Verify (?:that )?you are human)\s*</title>", RegexOptions.IgnoreCase))
+                outcome = "access_restricted";
+            else if (renderingFallback || (sourceName == "Tokopedia" &&
+                Regex.IsMatch(html, @"<div\b[^>]*\s+id\s*=\s*[""']zeus-root[""'][^>]*>\s*</div>", RegexOptions.IgnoreCase)))
+                outcome = "upstream_rendering_fallback";
+
+            _logger.LogInformation(
+                "Marketplace outcome {Outcome} for {Host}; title {HasTitle}, price {HasPrice}, image {HasImage}, SSR timing fallback {RenderingFallback}; RequestId {RequestId}",
+                outcome, resolvedUri.Host, hasTitle, hasPrice, hasImage, renderingFallback, requestId);
+
             var imageUrl =
                 await _marketplaceImageStorageService
                     .ImportImageAsync(
@@ -140,10 +160,6 @@ public class MarketplaceLinksController : ControllerBase
                         cancellationToken
                     )
                 ?? marketplaceImageUrl;
-
-            var price =
-                jsonLd?.Price
-                ?? metaPrice;
 
             return Ok(
                 new MarketplaceLinkPreviewResponse

@@ -1,8 +1,13 @@
 using System.Net;
+using System.IO.Compression;
+using System.Text;
 using DecisionWorkspace.Api.Contracts;
 using DecisionWorkspace.Api.Controllers;
 using DecisionWorkspace.Api.Services;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 
 static class PreviewTests
@@ -13,6 +18,7 @@ static class PreviewTests
         const string shortSource = "https://tk.tokopedia.com/ZSpuKfdyw/";
         const string image = "https://p16-images-sign-sg.tokopedia-static.net/image.jpg";
         var logs = new PreviewLogger();
+        var outcomeLogs = new PreviewLogger();
 
         MarketplaceLinkService Service(FakeFactory factory) => new(factory, logs);
         MarketplaceLinksController Controller(FakeFactory factory)
@@ -23,7 +29,7 @@ static class PreviewTests
                 new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
                 { ["Supabase:Url"] = "https://example.supabase.co" }).Build(),
                 NullLogger<MarketplaceImageStorageService>.Instance),
-            NullLogger<MarketplaceLinksController>.Instance)
+                outcomeLogs)
             { ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() } };
             controller.Request.Headers["Rndr-Id"] = "test-render-request";
             return controller;
@@ -73,13 +79,15 @@ static class PreviewTests
             pageRequests++;
             return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
             {
-                Content = new StringContent($"<meta property='og:title' content='Product'><meta property='og:image' content='{image}'>")
+                Content = new StringContent($"<meta property='og:title' content='Product'><meta property='og:image' content='{image}'><meta property='product:price:amount' content='123'>")
             });
         });
         var preview = await Controller(fallbackFactory).Preview(new PreviewMarketplaceLinkRequest { Url = source }, default);
         Check(preview is OkObjectResult { Value: MarketplaceLinkPreviewResponse { Title: "Product", ImageUrl: image } },
             "Optional image timeout must preserve a successful metadata preview and source image");
         Check(pageRequests == 1 && imageRequests == 1, "Direct page must be fetched once before optional image import");
+        Check(outcomeLogs.Entries.Any(e => e.Fields.TryGetValue("Outcome", out var value) && Equals(value, "metadata_complete")),
+            "Complete metadata must be logged independently of image storage");
         Console.WriteLine("PASS Preview image timeout falls back after successful metadata fetch");
 
         var visited = new List<string>();
@@ -170,10 +178,94 @@ static class PreviewTests
         Check(await Controller(unreachable).Preview(new PreviewMarketplaceLinkRequest { Url = source }, default)
             is ObjectResult { StatusCode: 502 }, "Network failure must remain HTTP 502");
         Console.WriteLine("PASS Upstream status rejection and network errors retain their existing response codes");
+
+        foreach (var (body, serverTiming, expected) in new[]
+        {
+            ("<div id='zeus-root'></div>", "", "upstream_rendering_fallback"),
+            ("<html></html>", "inner;dur=10, ssr_deadline_client_fallback;dur=2000", "upstream_rendering_fallback"),
+            ("<title>Access Denied</title>", "", "access_restricted"),
+            ("<meta property='og:title' content='Product'>", "", "metadata_partial"),
+            ("<html></html>", "", "metadata_missing")
+        })
+        {
+            outcomeLogs.Entries.Clear();
+            var sends = 0;
+            var factory = new FakeFactory((_, _, _) =>
+            {
+                sends++;
+                var response = new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(body) };
+                if (serverTiming.Length > 0) response.Headers.TryAddWithoutValidation("Server-Timing", serverTiming);
+                return Task.FromResult(response);
+            });
+            var result = await Controller(factory).Preview(new PreviewMarketplaceLinkRequest { Url = source }, default);
+            Check(result is OkObjectResult && sends == 1, "An empty preview must retain the manual-entry flow without retries");
+            var entry = outcomeLogs.Entries.Single(e => e.Fields.ContainsKey("Outcome"));
+            Check((string)entry.Fields["Outcome"]! == expected && (string)entry.Fields["RequestId"]! == "test-render-request",
+                $"Expected diagnostic outcome {expected}");
+        }
+        foreach (var (status, expected) in new[]
+        {
+            (HttpStatusCode.Gone, "listing_unavailable"),
+            (HttpStatusCode.TooManyRequests, "access_restricted"),
+            (HttpStatusCode.GatewayTimeout, "upstream_timeout")
+        })
+        {
+            logs.Entries.Clear();
+            var factory = new FakeFactory((_, _, _) => Task.FromResult(new HttpResponseMessage(status)));
+            Check(await Controller(factory).Preview(new PreviewMarketplaceLinkRequest { Url = source }, default) is BadRequestObjectResult &&
+                logs.Entries.Any(e => e.Fields.TryGetValue("Outcome", out var value) && Equals(value, expected)),
+                $"Expected diagnostic outcome {expected} while preserving the HTTP response");
+        }
+        Console.WriteLine("PASS Preview distinguishes HTML shells, partial metadata, unavailable and restricted listings, and upstream timeouts");
+
+        var appBuilder = WebApplication.CreateSlimBuilder();
+        appBuilder.Logging.ClearProviders();
+        appBuilder.WebHost.UseUrls("http://127.0.0.1:0");
+        appBuilder.Services.AddMarketplaceHttpClient();
+        await using var app = appBuilder.Build();
+        app.MapGet("/{encoding}", async (string encoding, HttpContext context) =>
+        {
+            Check(context.Request.Headers.Accept == "*/*", "Marketplace must send a standard Accept header");
+            var acceptEncoding = context.Request.Headers.AcceptEncoding.ToString();
+            Check(acceptEncoding.Contains("gzip") && acceptEncoding.Contains("deflate"), "Marketplace must advertise both encodings");
+            Check(!context.Request.Headers.ContainsKey("Cookie"), "Pooled clients must not replay marketplace cookies");
+            context.Response.Headers.SetCookie = "marketplace_test=independent; Path=/";
+            context.Response.ContentType = "text/html; charset=utf-8";
+            context.Response.Headers.ContentEncoding = encoding == "deflate" ? "deflate" : "gzip";
+            await using Stream compressed = encoding == "deflate"
+                ? new ZLibStream(context.Response.Body, CompressionMode.Compress, leaveOpen: true)
+                : new GZipStream(context.Response.Body, CompressionMode.Compress, leaveOpen: true);
+            var html = encoding == "oversize" ? new string('x', 4 * 1024 * 1024 + 1) :
+                "<meta property='og:title' content='Product'><meta property='product:price:amount' content='123'>";
+            await compressed.WriteAsync(Encoding.UTF8.GetBytes(html));
+        });
+        await app.StartAsync();
+        var address = app.Urls.Single();
+        var httpFactory = app.Services.GetRequiredService<IHttpClientFactory>();
+        foreach (var encoding in new[] { "gzip", "deflate", "oversize" })
+        {
+            using var client = httpFactory.CreateClient("Marketplace");
+            using var response = await client.GetAsync($"{address}/{encoding}", HttpCompletionOption.ResponseHeadersRead);
+            Check(response.IsSuccessStatusCode, "The real named client must reach the compression fixture");
+            logs.Entries.Clear();
+            var factory = new FakeFactory((_, _, _) => Task.FromResult(response));
+            var url = encoding == "deflate" ? "https://shopee.co.id/product/123/456" : source;
+            var result = await Controller(factory).Preview(new PreviewMarketplaceLinkRequest { Url = url }, default);
+            if (encoding == "oversize")
+                Check(result is BadRequestObjectResult && logs.Entries.Any(e =>
+                    e.Fields.TryGetValue("Outcome", out var value) && Equals(value, "html_size_limit")),
+                    "Compressed HTML must be capped after decompression");
+            else
+                Check(result is OkObjectResult { Value: MarketplaceLinkPreviewResponse { Title: "Product", Price: 123 } metadata } &&
+                    metadata.SourceName == (encoding == "deflate" ? "Shopee" : "Tokopedia"),
+                    "The named client must decode compressed responses for both marketplaces");
+        }
+        await app.StopAsync();
+        Console.WriteLine("PASS Marketplace client negotiates gzip/deflate, drops cookies, and caps expanded HTML");
     }
 }
 
-sealed class PreviewLogger : ILogger<MarketplaceLinkService>
+sealed class PreviewLogger : ILogger<MarketplaceLinkService>, ILogger<MarketplaceLinksController>
 {
     public readonly List<(LogLevel Level, Dictionary<string, object?> Fields, Exception? Exception)> Entries = [];
     public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;

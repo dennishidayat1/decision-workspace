@@ -77,23 +77,7 @@ builder.Services.AddScoped<MarketplaceImageStorageService>();
 builder.Services.AddScoped<IOptionImageRepository, OptionImageRepository>();
 builder.Services.AddScoped<OptionImageRecoveryService>();
 
-builder.Services.AddHttpClient(
-    "Marketplace",
-    client =>
-    {
-        client.Timeout = TimeSpan.FromSeconds(10);
-
-        client.DefaultRequestHeaders.UserAgent.ParseAdd(
-            "DecisionWorkspace/1.0"
-        );
-    }
-)
-.ConfigurePrimaryHttpMessageHandler(() =>
-    new HttpClientHandler
-    {
-        AllowAutoRedirect = false
-    }
-);
+builder.Services.AddMarketplaceHttpClient();
 
 builder.Services.AddHttpClient(
     "SupabaseStorage",

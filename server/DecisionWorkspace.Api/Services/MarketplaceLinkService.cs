@@ -7,6 +7,7 @@ namespace DecisionWorkspace.Api.Services;
 
 public class MarketplaceLinkService
 {
+    private const int MaxHtmlBytes = 4 * 1024 * 1024;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<MarketplaceLinkService> _logger;
     private static readonly Dictionary<string, string> SupportedDomains =
@@ -80,7 +81,7 @@ public class MarketplaceLinkService
         return null;
     }
 
-    public async Task<(Uri Uri, string Html)?> GetPageAsync(
+    public async Task<(Uri Uri, string Html, bool RenderingFallback)?> GetPageAsync(
         Uri initialUri,
         CancellationToken cancellationToken = default,
         string? requestId = null)
@@ -119,14 +120,33 @@ public class MarketplaceLinkService
 
                 if (!IsRedirect(response.StatusCode))
                 {
-                    if (!response.IsSuccessStatusCode) return null;
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        var outcome = response.StatusCode switch
+                        {
+                            HttpStatusCode.NotFound or HttpStatusCode.Gone => "listing_unavailable",
+                            HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden or
+                                HttpStatusCode.TooManyRequests or HttpStatusCode.UnavailableForLegalReasons => "access_restricted",
+                            HttpStatusCode.RequestTimeout or HttpStatusCode.GatewayTimeout => "upstream_timeout",
+                            _ => "upstream_http_error"
+                        };
+                        _logger.LogInformation(
+                            "Marketplace outcome {Outcome} for {Host} hop {Hop} with status {StatusCode}; RequestId {RequestId}",
+                            outcome, currentUri.Host, i, (int)response.StatusCode, requestId);
+                        return null;
+                    }
                     stage = "html_body";
                     elapsed.Restart();
+                    // Count decoded bytes even when the wire length is compressed or unknown.
+                    await response.Content.LoadIntoBufferAsync(MaxHtmlBytes, deadline.Token);
                     var html = await response.Content.ReadAsStringAsync(deadline.Token);
                     _logger.LogInformation(
                         "Marketplace stage {Stage} completed for {Host} hop {Hop} in {ElapsedMs} ms; RequestId {RequestId}",
                         stage, currentUri.Host, i, elapsed.ElapsedMilliseconds, requestId);
-                    return (currentUri, html);
+                    var renderingFallback = response.Headers.TryGetValues("Server-Timing", out var timings) &&
+                        timings.SelectMany(value => value.Split(',')).Any(metric =>
+                            metric.Split(';', 2)[0].Trim().Equals("ssr_deadline_client_fallback", StringComparison.OrdinalIgnoreCase));
+                    return (currentUri, html, renderingFallback);
                 }
 
                 var location = response.Headers.Location;
@@ -134,6 +154,14 @@ public class MarketplaceLinkService
                 currentUri = location.IsAbsoluteUri
                     ? location
                     : new Uri(currentUri, location);
+            }
+            catch (HttpRequestException ex) when (stage == "html_body" &&
+                ex.HttpRequestError == HttpRequestError.ConfigurationLimitExceeded)
+            {
+                _logger.LogWarning(
+                    "Marketplace outcome {Outcome} for {Host} hop {Hop}; RequestId {RequestId}",
+                    "html_size_limit", currentUri.Host, i, requestId);
+                return null;
             }
             catch (OperationCanceledException ex) when (!cancellationToken.IsCancellationRequested)
             {
