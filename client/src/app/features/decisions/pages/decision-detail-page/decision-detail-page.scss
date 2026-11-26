@@ -42,8 +42,10 @@ ion-content {
   text-transform: none;
 }
 
-.back-link:hover {
-  --color: #247657;
+@media (hover: hover) and (pointer: fine) {
+  .back-link:hover {
+    --color: #247657;
+  }
 }
 
 .back-link ion-icon {
@@ -140,8 +142,10 @@ ion-content {
   --box-shadow: none;
 }
 
-.decision-actions-button:hover {
-  --color: #247657;
+@media (hover: hover) and (pointer: fine) {
+  .decision-actions-button:hover {
+    --color: #247657;
+  }
 }
 
 .decision-actions-button ion-icon {
@@ -233,9 +237,11 @@ ion-content {
   font-size: 12px;
   font-weight: 500;
 
-  &:hover {
-    text-decoration: underline;
-    text-underline-offset: 3px;
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
   }
 }
 
@@ -376,8 +382,10 @@ ion-content {
   transition: background-color 160ms ease;
 }
 
-.add-option-header-button:hover::part(native) {
-  background: #1b6045;
+@media (hover: hover) and (pointer: fine) {
+  .add-option-header-button:hover::part(native) {
+    background: #1b6045;
+  }
 }
 
 .add-option-header-button:active::part(native) {
@@ -418,9 +426,11 @@ ion-content {
     border-color 160ms ease;
 }
 
-.compare-options-button:not([disabled]):hover::part(native) {
-  background: #edf3ef;
-  border-color: #c7d6ce;
+@media (hover: hover) and (pointer: fine) {
+  .compare-options-button:not([disabled]):hover::part(native) {
+    background: #edf3ef;
+    border-color: #c7d6ce;
+  }
 }
 
 .compare-options-button:not([disabled]):active::part(native) {
@@ -590,12 +600,14 @@ ion-content {
     box-shadow 180ms ease;
 }
 
-.option-card--compact:hover {
-  transform: translateY(-2px);
+@media (hover: hover) and (pointer: fine) {
+  .option-card--compact:hover {
+    transform: translateY(-2px);
 
-  border-color: rgba(36, 118, 87, 0.35);
+    border-color: rgba(36, 118, 87, 0.35);
 
-  box-shadow: 0 6px 20px rgba(34, 57, 46, 0.03);
+    box-shadow: 0 6px 20px rgba(34, 57, 46, 0.03);
+  }
 }
 
 .compact-image-shell {
@@ -850,12 +862,14 @@ ion-content {
     box-shadow 180ms ease;
 }
 
-.option-card--detailed:hover {
-  transform: translateY(-2px);
+@media (hover: hover) and (pointer: fine) {
+  .option-card--detailed:hover {
+    transform: translateY(-2px);
 
-  border-color: rgba(36, 118, 87, 0.35);
+    border-color: rgba(36, 118, 87, 0.35);
 
-  box-shadow: 0 6px 20px rgba(34, 57, 46, 0.03);
+    box-shadow: 0 6px 20px rgba(34, 57, 46, 0.03);
+  }
 }
 
 .option-card--detailed ion-card-content {
@@ -1203,8 +1217,10 @@ ion-content {
     box-shadow 160ms ease;
 }
 
-.add-option-fab-button:hover::part(native) {
-  background: #1b6045;
+@media (hover: hover) and (pointer: fine) {
+  .add-option-fab-button:hover::part(native) {
+    background: #1b6045;
+  }
 }
 
 .add-option-fab-button:active::part(native) {
@@ -1423,162 +1439,6 @@ ion-content {
 
   .compare-options-button ion-icon {
     font-size: 12px;
-  }
-}
-
-.delete-decision-modal {
-  --background: transparent;
-
-  &::part(backdrop) {
-    background: rgba(36, 53, 46, 0.25);
-  }
-
-  &::part(content) {
-    position: absolute;
-    bottom: 0;
-
-    width: 100%;
-    max-width: none;
-    height: auto;
-
-    border-radius: 16px 16px 0 0;
-
-    background: #ffffff;
-  }
-}
-
-.delete-sheet {
-  background: #ffffff;
-  color: #24352e;
-}
-
-.delete-sheet-header {
-  padding: 12px 16px 16px;
-  border-bottom: 1px solid #e1e7e3;
-}
-
-.sheet-handle {
-  width: 36px;
-  height: 4px;
-
-  margin: 0 auto 12px;
-
-  border-radius: 999px;
-  background: #e1e7e3;
-}
-
-.delete-sheet-title-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-
-  h2 {
-    margin: 0;
-
-    font-family: "Manrope", sans-serif;
-    font-size: 18px;
-    font-weight: 800;
-  }
-}
-
-.close-delete-button {
-  --color: #6b7770;
-  --padding-start: 0;
-  --padding-end: 0;
-
-  width: 36px;
-  height: 36px;
-  margin: 0;
-}
-
-.delete-sheet-body {
-  padding: 20px;
-
-  p {
-    margin: 0;
-
-    color: #6b7770;
-
-    font-size: 14px;
-    line-height: 24px;
-  }
-
-  span {
-    display: block;
-
-    margin-top: 8px;
-
-    color: #6b7770;
-    font-size: 11px;
-  }
-}
-
-.delete-sheet-actions {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  gap: 12px;
-
-  padding:
-    16px 20px calc(16px + env(safe-area-inset-bottom));
-
-  border-top: 1px solid #e1e7e3;
-}
-
-.cancel-delete-button {
-  --color: #6b7770;
-  --background-hover: #f2f5f3;
-
-  margin: 0;
-
-  font-size: 12px;
-  font-weight: 500;
-  text-transform: none;
-}
-
-.confirm-delete-button {
-  --background: #b91c1c;
-  --background-hover: #991b1b;
-
-  --color: #ffffff;
-
-  --border-radius: 12px;
-  --box-shadow: none;
-
-  min-height: 44px;
-  margin: 0;
-
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: none;
-}
-
-@media (min-width: 576px) {
-  .delete-decision-modal {
-    --width: 500px;
-    --height: auto;
-
-    &::part(content) {
-      position: relative;
-      bottom: auto;
-
-      width: 500px;
-
-      border: 1px solid #e1e7e3;
-      border-radius: 16px;
-
-      box-shadow: 0 20px 50px rgba(36, 53, 46, 0.18);
-    }
-  }
-
-  .sheet-handle {
-    display: none;
-  }
-
-  .delete-sheet-header {
-    padding: 20px;
   }
 }
 

@@ -15,6 +15,8 @@
           fill="outline"
           placeholder="Name"
           aria-label="Attribute name"
+          name="option-attribute-key"
+          autocomplete="off"
           formControlName="name"
         />
       </ion-col>
@@ -26,6 +28,8 @@
           [attr.aria-label]="
             (attribute.controls.name.value || 'Attribute') + ' value'
           "
+          name="option-attribute-value"
+          autocomplete="off"
           formControlName="value"
         />
       </ion-col>

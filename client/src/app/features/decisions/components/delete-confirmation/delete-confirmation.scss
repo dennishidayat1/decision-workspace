@@ -1,0 +1,166 @@
+.delete-decision-modal {
+  --background: transparent;
+
+  &::part(backdrop) {
+    background: rgba(36, 53, 46, 0.25);
+  }
+
+  &::part(content) {
+    position: absolute;
+    bottom: 0;
+
+    width: 100%;
+    max-width: none;
+    height: auto;
+
+    border-radius: 16px 16px 0 0;
+
+    background: #ffffff;
+  }
+}
+
+.delete-sheet {
+  background: #ffffff;
+  color: #24352e;
+}
+
+.delete-sheet-header {
+  padding: 12px 16px 16px;
+  border-bottom: 1px solid #e1e7e3;
+}
+
+.sheet-handle {
+  width: 36px;
+  height: 4px;
+
+  margin: 0 auto 12px;
+
+  border-radius: 999px;
+  background: #e1e7e3;
+}
+
+.delete-sheet-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  h2 {
+    margin: 0;
+
+    font-family: "Manrope", sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+  }
+}
+
+.close-delete-button {
+  --color: #6b7770;
+  --padding-start: 0;
+  --padding-end: 0;
+
+  width: 36px;
+  height: 36px;
+  margin: 0;
+}
+
+.delete-sheet-body {
+  padding: 20px;
+
+  p {
+    margin: 0;
+
+    color: #6b7770;
+
+    font-size: 14px;
+    line-height: 24px;
+  }
+
+  span {
+    display: block;
+
+    margin-top: 8px;
+
+    color: #6b7770;
+    font-size: 11px;
+  }
+}
+
+.delete-sheet-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  padding:
+    16px max(20px, var(--ion-safe-area-right, 0px))
+    calc(16px + var(--ion-safe-area-bottom, 0px)) max(20px, var(--ion-safe-area-left, 0px));
+
+  border-top: 1px solid #e1e7e3;
+}
+
+.cancel-delete-button {
+  --color: #6b7770;
+  --background-hover: #f2f5f3;
+
+  margin: 0;
+
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: none;
+}
+
+.confirm-delete-button {
+  --background: #b91c1c;
+  --background-hover: #991b1b;
+
+  --color: #ffffff;
+
+  --border-radius: 12px;
+  --box-shadow: none;
+
+  min-height: 44px;
+  margin: 0;
+
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: none;
+}
+
+@media (min-width: 576px) {
+  .delete-decision-modal {
+    --width: 500px;
+    --height: auto;
+
+    &::part(content) {
+      position: relative;
+      bottom: auto;
+
+      width: 500px;
+
+      border: 1px solid #e1e7e3;
+      border-radius: 16px;
+
+      box-shadow: 0 20px 50px rgba(36, 53, 46, 0.18);
+    }
+  }
+
+  .sheet-handle {
+    display: none;
+  }
+
+  .delete-sheet-header {
+    padding: 20px;
+  }
+}
+
+.delete-sheet-error {
+  color: #b91c1c;
+  margin: 0 20px 16px;
+}
+
+.delete-decision-modal::part(content) {
+  max-height: calc(100% - var(--ion-safe-area-top, 0px));
+  overflow: auto;
+}

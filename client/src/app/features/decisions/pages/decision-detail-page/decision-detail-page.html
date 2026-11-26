@@ -1,4 +1,5 @@
 <ion-content>
+  <app-mobile-account-header />
 
   @if (isLoading()) {
     <main class="decision-page decision-page--state">
@@ -21,7 +22,7 @@
       <ion-button
         fill="clear"
         size="small"
-        class="back-link"
+        class="back-link page-back-link"
         (click)="goBackToDecisions()"
       >
         <ion-icon
@@ -464,8 +465,7 @@
 
 
                       @if (
-                        option.price !== undefined &&
-                        option.currency
+                        option.price != null
                       ) {
                         <ion-text class="compact-price">
                           {{ option.price }}
@@ -474,6 +474,8 @@
                             {{ option.currency }}
                           </span>
                         </ion-text>
+                      } @else {
+                        <ion-text class="compact-price">No price set</ion-text>
                       }
 
                     </ion-card-header>
@@ -661,8 +663,7 @@
 
 
                           @if (
-                            option.price !== undefined &&
-                            option.currency
+                            option.price != null
                           ) {
                             <div
                               class="detailed-option-price"
@@ -673,6 +674,8 @@
                                 {{ option.currency }}
                               </span>
                             </div>
+                          } @else {
+                            <div class="detailed-option-price">No price set</div>
                           }
 
                         </div>
@@ -910,82 +913,14 @@
   </ng-template>
 </ion-modal>
 
-<ion-modal
-  class="delete-decision-modal"
-  [isOpen]="isDeleteDecisionOpen()"
-  (didDismiss)="closeDeleteDecision()"
->
-  <ng-template>
-
-    <div class="delete-sheet">
-
-      <header class="delete-sheet-header">
-
-        <div class="sheet-handle"></div>
-
-        <div class="delete-sheet-title-row">
-
-          <h2>
-            Delete this decision?
-          </h2>
-
-          <ion-button
-            type="button"
-            fill="clear"
-            class="close-delete-button"
-            aria-label="Close delete confirmation"
-            (click)="closeDeleteDecision()"
-          >
-            <ion-icon
-              slot="icon-only"
-              name="close-outline"
-            />
-          </ion-button>
-
-        </div>
-
-      </header>
-
-
-      <div class="delete-sheet-body">
-
-        <p>
-          This decision, its options, and their ratings
-          will be removed.
-        </p>
-
-        <span>
-          This action can’t be undone.
-        </span>
-
-      </div>
-
-
-      <footer class="delete-sheet-actions">
-
-        <ion-button
-          type="button"
-          fill="clear"
-          class="cancel-delete-button"
-          (click)="closeDeleteDecision()"
-        >
-          Cancel
-        </ion-button>
-
-        <ion-button
-          type="button"
-          class="confirm-delete-button"
-          (click)="confirmDeleteDecision()"
-        >
-          Delete decision
-        </ion-button>
-
-      </footer>
-
-    </div>
-
-  </ng-template>
-</ion-modal>
+<app-delete-confirmation
+  [open]="isDeleteDecisionOpen()"
+  title="Delete this decision?"
+  message="This decision, its options, and their ratings will be removed."
+  action="Delete decision"
+  (dismissed)="closeDeleteDecision()"
+  (confirmed)="confirmDeleteDecision()"
+/>
 
 <ion-modal
   [isOpen]="compareSelectorOpen()"

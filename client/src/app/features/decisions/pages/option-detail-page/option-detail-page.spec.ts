@@ -48,6 +48,28 @@ describe('OptionDetailPage', () => {
     expect(component).toBeTruthy();
   });
 
+  it('requires confirmation and makes only one delete request while saving', () => {
+    const isDelete = (request: { method: string }) => request.method === 'DELETE';
+    component.removeOption();
+    component.openDeleteOption();
+    component.deleting.set(false);
+    component.removeOption();
+    http.expectNone(isDelete);
+
+    component.openDeleteOption();
+    component.removeOption();
+    component.removeOption();
+    http.expectOne(isDelete).flush(null, { status: 500, statusText: 'Server error' });
+    expect(component.deleting()).toBe(true);
+    expect(component.deleteInProgress()).toBe(false);
+    expect(component.deleteError()).toBeTruthy();
+
+    component.removeOption();
+    http.expectOne(isDelete).flush(null, { status: 204, statusText: 'No Content' });
+    expect(component.deleting()).toBe(false);
+    expect(state.options()).toEqual([]);
+  });
+
   it('requires explicit confirmation for a potentially customized thumbnail', () => {
     state.options.set([{ ...original, thumbnailUrl: 'https://images.example/custom.jpg' }]);
     component.refreshImage();

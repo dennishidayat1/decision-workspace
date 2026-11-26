@@ -61,8 +61,10 @@ ion-content {
   text-transform: none;
 }
 
-.back-button:hover {
-  --color: #247657;
+@media (hover: hover) and (pointer: fine) {
+  .back-button:hover {
+    --color: #247657;
+  }
 }
 
 .back-button ion-icon {
@@ -407,9 +409,11 @@ form {
   cursor: pointer;
 }
 
-.marketplace-import-trigger:hover {
-  border-color: rgba(36, 118, 87, 0.35);
-  background: #f7f9f8;
+@media (hover: hover) and (pointer: fine) {
+  .marketplace-import-trigger:hover {
+    border-color: rgba(36, 118, 87, 0.35);
+    background: #f7f9f8;
+  }
 }
 
 .marketplace-import-trigger__row {

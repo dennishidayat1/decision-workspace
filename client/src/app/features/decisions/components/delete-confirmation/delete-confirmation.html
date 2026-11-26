@@ -1,0 +1,84 @@
+<ion-modal
+  class="delete-decision-modal"
+  [canDismiss]="!busy()"
+  [isOpen]="open()"
+  [attr.aria-label]="title()"
+  (didDismiss)="dismissed.emit()"
+>
+  <ng-template>
+
+    <div class="delete-sheet">
+
+      <header class="delete-sheet-header">
+
+        <div class="sheet-handle"></div>
+
+        <div class="delete-sheet-title-row">
+
+          <h2>
+            {{ title() }}
+          </h2>
+
+          <ion-button
+            type="button"
+            fill="clear"
+            class="close-delete-button"
+            [disabled]="busy()"
+            aria-label="Close delete confirmation"
+            (click)="dismissed.emit()"
+          >
+            <ion-icon
+              slot="icon-only"
+              [icon]="closeOutline"
+            />
+          </ion-button>
+
+        </div>
+
+      </header>
+
+
+      <div class="delete-sheet-body">
+
+        <p>
+          {{ message() }}
+        </p>
+
+        <span>
+          This action can’t be undone.
+        </span>
+
+      </div>
+
+
+      @if (error()) {
+        <p class="delete-sheet-error" role="alert">{{ error() }}</p>
+      }
+
+      <footer class="delete-sheet-actions">
+
+        <ion-button
+          type="button"
+          fill="clear"
+          class="cancel-delete-button"
+          [disabled]="busy()"
+          (click)="dismissed.emit()"
+        >
+          Cancel
+        </ion-button>
+
+        <ion-button
+          type="button"
+          class="confirm-delete-button"
+          [disabled]="busy()"
+          (click)="confirmed.emit()"
+        >
+          {{ busy() ? 'Deleting…' : action() }}
+        </ion-button>
+
+      </footer>
+
+    </div>
+
+  </ng-template>
+</ion-modal>

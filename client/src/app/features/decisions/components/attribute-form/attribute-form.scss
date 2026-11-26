@@ -114,8 +114,10 @@
   --box-shadow: none;
 }
 
-.attribute-remove:hover {
-  --color: #b42318;
+@media (hover: hover) and (pointer: fine) {
+  .attribute-remove:hover {
+    --color: #b42318;
+  }
 }
 
 .attribute-remove ion-icon {

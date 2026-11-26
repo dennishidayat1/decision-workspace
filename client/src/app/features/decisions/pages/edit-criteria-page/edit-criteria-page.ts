@@ -1,3 +1,4 @@
+import { MobileAccountHeader } from '../../../../layout/app-layout/mobile-account-header';
 import {
   Component,
   effect,
@@ -62,6 +63,7 @@ addIcons({
   selector: 'app-edit-criteria-page',
   standalone: true,
   imports: [
+    MobileAccountHeader,
     ReactiveFormsModule,
 
     CriteriaForm,

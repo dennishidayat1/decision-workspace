@@ -1,4 +1,5 @@
 <ion-content class="criteria-page">
+  <app-mobile-account-header />
 
   <ion-grid class="page-grid">
 
@@ -153,7 +154,7 @@
 
         <!-- ACTIONS -->
 
-        <div class="actions">
+        <div class="actions mobile-form-actions">
 
           <ion-grid>
             <ion-row
@@ -168,7 +169,7 @@
                 <ion-button
                   type="button"
                   fill="outline"
-                  class="cancel-button"
+                  class="cancel-button mobile-form-cancel"
                   (click)="cancel()"
                   [disabled]="isSubmitting()"
                 >
@@ -182,7 +183,7 @@
 
                 <ion-button
                   type="submit"
-                  class="save-button"
+                  class="save-button mobile-form-primary"
                   (click)="save()"
                   [disabled]="
                     hasIncompleteCriterion() ||

@@ -285,17 +285,21 @@
   }
 }
 
-@media (max-width: 639px) and (pointer: coarse) {
+@media (max-width: 639px) {
   .score-main-row { flex-wrap: wrap; }
   .score-meta { flex: 1 1 100%; }
+  .score-name, .score-importance { white-space: normal; }
   .score-control-col { width: 100%; max-width: 100%; }
-  .score-actions { flex-wrap: wrap; }
-  .score-star,
-  .score-comment-button {
-    flex: 0 0 44px;
+  .score-star, .score-comment-button {
+    flex: 0 1 44px;
     width: 44px;
-    min-width: 44px;
+    min-width: 0;
     height: 44px;
     min-height: 44px;
+  }
+  .score-comment-button {
+    margin-inline-start: auto;
+    border-inline-start: 1px solid #e1e7e3;
+    border-radius: 0;
   }
 }

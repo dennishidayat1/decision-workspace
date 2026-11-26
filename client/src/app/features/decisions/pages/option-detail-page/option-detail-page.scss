@@ -87,8 +87,10 @@
     color 160ms ease;
 }
 
-.option-back-button:hover {
-  --color: #247657;
+@media (hover: hover) and (pointer: fine) {
+  .option-back-button:hover {
+    --color: #247657;
+  }
 }
 
 .option-back-button ion-icon {
@@ -128,8 +130,10 @@
     color 160ms ease;
 }
 
-.option-close-button:hover {
-  --color: #24352e;
+@media (hover: hover) and (pointer: fine) {
+  .option-close-button:hover {
+    --color: #24352e;
+  }
 }
 
 .option-close-button ion-icon {
@@ -449,10 +453,12 @@
   cursor: pointer;
 }
 
-.section-edit-button:hover {
-  text-decoration: underline;
+@media (hover: hover) and (pointer: fine) {
+  .section-edit-button:hover {
+    text-decoration: underline;
 
-  text-underline-offset: 3px;
+    text-underline-offset: 3px;
+  }
 }
 
 .section-more-button {
@@ -713,8 +719,10 @@
   cursor: pointer;
 }
 
-.remove-button:hover {
-  color: #b42318;
+@media (hover: hover) and (pointer: fine) {
+  .remove-button:hover {
+    color: #b42318;
+  }
 }
 
 .remove-button ion-icon {

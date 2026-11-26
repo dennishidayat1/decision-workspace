@@ -1,3 +1,5 @@
+import { DeleteConfirmation } from '../../components/delete-confirmation/delete-confirmation';
+import { MobileAccountHeader } from '../../../../layout/app-layout/mobile-account-header';
 import { Component, signal, computed, inject, viewChild } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
@@ -92,6 +94,8 @@ type OptionView = 'list' | 'grid';
 
 @Component({
   imports: [
+    MobileAccountHeader,
+    DeleteConfirmation,
     ReactiveFormsModule,
     DecimalPipe,
     RouterLink,

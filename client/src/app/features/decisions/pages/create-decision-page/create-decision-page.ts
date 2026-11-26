@@ -1,3 +1,4 @@
+import { MobileAccountHeader } from '../../../../layout/app-layout/mobile-account-header';
 import { Component, computed, inject, signal } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -45,6 +46,7 @@ addIcons({
   selector: 'app-create-decision-page',
 
   imports: [
+    MobileAccountHeader,
     ReactiveFormsModule,
 
     DecisionForm,

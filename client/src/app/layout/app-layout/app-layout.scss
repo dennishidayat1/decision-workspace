@@ -171,10 +171,12 @@
   cursor: pointer;
 }
 
-.sign-out-row:hover {
-  background: #f2f5f3;
+@media (hover: hover) and (pointer: fine) {
+  .sign-out-row:hover {
+    background: #f2f5f3;
 
-  color: #24352e;
+    color: #24352e;
+  }
 }
 
 .sign-out-row ion-icon {

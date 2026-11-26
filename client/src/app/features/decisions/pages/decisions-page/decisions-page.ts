@@ -1,3 +1,4 @@
+import { MobileAccountHeader } from '../../../../layout/app-layout/mobile-account-header';
 import { Component, inject, signal } from '@angular/core';
 import { DecisionApi } from '../../../decisions/services/decision-api';
 import { Decision } from '../../../decisions/models/decision';
@@ -35,6 +36,7 @@ addIcons({
 
 @Component({
   imports: [
+    MobileAccountHeader,
     RouterLink,
 
     IonButton,

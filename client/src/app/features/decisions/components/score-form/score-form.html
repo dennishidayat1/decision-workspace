@@ -76,6 +76,7 @@
                     'Add comment for ' +
                     getCriterionName(criterionId)
                   "
+                  [attr.aria-expanded]="expandedCommentCriterionId() === criterionId"
                   (click)="toggleComment(criterionId)"
                 >
                   <ion-icon
@@ -101,6 +102,8 @@
               getCriterionName(criterionId).toLowerCase() +
               ' (optional)'
             "
+            name="criterion-rating-note"
+            autocomplete="off"
             formControlName="comment"
           />
         }

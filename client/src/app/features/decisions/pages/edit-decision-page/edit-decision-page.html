@@ -1,4 +1,5 @@
 <ion-content class="edit-page">
+  <app-mobile-account-header />
 
   <ion-grid class="page-grid">
 
@@ -6,7 +7,7 @@
     <ion-row>
       <ion-col size="12">
         <ion-button
-          class="back-button"
+          class="back-button page-back-link"
           fill="clear"
           size="small"
           (click)="cancel()"
@@ -162,7 +163,7 @@
         </ion-card>
 
         <!-- Actions -->
-        <div class="actions">
+        <div class="actions mobile-form-actions">
 
           <ion-grid>
             <ion-row
@@ -171,9 +172,10 @@
 
               <ion-col
                 size="auto"
+                class="mobile-form-pair"
               >
                 <ion-button
-                class="cancel-button"
+                class="cancel-button mobile-form-cancel"
                 type="button"
                 fill="outline"
                 (click)="cancel()"
@@ -182,7 +184,7 @@
                 </ion-button>
 
                 <ion-button
-                class="save-button"
+                class="save-button mobile-form-primary"
                 type="submit"
                 [disabled]="
                     decisionForm.invalid ||

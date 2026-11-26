@@ -1,9 +1,10 @@
 import { DOCUMENT } from '@angular/common';
-import { Component, inject, signal } from '@angular/core';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { SwUpdate } from '@angular/service-worker';
 import { IonApp, IonButton, IonRouterOutlet } from '@ionic/angular';
 import { fromEvent, merge, timer } from 'rxjs';
+import { keepIosInputVisible } from './layout/keep-ios-input-visible';
 
 @Component({
   imports: [IonApp, IonButton, IonRouterOutlet],
@@ -21,6 +22,7 @@ export class App {
   protected readonly reloadRequired = signal(false);
 
   constructor() {
+    inject(DestroyRef).onDestroy(keepIosInputVisible(this.browser));
     const connectivity = merge(
       fromEvent(this.browser, 'online'),
       fromEvent(this.browser, 'offline'),

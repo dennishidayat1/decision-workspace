@@ -1,3 +1,4 @@
+import { MobileAccountHeader } from '../../../../layout/app-layout/mobile-account-header';
 import {
   Component,
   inject,
@@ -53,6 +54,7 @@ addIcons({
   selector: 'app-edit-decision-page',
   standalone: true,
   imports: [
+    MobileAccountHeader,
     ReactiveFormsModule,
 
     IonAccordion,

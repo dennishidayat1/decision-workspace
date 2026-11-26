@@ -1,3 +1,5 @@
+import { DeleteConfirmation } from '../../components/delete-confirmation/delete-confirmation';
+import { MobileAccountHeader } from '../../../../layout/app-layout/mobile-account-header';
 import {
   Component,
   HostListener,
@@ -74,6 +76,8 @@ addIcons({
   selector: 'app-option-detail-page',
 
   imports: [
+    MobileAccountHeader,
+    DeleteConfirmation,
     DecimalPipe,
     ReactiveFormsModule,
 
@@ -1092,9 +1096,19 @@ export class OptionDetailPage {
   }
 
 
+  readonly deleteInProgress = signal(false);
+  readonly deleteError = signal('');
+
+  openDeleteOption(): void {
+    this.deleteError.set('');
+    this.deleting.set(true);
+  }
+
   removeOption(): void {
 
     if (
+      !this.deleting() ||
+      this.deleteInProgress() ||
       !this.decisionId ||
       !this.optionId
     ) {
@@ -1102,9 +1116,8 @@ export class OptionDetailPage {
     }
 
 
-    this.deleting.set(
-      true,
-    );
+    this.deleteInProgress.set(true);
+    this.deleteError.set('');
 
 
     this.decisionApi
@@ -1115,6 +1128,8 @@ export class OptionDetailPage {
       .subscribe({
 
         next: () => {
+          this.deleteInProgress.set(false);
+          this.deleting.set(false);
 
           this.decisionState
             .removeOption(
@@ -1151,8 +1166,8 @@ export class OptionDetailPage {
               error,
             );
 
-            this.deleting
-              .set(false);
+            this.deleteInProgress.set(false);
+            this.deleteError.set('Unable to delete this option. Please try again.');
 
           },
 

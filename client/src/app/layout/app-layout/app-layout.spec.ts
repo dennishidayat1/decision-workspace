@@ -4,6 +4,7 @@ import { signal } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { MenuController, PopoverController, ToastController } from '@ionic/angular';
 import { AuthService } from '../../core/auth/auth.service';
+import { MobileAccountHeader } from './mobile-account-header';
 
 describe('AppLayout', () => {
   let component: AppLayout;
@@ -50,8 +51,9 @@ describe('AppLayout', () => {
   });
 
   it('provides an explicitly named mobile account-menu trigger', () => {
-    fixture.detectChanges();
-    const trigger = fixture.nativeElement.querySelector('ion-menu-button[menu="account-menu"]');
+    const header = TestBed.createComponent(MobileAccountHeader);
+    header.detectChanges();
+    const trigger = header.nativeElement.querySelector('ion-menu-button[menu="account-menu"]');
     expect(trigger).not.toBeNull();
     expect(trigger.shadowRoot?.querySelector('button')?.getAttribute('aria-label') ??
       trigger.getAttribute('aria-label')).toBe('Open account menu');

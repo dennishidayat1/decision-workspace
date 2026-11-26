@@ -96,13 +96,145 @@ input:-webkit-autofill:focus {
     transform 160ms ease,
     filter 160ms ease;
 
-  &:hover {
-    transform: translateY(-1px);
-    filter: brightness(0.98);
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      transform: translateY(-1px);
+      filter: brightness(0.98);
+    }
   }
 
   &:active {
-    transform: translateY(0);
     filter: brightness(0.96);
+  }
+}
+
+.workspace-router ion-button.page-back-link {
+  min-height: 44px;
+  --padding-start: 8px;
+  --padding-end: 8px;
+}
+
+.workspace-router ion-button.page-back-link ion-icon {
+  flex: 0 0 auto;
+  margin-inline: 0 6px;
+  font-size: 16px;
+}
+
+ion-content[style*="--focus-obstruction"]::part(scroll) {
+  padding-bottom: calc(
+    var(--padding-bottom) + max(var(--keyboard-offset), var(--focus-obstruction)) +
+    var(--offset-bottom) + var(--internal-content-safe-area-padding-bottom, 0px)
+  );
+}
+
+.workspace-keyboard-open ion-modal.marketplace-import-modal {
+  --marketplace-vertical-alignment: flex-start;
+}
+
+.workspace-keyboard-open ion-modal.marketplace-import-modal::part(content) {
+  top: calc(var(--workspace-visual-top, 0px) + max(12px, var(--ion-safe-area-top, 0px)));
+}
+
+ion-accordion > [slot="header"] .ion-accordion-toggle-icon {
+  color: #6b7770;
+  flex-shrink: 0;
+  align-self: center;
+}
+
+.option-currency-select {
+  --highlight-color-focused: var(--ion-color-primary);
+}
+
+.option-section-actions .mobile-form-cancel {
+  display: none;
+}
+
+@media (max-width: 639px) {
+  .workspace-keyboard-open ion-footer.form-footer {
+    display: none;
+  }
+
+  :is(#workspace-main, .option-detail-overlay) .mobile-form-actions:not(ion-footer),
+  :is(#workspace-main, .option-detail-overlay) .mobile-form-actions .footer-grid {
+    box-sizing: border-box;
+    padding: 16px 20px calc(16px + var(--ion-safe-area-bottom, 0px));
+  }
+
+  :is(#workspace-main, .option-detail-overlay) .mobile-form-actions:not(ion-footer) {
+    border-top: 1px solid #e1e7e3;
+  }
+
+  :is(#workspace-main, .option-detail-overlay) .mobile-form-actions ion-grid:not(.footer-grid),
+  :is(#workspace-main, .option-detail-overlay) .mobile-form-actions ion-col {
+    padding: 0;
+  }
+
+  :is(#workspace-main, .option-detail-overlay) .mobile-form-actions ion-row.ion-justify-content-end,
+  :is(#workspace-main, .option-detail-overlay) .option-section-actions,
+  :is(#workspace-main, .option-detail-overlay) .mobile-form-actions .mobile-form-pair {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+
+  :is(#workspace-main, .option-detail-overlay) .mobile-form-actions ion-row.ion-justify-content-end {
+    // Ionic's utility uses !important.
+    justify-content: space-between !important;
+  }
+
+  :is(#workspace-main, .option-detail-overlay) .mobile-form-actions .mobile-form-pair {
+    flex: 1;
+  }
+
+  .option-section-actions .mobile-form-cancel {
+    display: inline-flex;
+  }
+
+  :is(#workspace-main, .option-detail-overlay) .mobile-form-actions ion-button.mobile-form-cancel,
+  :is(#workspace-main, .option-detail-overlay) .mobile-form-actions ion-button.mobile-form-primary {
+    min-height: 44px;
+    margin: 0;
+    --border-radius: 12px;
+    --box-shadow: none;
+    font-weight: 600;
+    text-transform: none;
+  }
+
+  :is(#workspace-main, .option-detail-overlay) .mobile-form-actions ion-button.mobile-form-cancel {
+    min-width: 0;
+    --padding-start: 4px;
+    --padding-end: 4px;
+    --border-width: 0;
+    --background: transparent;
+    --color: #6b7770;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  :is(#workspace-main, .option-detail-overlay) .mobile-form-actions ion-button.mobile-form-primary {
+    min-width: 0;
+    --padding-start: 16px;
+    --padding-end: 16px;
+    --background: #247657;
+    --color: #fff;
+    font-size: 14px;
+  }
+
+  :is(#workspace-main, .option-detail-overlay) .mobile-form-actions ion-button.mobile-form-primary ion-icon[slot="start"] {
+    display: none;
+  }
+}
+
+@media (hover: none), (pointer: coarse) {
+  .decision-card:active,
+  .option-card--compact:active,
+  .option-card--detailed:active {
+    filter: brightness(0.97);
+  }
+
+  ion-button {
+    --background-hover-opacity: 0;
   }
 }

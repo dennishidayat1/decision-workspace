@@ -53,7 +53,7 @@
             {{ option.title }}
           </h2>
 
-          @if (option.price) {
+          @if (option.price != null) {
             <p>
               {{ option.price }}
 
@@ -61,6 +61,8 @@
                 {{ option.currency }}
               }
             </p>
+          } @else {
+            <p>No price set</p>
           }
         </ion-label>
       </ion-item>

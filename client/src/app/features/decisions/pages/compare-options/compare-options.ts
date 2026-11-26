@@ -1,3 +1,4 @@
+import { MobileAccountHeader } from '../../../../layout/app-layout/mobile-account-header';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -38,6 +39,7 @@ import {
   selector: 'app-compare-options',
   standalone: true,
   imports: [
+    MobileAccountHeader,
     IonButton,
     IonContent,
     IonGrid,

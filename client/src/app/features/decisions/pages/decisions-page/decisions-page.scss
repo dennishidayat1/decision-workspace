@@ -130,10 +130,12 @@ ion-content {
     transform 160ms ease;
 }
 
-.decision-card:hover {
-  border-color: rgba(36, 118, 87, 0.4);
+@media (hover: hover) and (pointer: fine) {
+  .decision-card:hover {
+    border-color: rgba(36, 118, 87, 0.4);
 
-  transform: translateY(-1px);
+    transform: translateY(-1px);
+  }
 }
 
 .decision-card ion-card-content {

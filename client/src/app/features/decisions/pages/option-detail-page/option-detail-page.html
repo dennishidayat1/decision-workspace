@@ -6,6 +6,9 @@
   "
 >
   <ion-content class="option-detail-content">
+    @if (presentation() !== 'panel') {
+      <app-mobile-account-header />
+    }
     <main class="option-detail-panel">
 
       @if (option(); as option) {
@@ -20,7 +23,7 @@
               type="button"
               fill="clear"
               size="small"
-              class="option-back-button"
+              class="option-back-button page-back-link"
               (click)="backToDecision()"
             >
               <ion-icon
@@ -105,14 +108,13 @@
               {{ option.title }}
             </h1>
 
-            @if (
-              option.price !== undefined &&
-              option.currency
-            ) {
+            @if (option.price != null) {
               <p class="option-price">
                 {{ option.price }}
                 {{ option.currency }}
               </p>
+            } @else {
+              <p class="option-price">No price set</p>
             }
 
           </div>
@@ -325,6 +327,7 @@
 
                   <ion-select
                     fill="outline"
+                    class="option-currency-select"
                     formControlName="currency"
                   >
                     <ion-select-option value="USD">
@@ -398,13 +401,10 @@
 
               </label>
 
-              <ion-button
-                expand="block"
-                class="section-save-button"
-                (click)="saveBasicDetails()"
-              >
-                Save details
-              </ion-button>
+              <div class="mobile-form-actions option-section-actions">
+                <ion-button type="button" fill="clear" class="mobile-form-cancel" (click)="toggleBasicEdit()">Cancel</ion-button>
+                <ion-button expand="block" class="section-save-button mobile-form-primary" (click)="saveBasicDetails()">Save details</ion-button>
+              </div>
 
             </div>
 
@@ -434,13 +434,12 @@
 
                   <dd>
                     @if (
-                      option.price !== undefined &&
-                      option.currency
+                      option.price != null
                     ) {
                       {{ option.price }}
                       {{ option.currency }}
                     } @else {
-                      —
+                      No price set
                     }
                   </dd>
 
@@ -517,13 +516,10 @@
               [suggestedAttributeNames]="[]"
             />
 
-            <ion-button
-              expand="block"
-              class="section-save-button"
-              (click)="saveAttributes()"
-            >
-              Save attributes
-            </ion-button>
+            <div class="mobile-form-actions option-section-actions">
+                <ion-button type="button" fill="clear" class="mobile-form-cancel" (click)="toggleAttributesEdit()">Cancel</ion-button>
+                <ion-button expand="block" class="section-save-button mobile-form-primary" (click)="saveAttributes()">Save attributes</ion-button>
+              </div>
 
           } @else {
 
@@ -589,48 +585,10 @@
         <!-- DELETE -->
         <div class="remove-section">
 
-          @if (deleting()) {
-
-            <div class="delete-confirmation">
-
-              <span>
-                Delete this option?
-              </span>
-
-              <div>
-
-                <button
-                  type="button"
-                  class="confirm-remove"
-                  (click)="removeOption()"
-                >
-                  Delete
-                </button>
-
-                <button
-                  type="button"
-                  (click)="deleting.set(false)"
-                >
-                  Cancel
-                </button>
-
-              </div>
-
-            </div>
-
-          } @else {
-
-            <button
-              type="button"
-              class="remove-button"
-              (click)="deleting.set(true)"
-            >
-              <ion-icon name="trash-outline" />
-
-              Delete option
-            </button>
-
-          }
+          <button type="button" class="remove-button" (click)="openDeleteOption()">
+            <ion-icon name="trash-outline" />
+            Delete option
+          </button>
 
         </div>
 
@@ -653,3 +611,14 @@
     </main>
   </ion-content>
 </div>
+
+<app-delete-confirmation
+  [open]="deleting()"
+  [busy]="deleteInProgress()"
+  [error]="deleteError()"
+  title="Delete this option?"
+  message="This option and its ratings will be removed."
+  action="Delete option"
+  (dismissed)="deleting.set(false)"
+  (confirmed)="removeOption()"
+/>

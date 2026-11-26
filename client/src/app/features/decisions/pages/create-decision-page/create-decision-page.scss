@@ -60,8 +60,10 @@ ion-content {
 }
 
 
-.back-button:hover {
-  --color: #247657;
+@media (hover: hover) and (pointer: fine) {
+  .back-button:hover {
+    --color: #247657;
+  }
 }
 
 
@@ -282,8 +284,10 @@ ion-content {
 }
 
 
-.cancel-button:hover {
-  --color: #24352e;
+@media (hover: hover) and (pointer: fine) {
+  .cancel-button:hover {
+    --color: #24352e;
+  }
 }
 
 

@@ -1,3 +1,4 @@
+import { MobileAccountHeader } from '../../../../layout/app-layout/mobile-account-header';
 import { Component, signal, inject, effect, viewChild } from '@angular/core';
 import { ReactiveFormsModule, FormGroup, FormControl } from '@angular/forms';
 import { finalize } from 'rxjs'
@@ -34,6 +35,7 @@ addIcons({
 
 @Component({
   imports: [
+    MobileAccountHeader,
     OptionInfoForm,
     AttributeForm,
     ScoreForm,

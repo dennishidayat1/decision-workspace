@@ -1,4 +1,5 @@
 <ion-content>
+  <app-mobile-account-header />
   <ion-grid class="add-option-layout ion-no-padding">
     <ion-row class="ion-justify-content-center">
       <ion-col class="add-option-container">
@@ -139,16 +140,16 @@
 
 
           <!-- ACTIONS -->
-          <ion-grid class="option-form-actions ion-no-padding">
+          <ion-grid class="option-form-actions ion-no-padding mobile-form-actions">
             <ion-row class="ion-justify-content-end">
               <ion-col size="auto">
-                <ion-button type="button" fill="clear" (click)="onCancel()">
+                <ion-button type="button" fill="clear" class="mobile-form-cancel" (click)="onCancel()">
                   Cancel
                 </ion-button>
               </ion-col>
 
               <ion-col size="auto">
-                <ion-button type="submit" [disabled]="isSubmitting()">
+                <ion-button type="submit" class="mobile-form-primary" [disabled]="isSubmitting()">
                   Add option
                 </ion-button>
               </ion-col>
